@@ -1,0 +1,2776 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Tutor Manager</title>
+<meta name="description" content="Quản lý gia sư offline">
+<meta name="theme-color" content="#4f46e5">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icons/icon.svg">
+<style>
+  /* ===== CSS RESET & VARIABLES ===== */
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  :root {
+    --primary: #4f46e5;
+    --primary-light: #818cf8;
+    --primary-dark: #3730a3;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --bg: #f1f5f9;
+    --surface: #ffffff;
+    --text: #1e293b;
+    --text-secondary: #64748b;
+    --border: #e2e8f0;
+    --shadow: 0 1px 3px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont,
+      'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 80px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    padding: 16px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-md);
+  }
+  .header h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .app-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: white;
+    padding: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  }
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .header-actions button {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .header-actions button:hover {
+    background: rgba(255,255,255,0.3);
+  }
+
+  /* ===== BOTTOM NAVIGATION ===== */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    display: flex;
+    border-top: 1px solid var(--border);
+    z-index: 100;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 4px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: color 0.2s;
+    border: none;
+    background: none;
+    font-size: 0.65rem;
+    gap: 2px;
+    position: relative;
+  }
+  .nav-item.active {
+    color: var(--primary);
+  }
+  .nav-item .nav-icon {
+    font-size: 1.4rem;
+    line-height: 1;
+  }
+  .nav-badge {
+    position: absolute;
+    top: 2px;
+    right: calc(50% - 18px);
+    background: var(--danger);
+    color: white;
+    font-size: 0.6rem;
+    padding: 1px 5px;
+    border-radius: 10px;
+    font-weight: 700;
+  }
+
+  /* ===== PAGES ===== */
+  .page {
+    display: none;
+    padding: 16px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .page.active {
+    display: block;
+  }
+
+  /* ===== CARDS ===== */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+
+  /* ===== BADGES ===== */
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+  .badge-success {
+    background: #d1fae5; color: #065f46;
+  }
+  .badge-warning {
+    background: #fef3c7; color: #92400e;
+  }
+  .badge-danger {
+    background: #fee2e2; color: #991b1b;
+  }
+  .badge-info {
+    background: #dbeafe; color: #1e40af;
+  }
+
+  /* ===== BUTTONS ===== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+  }
+  .btn-primary:hover {
+    background: var(--primary-dark);
+  }
+  .btn-success {
+    background: var(--success);
+    color: white;
+  }
+  .btn-danger {
+    background: var(--danger);
+    color: white;
+  }
+  .btn-outline {
+    background: transparent;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+  }
+  .btn-sm {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+  }
+  .btn-block {
+    width: 100%;
+    justify-content: center;
+  }
+  .btn-icon {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 1rem;
+  }
+
+  /* ===== FORMS ===== */
+  .form-group {
+    margin-bottom: 14px;
+  }
+  .form-group label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text-secondary);
+  }
+  .form-control {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+    background: var(--surface);
+    color: var(--text);
+  }
+  .form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+  select.form-control {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+
+  /* ===== MODAL ===== */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-overlay.active {
+    display: flex;
+  }
+  .modal {
+    background: var(--surface);
+    border-radius: 20px 20px 0 0;
+    padding: 24px 20px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+  .modal-close:hover {
+    background: var(--bg);
+  }
+
+  /* ===== DASHBOARD ===== */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+  .stat-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--primary);
+  }
+  .stat-label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  /* ===== SCHEDULE ITEM ===== */
+  .schedule-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .schedule-item:last-child {
+    border-bottom: none;
+  }
+  .schedule-time {
+    text-align: center;
+    min-width: 60px;
+  }
+  .schedule-time .time {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+  .schedule-time .day {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+  }
+  .schedule-info {
+    flex: 1;
+  }
+  .schedule-info .name {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  .schedule-info .subject {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+
+  /* ===== LIST ITEMS ===== */
+  .list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .list-item:last-child {
+    border-bottom: none;
+  }
+  .list-item-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  /* ===== HOMEWORK ITEM ===== */
+  .hw-item {
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    border-left: 4px solid var(--warning);
+    background: #fffbeb;
+  }
+  .hw-item.completed {
+    border-left-color: var(--success);
+    background: #f0fdf4;
+    opacity: 0.7;
+  }
+  .hw-item .hw-title {
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+  .hw-item .hw-meta {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+  .hw-item .hw-desc {
+    font-size: 0.8rem;
+    margin-top: 6px;
+    color: var(--text);
+  }
+
+  /* ===== FEE STATUS ===== */
+  .fee-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    background: var(--bg);
+  }
+  .fee-amount {
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  /* ===== EMPTY STATE ===== */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+  }
+  .empty-state .icon {
+    font-size: 3rem;
+    margin-bottom: 8px;
+  }
+
+  /* ===== SECTION TITLE ===== */
+  .section-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin: 20px 0 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* ===== FILTER TABS ===== */
+  .filter-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .filter-tab {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .filter-tab.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+
+  /* ===== TODAY MARKER ===== */
+  .today-marker {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: white;
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .today-marker .date {
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+  .today-marker .info {
+    font-size: 0.8rem;
+    opacity: 0.9;
+  }
+
+  /* ===== TOAST ===== */
+  .toast {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: #1e293b;
+    color: white;
+    padding: 12px 24px;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    z-index: 300;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    max-width: 90%;
+    text-align: center;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ===== SCROLLBAR ===== */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e1; border-radius: 4px;
+  }
+
+  /* ===== DAY SELECTOR ===== */
+  .day-selector {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .day-chip {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .day-chip.selected {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+
+  /* ===== CHECKBOX CUSTOM ===== */
+  .checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+  .checkbox-wrapper input {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--primary);
+  }
+
+  @media (min-width: 768px) {
+    .stats-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  /* ===== WEEKLY SCHEDULER GRID ===== */
+  .week-scheduler { display:flex; gap:12px; align-items:flex-start; }
+  .week-scheduler .ws-timecol { width:64px; flex:0 0 64px; text-align:right; padding-right:8px; box-sizing:border-box; }
+  .week-scheduler .ws-time { height:48px; display:flex; align-items:center; justify-content:flex-end; color:var(--text-secondary); font-size:12px; padding-right:6px; border-top:1px solid #f0f0f0; box-sizing:border-box; }
+  .week-scheduler .ws-days { flex:1; display:grid; grid-template-columns: repeat(7,1fr); border:1px solid var(--border); border-radius:8px; overflow:hidden; background:var(--surface); }
+  .ws-day { position:relative; border-left:1px solid #f7f7f7; height: calc(48px * 14); box-sizing:border-box; }
+  .ws-day-header { position:sticky; top:0; background:var(--surface); border-bottom:1px solid var(--border); text-align:center; padding:6px 4px; font-weight:700; z-index:2; }
+  .ws-day-body { position:relative; height: calc(48px * 14); }
+  .ws-day-slot { height:48px; border-top:1px dashed #f5f5f5; }
+  .ws-event { position:absolute; left:6px; right:6px; border-radius:6px; padding:6px 8px; color:#fff; font-size:12px; box-shadow:0 2px 6px rgba(0,0,0,0.08); overflow:hidden; cursor:pointer; }
+  .ws-event .ev-time { font-size:11px; opacity:0.95; margin-top:4px; }
+  @media (max-width:700px) { .week-scheduler { flex-direction:column; } .ws-day { min-height: 320px; height:auto } }
+
+  /* ===== TOOL MODAL TABS ===== */
+  .tool-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 0;
+  }
+  .tool-tab-btn {
+    padding: 8px 16px;
+    border: none;
+    background: none;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+  }
+  .tool-tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+  .tool-panel { display: none; }
+  .tool-panel.active { display: block; }
+
+  /* ===== CLIPBOARD TEMPLATE ITEM ===== */
+  .tpl-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  .tpl-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .tpl-preview {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 60px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<div class="header">
+  <h1>
+    <img src="./assets/logo.svg" alt="Tutor Manager" class="app-logo">
+    Tutor Manager
+  </h1>
+  <div class="header-actions">
+    <button id="installBtn" style="display:none" onclick="promptInstall()">⬇️ Cài app</button>
+    <button onclick="exportData()">💾 Sao lưu</button>
+    <button onclick="document.getElementById('importFile').click()">📂 Khôi phục</button>
+    <button onclick="openToolModal()">🔧 Tool</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<!-- ===== PAGE: DASHBOARD ===== -->
+<div class="page active" id="page-dashboard">
+  <div class="today-marker">
+    <div>
+      <div class="date" id="todayDate"></div>
+      <div class="info" id="todayInfo"></div>
+    </div>
+  </div>
+
+  <div class="stats-grid" id="statsGrid"></div>
+
+  <div class="section-title">
+    📅 Lịch học hôm nay
+  </div>
+  <div class="card">
+    <div id="todaySchedule"></div>
+  </div>
+
+  <div class="section-title">
+    ⚠️ Cần chú ý
+  </div>
+  <div id="alerts"></div>
+</div>
+
+<!-- ===== PAGE: CLASSES ===== -->
+<div class="page" id="page-classes">
+  <div class="section-title">
+    Danh sách lớp
+    <button class="btn btn-primary btn-sm"
+      onclick="openModal('classModal')">
+      + Thêm lớp
+    </button>
+  </div>
+  <div id="classList"></div>
+</div>
+
+<!-- ===== PAGE: SCHEDULE ===== -->
+<div class="page" id="page-schedule">
+  <div class="section-title">Lịch học trong tuần</div>
+  <div class="filter-tabs" id="dayFilter"></div>
+  <div id="weekSchedule"></div>
+</div>
+
+<!-- ===== PAGE: HOMEWORK ===== -->
+<div class="page" id="page-homework">
+  <div class="section-title">
+    Bài tập về nhà
+    <button class="btn btn-primary btn-sm"
+      onclick="openHomeworkModal()">
+      + Giao bài
+    </button>
+  </div>
+  <div class="filter-tabs" id="hwFilter"></div>
+  <div id="homeworkList"></div>
+</div>
+
+<!-- ===== PAGE: FEES ===== -->
+<div class="page" id="page-fees">
+  <div class="section-title">
+    Quản lý học phí
+    <button class="btn btn-primary btn-sm"
+      onclick="openFeeModal()">
+      + Tạo phiếu thu
+    </button>
+  </div>
+  
+  <div id="feeList"></div>
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">📊 Thống kê</div>
+    <div id="feeStats"
+      style="margin-top:12px;font-size:0.85rem"></div>
+  </div>
+</div>
+
+<!-- ===== BOTTOM NAVIGATION ===== -->
+<nav class="bottom-nav">
+  <button class="nav-item active" onclick="switchPage('dashboard')">
+    <span class="nav-icon">🏠</span>
+    <span>Tổng quan</span>
+  </button>
+  <button class="nav-item" onclick="switchPage('classes')">
+    <span class="nav-icon">👨‍🎓</span>
+    <span>Lớp học</span>
+  </button>
+  <button class="nav-item" onclick="switchPage('schedule')">
+    <span class="nav-icon">📅</span>
+    <span>Lịch học</span>
+  </button>
+  <button class="nav-item" onclick="switchPage('homework')">
+    <span class="nav-icon">📝</span>
+    <span>Bài tập</span>
+    <span class="nav-badge" id="hwBadge" style="display:none"></span>
+  </button>
+  <button class="nav-item" onclick="switchPage('fees')">
+    <span class="nav-icon">💰</span>
+    <span>Học phí</span>
+    <span class="nav-badge" id="feeBadge" style="display:none"></span>
+  </button>
+</nav>
+
+<!-- ===== MODAL: CLASS ===== -->
+<div class="modal-overlay" id="classModal">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="classModalTitle">Thêm lớp mới</span>
+      <button class="modal-close"
+        onclick="closeModal('classModal')">×</button>
+    </div>
+    <form onsubmit="saveClass(event)">
+      <input type="hidden" id="classId">
+      <div class="form-group">
+        <label>Tên lớp *</label>
+        <input class="form-control" id="className"
+          placeholder="VD: Lớp Toán 10 - Nam" required>
+      </div>
+      <div class="form-group">
+        <label>Môn học *</label>
+        <input class="form-control" id="classSubject"
+          placeholder="VD: Toán" required>
+      </div>
+      <div class="form-group">
+        <label>Phí mỗi buổi (VNĐ)</label>
+        <input class="form-control" id="classFee" type="number"
+          placeholder="VD: 100000">
+      </div>
+      <div class="form-group">
+        <label>Ngày học trong tuần *</label>
+        <div class="day-selector" id="classDays"></div>
+      </div>
+      <div class="form-group" id="perDayTimes"></div>
+      <div class="form-group">
+        <label>Ghi chú</label>
+        <textarea class="form-control" id="classNote"
+          rows="2" placeholder="Ghi chú thêm..."></textarea>
+      </div>
+
+      <div class="section-title" style="margin-top:20px">
+        Học sinh
+      </div>
+      <div id="studentFields"></div>
+      <button type="button" class="btn btn-outline btn-sm"
+        onclick="addStudentField()"
+        style="margin-bottom:16px">
+        + Thêm học sinh
+      </button>
+
+      <button type="submit" class="btn btn-primary btn-block">
+        💾 Lưu
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ===== MODAL: HOMEWORK ===== -->
+<div class="modal-overlay" id="hwModal">
+  <div class="modal">
+    <div class="modal-title">
+      <span>Giao bài tập</span>
+      <button class="modal-close"
+        onclick="closeModal('hwModal')">×</button>
+    </div>
+    <form onsubmit="saveHomework(event)">
+      <input type="hidden" id="hwId">
+      <div class="form-group">
+        <label>Lớp *</label>
+        <select class="form-control" id="hwClass" required>
+          <option value="">-- Chọn lớp --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Tiêu đề *</label>
+        <input class="form-control" id="hwTitle"
+          placeholder="VD: Bài 5 trang 20" required>
+      </div>
+      <div class="form-group">
+        <label>Nội dung chi tiết</label>
+        <textarea class="form-control" id="hwDesc" rows="3"
+          placeholder="Mô tả chi tiết bài tập..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Hạn nộp *</label>
+        <input class="form-control" id="hwDue" type="date"
+          required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">
+        💾 Lưu bài tập
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ===== MODAL: FEE ===== -->
+<div class="modal-overlay" id="feeModal">
+  <div class="modal">
+    <div class="modal-title">
+      <span>Tạo phiếu thu học phí</span>
+      <button class="modal-close"
+        onclick="closeModal('feeModal')">×</button>
+    </div>
+    <form onsubmit="saveFee(event)">
+      <input type="hidden" id="feeId">
+      <div class="form-group">
+        <label>Lớp *</label>
+        <select class="form-control" id="feeClass" required>
+          <option value="">-- Chọn lớp --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Học sinh *</label>
+        <select class="form-control" id="feeStudent" required>
+          <option value="">-- Chọn học sinh --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Số buổi *</label>
+        <input class="form-control" id="feeCount" type="number" value="10" min="1" required>
+      </div>
+      <div class="form-group">
+        <label>Bắt đầu từ *</label>
+        <input class="form-control" id="feeStart" type="date" required>
+      </div>
+      <div class="form-group">
+        <label>Phí mỗi buổi (VNĐ)</label>
+        <input class="form-control" id="feePerSession" type="number">
+      </div>
+      <div class="form-group">
+        <label>Tổng tiền (VNĐ)</label>
+        <input class="form-control" id="feeAmount" type="number" readonly>
+      </div>
+      <div class="form-group">
+        <label>Danh sách buổi được thu</label>
+        <div id="feeSessionsList" style="font-size:0.9rem;color:var(--text-secondary)"></div>
+      </div>
+      <div class="form-group">
+        <label>Ghi chú</label>
+        <input class="form-control" id="feeNote" placeholder="Ghi chú...">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">
+        💾 Lưu phiếu thu
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ===== MODAL: FEE DETAIL (shift buổi) ===== -->
+<div class="modal-overlay" id="feeDetailModal">
+  <div class="modal">
+    <div class="modal-title">
+      <span>Chi tiết phiếu thu</span>
+      <button class="modal-close" onclick="closeModal('feeDetailModal')">×</button>
+    </div>
+    <div id="feeDetailContent"></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: CLASS DETAIL ===== -->
+<div class="modal-overlay" id="classDetailModal">
+  <div class="modal">
+    <div class="modal-title">
+      <span>Chi tiết lớp</span>
+      <button class="modal-close"
+        onclick="closeModal('classDetailModal')">×</button>
+    </div>
+    <div id="classDetailContent"></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: TOOL ===== -->
+<div class="modal-overlay" id="toolModal">
+  <div class="modal">
+    <div class="modal-title">
+      <span>🔧 Công cụ</span>
+      <button class="modal-close" onclick="closeModal('toolModal')">×</button>
+    </div>
+    <div class="tool-tabs">
+      <button class="tool-tab-btn active" onclick="switchToolTab('reset',this)">🧹 Reset</button>
+      <button class="tool-tab-btn" onclick="switchToolTab('clipboard',this)">📋 Clipboard</button>
+    </div>
+
+    <!-- Panel: Reset -->
+    <div id="toolPanel-reset" class="tool-panel active">
+      <div class="card">
+        <div style="font-weight:600;margin-bottom:12px">Quản lý dữ liệu</div>
+        <div style="margin-bottom:10px">
+          <button class="btn btn-danger btn-block" onclick="resetAppData()">
+            🧹 Xóa toàn bộ dữ liệu &amp; Reset app
+          </button>
+        </div>
+        <div style="margin-bottom:10px">
+          <button class="btn btn-outline btn-block" onclick="localStorage.clear();toast('Đã xóa localStorage')">
+            🗄️ Xóa localStorage
+          </button>
+        </div>
+        <div>
+          <button class="btn btn-sm btn-primary" onclick="scheduleNotificationAt('🔔 Thử thông báo','Đây là thông báo thử',Date.now()+2000,'test');toast('Sẽ thông báo sau 2 giây...')">
+            🔔 Thử thông báo
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel: Clipboard -->
+    <div id="toolPanel-clipboard" class="tool-panel">
+      <div class="card" style="margin-bottom:14px">
+        <div style="font-weight:600;margin-bottom:10px" id="tplFormTitle">➕ Thêm mẫu tin nhắn</div>
+        <div class="form-group">
+          <label>Tên mẫu</label>
+          <input class="form-control" id="tplName" placeholder="VD: Nhắc lịch học tuần này">
+        </div>
+        <div class="form-group" style="margin-bottom:6px">
+          <label>Nội dung <span style="font-weight:400;color:var(--text-secondary)">(dùng <b>#class#</b> = tên lớp, <b>#student#</b> = tên học sinh)</span></label>
+          <textarea class="form-control" id="tplContent" rows="5"
+            placeholder="Kính gửi phụ huynh #student#,&#10;Lịch học lớp #class# tuần này vẫn diễn ra bình thường.&#10;Trân trọng."></textarea>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-primary btn-sm" id="tplSaveBtn" onclick="saveTemplate()">💾 Lưu mẫu</button>
+          <button class="btn btn-outline btn-sm" id="tplCancelBtn" style="display:none" onclick="cancelEditTemplate()">✕ Hủy</button>
+        </div>
+      </div>
+      <div id="templateList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: COPY TARGET PICKER ===== -->
+<div class="modal-overlay" id="copyPickerModal">
+  <div class="modal">
+    <div class="modal-title">
+      <span>📋 Chọn đích gửi</span>
+      <button class="modal-close" onclick="closeModal('copyPickerModal')">×</button>
+    </div>
+    <div class="form-group">
+      <label>Kiểu gửi</label>
+      <select class="form-control" id="copyTargetType" onchange="onCopyTargetChange()">
+        <option value="all">Toàn bộ (không thay thế)</option>
+        <option value="class">Chỉ định lớp</option>
+        <option value="student">Chỉ định học sinh</option>
+      </select>
+    </div>
+    <div id="copyClassRow" class="form-group" style="display:none">
+      <label>Chọn lớp</label>
+      <select class="form-control" id="copyPickerClass" onchange="updateCopyPreview()"></select>
+    </div>
+    <div id="copyStudentRows" style="display:none">
+      <div class="form-group">
+        <label>Chọn lớp</label>
+        <select class="form-control" id="copyPickerClassForStu" onchange="populateCopyStudents()"></select>
+      </div>
+      <div class="form-group">
+        <label>Chọn học sinh</label>
+        <select class="form-control" id="copyPickerStudent" onchange="updateCopyPreview()"></select>
+      </div>
+    </div>
+    <div style="font-size:0.8rem;font-weight:600;margin-bottom:6px;color:var(--text-secondary)">Xem trước:</div>
+    <div id="copyPreviewBox" style="background:var(--bg);border-radius:8px;padding:12px;font-size:0.85rem;white-space:pre-wrap;word-break:break-word;min-height:70px;color:var(--text);margin-bottom:14px;border:1px solid var(--border)"></div>
+    <button class="btn btn-primary btn-block" onclick="doCopyToClipboard()">📋 Sao chép vào clipboard</button>
+  </div>
+</div>
+
+<script>
+// ==========================================================
+// DATABASE LAYER - IndexedDB wrapper
+// ==========================================================
+const DB_NAME = 'TutorManagerDB';
+const DB_VERSION = 2;
+const STORES = ['classes', 'homework', 'fees', 'templates'];
+
+/** Open (or create) the IndexedDB database */
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      STORES.forEach(name => {
+        if (!db.objectStoreNames.contains(name)) {
+          db.createObjectStore(name, { keyPath: 'id' });
+        }
+      });
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+/** Generic helper – get all records from a store */
+async function dbGetAll(storeName) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readonly');
+    const store = tx.objectStore(storeName);
+    const req = store.getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+/** Put (insert / update) a record */
+async function dbPut(storeName, data) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readwrite');
+    const store = tx.objectStore(storeName);
+    const req = store.put(data);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+/** Delete a record by id */
+async function dbDelete(storeName, id) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readwrite');
+    const store = tx.objectStore(storeName);
+    const req = store.delete(id);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// ==========================================================
+// STATE – lightweight in-memory mirrors (synced with IDB)
+// ==========================================================
+let classes = [];
+let homework = [];
+let fees = [];
+let templates = [];
+
+async function loadAll() {
+  classes   = await dbGetAll('classes');
+  homework  = await dbGetAll('homework');
+  fees      = await dbGetAll('fees');
+  templates = await dbGetAll('templates');
+}
+
+// ==========================================================
+// UTILITY HELPERS
+// ==========================================================
+const uid = () =>
+  Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+const DAY_NAMES = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+const DAY_FULL  = [
+  'Chủ nhật', 'Thứ 2', 'Thứ 3',
+  'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'
+];
+
+/** Format VNĐ */
+function fmtMoney(n) {
+  if (!n) return '0 ₫';
+  return Number(n).toLocaleString('vi-VN') + ' ₫';
+}
+
+/** Format date dd/mm/yyyy */
+function fmtDate(d) {
+  if (!d) return '';
+  const parts = d.split('-');
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+
+/** Convert time "HH:MM" to minutes since midnight */
+function timeToMinutes(str) {
+  if (!str) return NaN;
+  const parts = String(str).split(':').map(Number);
+  return (parts[0] || 0) * 60 + (parts[1] || 0);
+}
+
+/** Convert minutes since midnight to "HH:MM" */
+function minutesToTime(min) {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+}
+
+/** Format a Date object to local YYYY-MM-DD (avoids UTC timezone shift from toISOString) */
+function localDateStr(d) {
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+
+/**
+ * Return the next ISO date (YYYY-MM-DD) in the class's weekly schedule
+ * that is STRICTLY AFTER afterIso.
+ * E.g. if schedule is T5+T7 and afterIso is a Saturday, returns the next Thursday.
+ */
+function nextScheduledDateAfter(cls, afterIso) {
+  if (!cls || !afterIso) return null;
+  const d = new Date(afterIso + 'T00:00:00');
+  d.setDate(d.getDate() + 1); // one day past afterIso → strictly after
+  const result = getNextSessionsForClass(cls, localDateStr(d), 1);
+  return result.length > 0 ? result[0].date : null;
+}
+
+/** Get class time info for a specific weekday index */
+function getClassTimeForDay(c, dayIdx) {
+  if (!c) return null;
+  if (c.schedules && c.schedules[dayIdx]) {
+    const start = c.schedules[dayIdx].start;
+    const end = c.schedules[dayIdx].end;
+    const sMin = timeToMinutes(start);
+    const eMin = timeToMinutes(end);
+    const duration = (isNaN(sMin) || isNaN(eMin)) ? null : (eMin - sMin);
+    return { start, end, startMin: sMin, endMin: eMin, duration };
+  }
+  if (c.time) {
+    const start = c.time;
+    const sMin = timeToMinutes(start);
+    const duration = Number(c.duration) || 90;
+    const endMin = sMin + duration;
+    return { start, end: minutesToTime(endMin), startMin: sMin, endMin, duration };
+  }
+  return null;
+}
+
+/** Show a toast message */
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ==========================================================
+// NAVIGATION
+// ==========================================================
+function switchPage(name) {
+  document.querySelectorAll('.page').forEach(p =>
+    p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n =>
+    n.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  // Refresh the target page
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'classes')   renderClasses();
+  if (name === 'schedule')  renderSchedule();
+  if (name === 'homework')  renderHomework();
+  if (name === 'fees')      renderFees();
+}
+
+// ==========================================================
+// MODAL open / close
+// ==========================================================
+function openModal(id) {
+  document.getElementById(id).classList.add('active');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+// Close modal when clicking on overlay
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('modal-overlay')) {
+    e.target.classList.remove('active');
+  }
+});
+
+// ==========================================================
+// RENDER: DASHBOARD
+// ==========================================================
+function renderDashboard() {
+  // Today info
+  const now = new Date();
+  const dayIdx = now.getDay();
+  document.getElementById('todayDate').textContent =
+    DAY_FULL[dayIdx] + ', ' +
+    now.toLocaleDateString('vi-VN', {
+      day: '2-digit', month: '2-digit', year: 'numeric'
+    });
+
+  // Today's classes
+  const todayClasses = classes.filter(c =>
+    c.days && c.days.includes(dayIdx)
+  ).sort((a, b) => {
+    const ta = getClassTimeForDay(a, dayIdx);
+    const tb = getClassTimeForDay(b, dayIdx);
+    return (ta && tb) ? (ta.startMin - tb.startMin) : 0;
+  });
+
+  document.getElementById('todayInfo').textContent =
+    `${todayClasses.length} buổi học hôm nay`;
+
+  // Stats
+  // compute students without any invoice (treat invoice = collected)
+  let unpaidStudentsCount = 0;
+  classes.forEach(cl => {
+    (cl.students || []).forEach(s => {
+      const hasInvoice = fees.some(f => f.classId === cl.id && f.studentId === s.name);
+      if (!hasInvoice) unpaidStudentsCount++;
+    });
+  });
+  const pendingHW = homework.filter(h => !h.completed);
+  const totalStudents = classes.reduce((acc, c) =>
+    acc + (c.students ? c.students.length : 0), 0);
+
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-value">${classes.length}</div>
+      <div class="stat-label">Lớp học</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">${totalStudents}</div>
+      <div class="stat-label">Học sinh</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" style="color:var(--warning)">
+        ${pendingHW.length}
+      </div>
+      <div class="stat-label">BT chưa nộp</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" style="color:var(--danger)">
+        ${unpaidStudentsCount}
+      </div>
+      <div class="stat-label">Chưa thu phí</div>
+    </div>
+  `;
+
+  // Today schedule
+  const scheduleHTML = todayClasses.length === 0
+    ? `<div class="empty-state">
+         <div class="icon">😎</div>
+         <p>Hôm nay không có buổi học nào</p>
+       </div>`
+    : todayClasses.map(c => {
+        const t = getClassTimeForDay(c, dayIdx);
+        const timeLabel = t ? `${t.start} - ${t.end}` : '--:--';
+        const durLabel = t && t.duration ? `${t.duration} phút` : '';
+        return `
+        <div class="schedule-item">
+          <div class="schedule-time">
+            <div class="time">${timeLabel}</div>
+            <div class="day">${durLabel}</div>
+          </div>
+          <div class="schedule-info">
+            <div class="name">${esc(c.name)}</div>
+            <div class="subject">${esc(c.subject)}
+              – ${(c.students||[]).map(s => esc(s.name)).join(', ') || 'Chưa có HS'}
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+  document.getElementById('todaySchedule').innerHTML = scheduleHTML;
+
+  // Alerts
+  let alertsHTML = '';
+
+  // Unpaid fees
+  // For alerts, show classes or students without invoices
+  const uninvoiced = [];
+  classes.forEach(cl => {
+    (cl.students || []).forEach(s => {
+      const hasInv = fees.some(f => f.classId === cl.id && f.studentId === s.name);
+      if (!hasInv) uninvoiced.push({ className: cl.name, student: s.name });
+    });
+  });
+  if (uninvoiced.length > 0) {
+    uninvoiced.slice(0,5).forEach(u => {
+      alertsHTML += `
+        <div class="card" style="border-left:4px solid var(--danger)">
+          <div style="font-weight:600;font-size:0.85rem">
+            💰 Chưa thu học phí – ${esc(u.className)}
+          </div>
+          <div style="font-size:0.75rem;color:var(--text-secondary)">
+            Học sinh: ${esc(u.student)}
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  // Overdue homework
+  const today = localDateStr(now);
+  pendingHW.filter(h => h.due < today).forEach(h => {
+    const cls = classes.find(c => c.id === h.classId);
+    alertsHTML += `
+      <div class="card" style="border-left:4px solid var(--warning)">
+        <div style="font-weight:600;font-size:0.85rem">
+          📝 Bài tập quá hạn
+          – ${cls ? esc(cls.name) : 'N/A'}
+        </div>
+        <div style="font-size:0.75rem;color:var(--text-secondary)">
+          ${esc(h.title)} – hạn ${fmtDate(h.due)}
+        </div>
+      </div>
+    `;
+  });
+
+  if (!alertsHTML) {
+    alertsHTML = `
+      <div class="empty-state">
+        <div class="icon">✅</div>
+        <p>Không có cảnh báo nào</p>
+      </div>`;
+  }
+  document.getElementById('alerts').innerHTML = alertsHTML;
+
+  // Badges
+  updateBadges(pendingHW.length, unpaidStudentsCount);
+}
+
+function updateBadges(hwCount, feeCount) {
+  const hwBadge = document.getElementById('hwBadge');
+  const feeBadge = document.getElementById('feeBadge');
+  if (hwCount > 0) {
+    hwBadge.textContent = hwCount;
+    hwBadge.style.display = '';
+  } else {
+    hwBadge.style.display = 'none';
+  }
+  if (feeCount > 0) {
+    feeBadge.textContent = feeCount;
+    feeBadge.style.display = '';
+  } else {
+    feeBadge.style.display = 'none';
+  }
+}
+
+/** Escape HTML to prevent XSS */
+function esc(str) {
+  if (!str) return '';
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// ==========================================================
+// RENDER: CLASSES
+// ==========================================================
+function renderClasses() {
+  const container = document.getElementById('classList');
+  if (classes.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">📚</div>
+        <p>Chưa có lớp nào. Nhấn "+ Thêm lớp" để bắt đầu.</p>
+      </div>`;
+    return;
+  }
+  container.innerHTML = classes.map(c => `
+    <div class="card" onclick="viewClassDetail('${c.id}')"
+      style="cursor:pointer">
+      <div class="card-header">
+        <div>
+          <div class="card-title">
+            📖 ${esc(c.name)}
+          </div>
+          <div class="card-subtitle">
+            ${esc(c.subject)}
+            · ${(c.students||[]).length} học sinh
+          </div>
+        </div>
+        <span class="badge badge-info">
+          ${(c.days||[]).map(d => DAY_NAMES[d]).join(', ')}
+        </span>
+      </div>
+      <div style="display:flex;justify-content:space-between;
+        align-items:center;font-size:0.8rem">
+        <span>⏰ ${(() => {
+          try {
+            if (c.schedules) return (c.days||[]).map(d => `${DAY_NAMES[d]} ${c.schedules[d]? (c.schedules[d].start + '-' + c.schedules[d].end) : '--:--'}`).join(', ');
+            if (c.time) return `${c.time} · ${c.duration||90}p`;
+            return '--:--';
+          } catch (e) { return '--:--'; }
+        })()}</span>
+        <span style="font-weight:700;color:var(--primary)">
+          ${fmtMoney(c.fee)}/buổi
+        </span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ==========================================================
+// RENDER: SCHEDULE (weekly)
+// ==========================================================
+let selectedDay = new Date().getDay();
+
+function renderSchedule() {
+  // Day filter tabs (kept for quick filtering/highlight)
+  const filterHTML = DAY_NAMES.map((d, i) => `
+    <div class="filter-tab ${i === selectedDay ? 'active' : ''}"
+      onclick="selectedDay=${i};renderSchedule()">
+      ${d}
+    </div>
+  `).join('');
+  document.getElementById('dayFilter').innerHTML = filterHTML;
+
+  const container = document.getElementById('weekSchedule');
+  container.innerHTML = '';
+
+  // Weekly grid parameters
+  const START_HOUR = 8, END_HOUR = 22;
+  const HOURS = END_HOUR - START_HOUR; // 14
+  const TOTAL_MIN = HOURS * 60;
+
+  // build grid skeleton
+  const wrapper = document.createElement('div');
+  wrapper.className = 'week-scheduler';
+
+  const timeCol = document.createElement('div');
+  timeCol.className = 'ws-timecol';
+  for (let h = START_HOUR; h <= END_HOUR; h++) {
+    const lbl = document.createElement('div');
+    lbl.className = 'ws-time';
+    lbl.textContent = String(h).padStart(2, '0') + ':00';
+    timeCol.appendChild(lbl);
+  }
+  wrapper.appendChild(timeCol);
+
+  const daysWrap = document.createElement('div');
+  daysWrap.className = 'ws-days';
+  for (let d = 0; d < DAY_NAMES.length; d++) {
+    const dayCol = document.createElement('div');
+    dayCol.className = 'ws-day';
+    dayCol.dataset.day = d;
+    dayCol.innerHTML = `<div class="ws-day-header">${DAY_NAMES[d]}</div><div class="ws-day-body"></div>`;
+    const body = dayCol.querySelector('.ws-day-body');
+    for (let i = 0; i < HOURS; i++) {
+      const slot = document.createElement('div');
+      slot.className = 'ws-day-slot';
+      body.appendChild(slot);
+    }
+    daysWrap.appendChild(dayCol);
+  }
+  wrapper.appendChild(daysWrap);
+  container.appendChild(wrapper);
+
+  // gather events from classes
+  const eventsArr = [];
+  classes.forEach(c => {
+    (c.days || []).forEach(day => {
+      let startStr = null, endStr = null;
+      if (c.schedules && c.schedules[day]) {
+        startStr = c.schedules[day].start;
+        endStr = c.schedules[day].end || (c.duration ? minutesToTime(timeToMinutes(startStr) + Number(c.duration)) : null);
+      } else if (c.time) {
+        startStr = c.time;
+        endStr = minutesToTime(timeToMinutes(c.time) + (Number(c.duration) || 90));
+      } else return;
+
+      const sMin = timeToMinutes(startStr);
+      const eMin = timeToMinutes(endStr);
+      if (isNaN(sMin) || isNaN(eMin) || sMin >= eMin) return;
+      // skip out-of-range
+      if (eMin <= START_HOUR * 60 || sMin >= END_HOUR * 60) return;
+
+      const clampedStart = Math.max(sMin, START_HOUR * 60);
+      const clampedEnd = Math.min(eMin, END_HOUR * 60);
+      const top = ((clampedStart - START_HOUR * 60) / TOTAL_MIN) * 100;
+      const height = ((clampedEnd - clampedStart) / TOTAL_MIN) * 100;
+
+      eventsArr.push({ day, top, height, name: c.name, classId: c.id, start: minutesToTime(clampedStart), end: minutesToTime(clampedEnd) });
+    });
+  });
+
+  // render events
+  eventsArr.forEach((ev, idx) => {
+    const colBody = container.querySelector(`.ws-day[data-day="${ev.day}"] .ws-day-body`);
+    if (!colBody) return;
+    const el = document.createElement('div');
+    el.className = 'ws-event';
+    el.style.top = ev.top + '%';
+    el.style.height = ev.height + '%';
+    el.style.background = ['linear-gradient(90deg,#6C8CF5,#6CCBFF)','linear-gradient(90deg,#6CF5A6,#6CE5A6)','linear-gradient(90deg,#F5B26C,#F58F6C)','linear-gradient(90deg,#B36CF5,#7B6CF5)'][idx % 4];
+    el.innerHTML = `<div class="ev-title">${esc(ev.name)}</div><div class="ev-time">${ev.start} - ${ev.end}</div>`;
+    el.addEventListener('click', function(e){ e.stopPropagation(); viewClassDetail(ev.classId); });
+    colBody.appendChild(el);
+  });
+}
+
+// ==========================================================
+// RENDER: HOMEWORK
+// ==========================================================
+let hwFilterVal = 'pending';
+
+function renderHomework() {
+  // Class options
+  const select = document.getElementById('hwClass');
+  if (select.options.length <= 1) {
+    populateClassSelect(select);
+  }
+
+  // Filter tabs
+  document.getElementById('hwFilter').innerHTML = `
+    <div class="filter-tab ${hwFilterVal==='all'?'active':''}"
+      onclick="hwFilterVal='all';renderHomework()">Tất cả</div>
+    <div class="filter-tab ${hwFilterVal==='pending'?'active':''}"
+      onclick="hwFilterVal='pending';renderHomework()">
+      Chưa nộp</div>
+    <div class="filter-tab ${hwFilterVal==='completed'?'active':''}"
+      onclick="hwFilterVal='completed';renderHomework()">
+      Đã nộp</div>
+  `;
+
+  let filtered = [...homework];
+  if (hwFilterVal === 'pending') {
+    filtered = filtered.filter(h => !h.completed);
+  }
+  if (hwFilterVal === 'completed') {
+    filtered = filtered.filter(h => h.completed);
+  }
+  filtered.sort((a, b) => (a.due||'').localeCompare(b.due||''));
+
+  const container = document.getElementById('homeworkList');
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">📝</div>
+        <p>Không có bài tập nào</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(h => {
+    const cls = classes.find(c => c.id === h.classId);
+    const overdue = !h.completed &&
+      h.due < localDateStr(new Date());
+    return `
+      <div class="hw-item ${h.completed ? 'completed' : ''}">
+        <div style="display:flex;justify-content:space-between;
+          align-items:start">
+          <div>
+            <div class="hw-title">
+              ${h.completed ? '✅' : overdue ? '🔴' : '🟡'}
+              ${esc(h.title)}
+            </div>
+            <div class="hw-meta">
+              ${cls ? esc(cls.name) : 'N/A'}
+              · Hạn: ${fmtDate(h.due)}
+              ${overdue ? '<b style="color:var(--danger)"> (Quá hạn)</b>' : ''}
+            </div>
+            ${h.desc ? `<div class="hw-desc">${esc(h.desc)}</div>` : ''}
+          </div>
+          <div style="display:flex;gap:4px;flex-shrink:0">
+            ${!h.completed ? `
+              <button class="btn btn-success btn-sm"
+                onclick="toggleHW('${h.id}',true);event.stopPropagation()">
+                ✓
+              </button>` : `
+              <button class="btn btn-outline btn-sm"
+                onclick="toggleHW('${h.id}',false);event.stopPropagation()">
+                ↩
+              </button>`
+            }
+            <button class="btn btn-danger btn-sm"
+              onclick="deleteHomework('${h.id}');event.stopPropagation()">
+              🗑
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ==========================================================
+// RENDER: FEES
+// ==========================================================
+// feeMonthFilter removed; fees are session-based now
+
+function renderFees() {
+  // populate class select (used by modal)
+  const select = document.getElementById('feeClass');
+  if (select.options.length <= 1) populateClassSelect(select);
+
+  const container = document.getElementById('feeList');
+  const sorted = fees.slice().sort((a,b) => (b.createdAt||'').localeCompare(a.createdAt||''));
+  if (sorted.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">💰</div>
+        <p>Chưa có phiếu thu nào</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = sorted.map(f => {
+    const cls = classes.find(c => c.id === f.classId);
+    const studentName = f.studentId ? esc(f.studentId) : 'Tập thể';
+    const sessionList = (f.sessionDates||[]).slice(0,5).map(d => fmtDate(d)).join(', ') + ((f.sessionDates||[]).length>5? '...' : '');
+    return `
+      <div class="fee-row" style="cursor:pointer" onclick="viewFeeDetail('${f.id}')">
+        <div>
+          <div style="font-weight:600;font-size:0.85rem">
+            ${cls ? esc(cls.name) : 'N/A'} · ${studentName}
+          </div>
+          <div style="font-size:0.7rem;color:var(--text-secondary)">
+            ${f.sessionsCount || (f.sessionDates||[]).length} buổi · ${sessionList}
+            ${f.note ? ' · ' + esc(f.note) : ''}
+          </div>
+        </div>
+        <div style="text-align:right;display:flex;align-items:center;gap:8px">
+          <div>
+            <div class="fee-amount">${fmtMoney(f.amount)}</div>
+            <span class="badge badge-success">Đã thu</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <button class="btn btn-danger btn-sm" onclick="deleteFee('${f.id}');event.stopPropagation()">🗑</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Stats
+  const totalAll = fees.reduce((s, f) => s + Number(f.amount||0), 0);
+  const totalPaid = totalAll; // invoices are considered collected at creation
+  const totalUnpaid = 0;
+  document.getElementById('feeStats').innerHTML = `
+    <div style="display:flex;justify-content:space-between;
+      margin-bottom:8px">
+      <span>Tổng:</span>
+      <strong>${fmtMoney(totalAll)}</strong>
+    </div>
+    <div style="display:flex;justify-content:space-between;
+      margin-bottom:8px;color:var(--success)">
+      <span>Đã thu:</span>
+      <strong>${fmtMoney(totalPaid)}</strong>
+    </div>
+    <div style="display:flex;justify-content:space-between;
+      color:var(--danger)">
+      <span>Chưa thu:</span>
+      <strong>${fmtMoney(totalUnpaid)}</strong>
+    </div>
+  `;
+}
+
+// ==========================================================
+// CLASS FORM – student fields & day selector
+// ==========================================================
+let selectedClassDays = [];
+let studentFieldCount = 0;
+let editingSchedulesTemp = {};
+
+function initClassForm(classData) {
+  const isEdit = !!classData;
+  document.getElementById('classModalTitle').textContent =
+    isEdit ? 'Chỉnh sửa lớp' : 'Thêm lớp mới';
+  document.getElementById('classId').value =
+    isEdit ? classData.id : '';
+  document.getElementById('className').value =
+    isEdit ? classData.name : '';
+  document.getElementById('classSubject').value =
+    isEdit ? classData.subject : '';
+  document.getElementById('classFee').value =
+    isEdit ? classData.fee || '' : '';
+  document.getElementById('classNote').value =
+    isEdit ? classData.note || '' : '';
+
+  // Days
+  // Days
+  // If editing and schedules exist, prefill selected days from schedules keys
+  editingSchedulesTemp = isEdit && classData.schedules ? { ...classData.schedules } : {};
+  selectedClassDays = isEdit ? (classData.days && classData.days.length ? [...classData.days] : Object.keys(editingSchedulesTemp).map(k => Number(k))) : [];
+  renderDaySelector();
+  renderPerDayInputs();
+
+  // Students
+  studentFieldCount = 0;
+  document.getElementById('studentFields').innerHTML = '';
+  if (isEdit && classData.students) {
+    classData.students.forEach(s => addStudentField(s));
+  } else {
+    addStudentField();
+  }
+}
+
+function renderPerDayInputs() {
+  const perDayContainer = document.getElementById('perDayTimes');
+  perDayContainer.innerHTML = '';
+  if (!selectedClassDays || selectedClassDays.length === 0) {
+    perDayContainer.innerHTML = `<div style="color:var(--text-secondary);font-size:0.9rem">Chọn ngày học ở trên để nhập giờ cho từng ngày.</div>`;
+    return;
+  }
+
+  // render inputs only for selected days (sorted)
+  selectedClassDays.slice().sort((a,b) => a-b).forEach(i => {
+    const row = document.createElement('div');
+    row.className = 'perday-row';
+    row.dataset.day = i;
+    row.style.display = 'flex';
+    row.style.alignItems = 'center';
+    row.style.gap = '8px';
+    row.style.marginBottom = '6px';
+    const preset = editingSchedulesTemp && editingSchedulesTemp[i] ? editingSchedulesTemp[i] : {};
+    const startVal = preset.start || '';
+    const endVal = preset.end || '';
+    row.innerHTML = `<div style="width:80px">${DAY_FULL[i]}</div>\n      <input type="time" class="pd-start form-control" value="${startVal}">\n      <span style="margin:0 6px">→</span>\n      <input type="time" class="pd-end form-control" value="${endVal}">`;
+    perDayContainer.appendChild(row);
+  });
+}
+
+function renderDaySelector() {
+  document.getElementById('classDays').innerHTML =
+    DAY_NAMES.map((d, i) => `
+      <div class="day-chip ${selectedClassDays.includes(i)
+          ? 'selected' : ''}"
+        onclick="toggleDay(${i})">
+        ${d}
+      </div>
+    `).join('');
+}
+
+function toggleDay(i) {
+  const idx = selectedClassDays.indexOf(i);
+  if (idx >= 0) {
+    selectedClassDays.splice(idx, 1);
+  } else {
+    selectedClassDays.push(i);
+  }
+  renderDaySelector();
+  // ensure a temp schedule object exists for newly selected day
+  if (!editingSchedulesTemp[i]) editingSchedulesTemp[i] = { start: '', end: '' };
+  renderPerDayInputs();
+}
+
+function addStudentField(data) {
+  studentFieldCount++;
+  const idx = studentFieldCount;
+  const div = document.createElement('div');
+  div.className = 'card';
+  div.style.padding = '12px';
+  div.id = 'student-field-' + idx;
+  div.innerHTML = `
+    <div style="display:flex;justify-content:space-between;
+      align-items:center;margin-bottom:8px">
+      <strong style="font-size:0.8rem">
+        Học sinh ${idx}
+      </strong>
+      <button type="button" class="btn btn-danger btn-sm"
+        onclick="document.getElementById('student-field-${idx}')
+          .remove()">
+        ✕
+      </button>
+    </div>
+    <div class="form-group" style="margin-bottom:8px">
+      <input class="form-control student-name"
+        placeholder="Tên học sinh"
+        value="${data ? esc(data.name) : ''}">
+    </div>
+    <div class="form-group" style="margin-bottom:8px">
+      <input class="form-control student-phone"
+        placeholder="SĐT phụ huynh"
+        value="${data ? esc(data.phone||'') : ''}">
+    </div>
+    <div class="form-group" style="margin-bottom:0">
+      <input class="form-control student-note"
+        placeholder="Ghi chú"
+        value="${data ? esc(data.note||'') : ''}">
+    </div>
+  `;
+  document.getElementById('studentFields').appendChild(div);
+}
+
+// ==========================================================
+// SAVE: CLASS
+// ==========================================================
+async function saveClass(e) {
+  e.preventDefault();
+  if (selectedClassDays.length === 0) {
+    toast('⚠️ Vui lòng chọn ngày học');
+    return;
+  }
+
+  // Gather students
+  const students = [];
+  document.querySelectorAll('#studentFields .card')
+    .forEach(card => {
+      const name = card.querySelector('.student-name').value.trim();
+      if (name) {
+        students.push({
+          name,
+          phone: card.querySelector('.student-phone').value.trim(),
+          note: card.querySelector('.student-note').value.trim(),
+        });
+      }
+    });
+  const id = document.getElementById('classId').value || uid();
+  // per-day schedules (required) – build from inputs for selected days
+  let schedules = {};
+  for (const day of selectedClassDays) {
+    const row = document.querySelector(`#perDayTimes .perday-row[data-day="${day}"]`);
+    if (!row) {
+      toast('Vui lòng nhập giờ cho ' + DAY_FULL[day]);
+      return;
+    }
+    const start = row.querySelector('.pd-start').value;
+    const end = row.querySelector('.pd-end').value;
+    if (!start || !end) {
+      toast('Vui lòng nhập giờ cho ' + DAY_FULL[day]);
+      return;
+    }
+    const sMin = timeToMinutes(start);
+    const eMin = timeToMinutes(end);
+    if (isNaN(sMin) || isNaN(eMin) || sMin >= eMin) {
+      toast('Giờ không hợp lệ cho ' + DAY_FULL[day]);
+      return;
+    }
+    if (sMin < 8*60 || eMin > 22*60) {
+      toast('Khoảng giờ phải từ 08:00 đến 22:00');
+      return;
+    }
+    schedules[day] = { start, end };
+  }
+
+  const data = {
+    id,
+    name: document.getElementById('className').value.trim(),
+    subject: document.getElementById('classSubject').value.trim(),
+    fee: Number(document.getElementById('classFee').value) || 0,
+    days: selectedClassDays.sort(),
+    // schedules per-day
+    schedules,
+    note: document.getElementById('classNote').value.trim(),
+    students,
+    updatedAt: new Date().toISOString(),
+  };
+
+  await dbPut('classes', data);
+  const idx = classes.findIndex(c => c.id === id);
+  if (idx >= 0) classes[idx] = data;
+  else classes.push(data);
+
+  closeModal('classModal');
+  renderClasses();
+  toast('✅ Đã lưu lớp học');
+}
+
+// ==========================================================
+// VIEW CLASS DETAIL
+// ==========================================================
+function viewClassDetail(id) {
+  const c = classes.find(x => x.id === id);
+  if (!c) return;
+
+  const classHW = homework.filter(h =>
+    h.classId === id && !h.completed);
+  // students of this class who do NOT have any invoice
+  const unpaidStudents = (c.students || []).filter(s =>
+    !fees.some(f => f.classId === id && f.studentId === s.name)
+  );
+
+  document.getElementById('classDetailContent').innerHTML = `
+    <div class="card">
+      <div class="card-title">📖 ${esc(c.name)}</div>
+      <div class="card-subtitle"
+        style="margin-top:4px">${esc(c.subject)}</div>
+      <div style="margin-top:12px;font-size:0.85rem">
+        <p>📅 ${(c.days||[]).map(d => DAY_FULL[d]).join(', ')}</p>
+        <div>
+          ${((c.days||[]).map(d => {
+            const t = getClassTimeForDay(c, d);
+            return `<div>${DAY_FULL[d]}: ${t ? (t.start + ' - ' + t.end + (t.duration ? ' · ' + t.duration + ' phút' : '')) : '--:--'}</div>`;
+          })).join('')}
+        </div>
+        <p>💰 ${fmtMoney(c.fee)}/buổi</p>
+        ${c.note ? `<p>📝 ${esc(c.note)}</p>` : ''}
+      </div>
+    </div>
+
+    <div class="section-title">👨‍🎓 Học sinh
+      (${(c.students||[]).length})</div>
+    ${(c.students||[]).map(s => `
+      <div class="card" style="padding:12px">
+        <strong>${esc(s.name)}</strong>
+        ${s.phone ? `<br><span style="font-size:0.8rem;
+          color:var(--text-secondary)">📱 ${esc(s.phone)}</span>` : ''}
+        ${s.note ? `<br><span style="font-size:0.75rem;
+          color:var(--text-secondary)">${esc(s.note)}</span>` : ''}
+      </div>
+    `).join('') || '<p style="color:var(--text-secondary);font-size:0.85rem">Chưa có học sinh</p>'}
+
+    <div class="section-title">📝 BT chưa nộp (${classHW.length})</div>
+    ${classHW.map(h => `
+      <div class="hw-item">
+        <div class="hw-title">${esc(h.title)}</div>
+        <div class="hw-meta">Hạn: ${fmtDate(h.due)}</div>
+      </div>
+    `).join('') || '<p style="color:var(--text-secondary);font-size:0.85rem">Không có</p>'}
+
+    <div class="section-title">
+      💰 Học phí chưa thu (${unpaidStudents.length})
+    </div>
+    ${(unpaidStudents.length ? unpaidStudents.map(s => `
+      <div class="fee-row">
+        <div>
+          <div style="font-weight:600">${esc(s.name)}</div>
+          <div style="font-size:0.75rem;color:var(--text-secondary)">Chưa có phiếu thu</div>
+        </div>
+        <div style="display:flex;align-items:center">
+          <button class="btn btn-primary btn-sm" onclick="openFeeForStudent('${c.id}', ${JSON.stringify(s.name)});event.stopPropagation()">Tạo phiếu</button>
+        </div>
+      </div>
+    `).join('') : '<p style="color:var(--text-secondary);font-size:0.85rem">Đã thu đủ 👍</p>')}
+
+    <div style="display:flex;gap:8px;margin-top:20px">
+      <button class="btn btn-primary btn-block"
+        onclick="editClass('${c.id}')">✏️ Sửa</button>
+      <button class="btn btn-danger btn-block"
+        onclick="deleteClass('${c.id}')">🗑 Xóa</button>
+    </div>
+  `;
+  openModal('classDetailModal');
+}
+
+function editClass(id) {
+  closeModal('classDetailModal');
+  const c = classes.find(x => x.id === id);
+  initClassForm(c);
+  openModal('classModal');
+}
+
+async function deleteClass(id) {
+  if (!confirm('Xóa lớp này? Dữ liệu liên quan sẽ không bị xóa.'))
+    return;
+  await dbDelete('classes', id);
+  classes = classes.filter(c => c.id !== id);
+  closeModal('classDetailModal');
+  renderClasses();
+  toast('🗑 Đã xóa lớp');
+}
+
+// ==========================================================
+// HOMEWORK CRUD
+// ==========================================================
+function openHomeworkModal() {
+  document.getElementById('hwId').value = '';
+  document.getElementById('hwTitle').value = '';
+  document.getElementById('hwDesc').value = '';
+  document.getElementById('hwDue').value =
+    localDateStr(new Date());
+  populateClassSelect(document.getElementById('hwClass'));
+  openModal('hwModal');
+}
+
+async function saveHomework(e) {
+  e.preventDefault();
+  const id = document.getElementById('hwId').value || uid();
+  const data = {
+    id,
+    classId: document.getElementById('hwClass').value,
+    title: document.getElementById('hwTitle').value.trim(),
+    desc: document.getElementById('hwDesc').value.trim(),
+    due: document.getElementById('hwDue').value,
+    completed: false,
+    createdAt: new Date().toISOString(),
+  };
+  await dbPut('homework', data);
+  const idx = homework.findIndex(h => h.id === id);
+  if (idx >= 0) homework[idx] = data;
+  else homework.push(data);
+
+  closeModal('hwModal');
+  renderHomework();
+  toast('✅ Đã giao bài tập');
+}
+
+async function toggleHW(id, completed) {
+  const h = homework.find(x => x.id === id);
+  if (!h) return;
+  h.completed = completed;
+  await dbPut('homework', h);
+  renderHomework();
+  toast(completed ? '✅ Đã đánh dấu hoàn thành' : '↩ Đã mở lại');
+}
+
+async function deleteHomework(id) {
+  if (!confirm('Xóa bài tập này?')) return;
+  await dbDelete('homework', id);
+  homework = homework.filter(h => h.id !== id);
+  renderHomework();
+  toast('🗑 Đã xóa bài tập');
+}
+
+// ==========================================================
+// FEE CRUD
+// ==========================================================
+function openFeeModal() {
+  document.getElementById('feeId').value = '';
+  document.getElementById('feeAmount').value = '';
+  document.getElementById('feeNote').value = '';
+  document.getElementById('feePerSession').value = '';
+  document.getElementById('feeCount').value = 10;
+  document.getElementById('feeStart').value = localDateStr(new Date());
+  populateClassSelect(document.getElementById('feeClass'));
+
+  // when class changes, populate students and defaults
+  document.getElementById('feeClass').onchange = function() {
+    const cls = classes.find(c => c.id === this.value);
+    const studentSelect = document.getElementById('feeStudent');
+    studentSelect.innerHTML = '<option value="">-- Chọn học sinh --</option>';
+    if (cls && cls.students) {
+      cls.students.forEach((s, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx; // index in class.students
+        opt.textContent = s.name;
+        studentSelect.appendChild(opt);
+      });
+    }
+    if (cls && cls.fee) document.getElementById('feePerSession').value = cls.fee;
+    // set default start to next session date for this class
+    const next = getNextSessionsForClass(cls, localDateStr(new Date()), 1)[0];
+    if (next) document.getElementById('feeStart').value = next.date;
+    updateFeePreview();
+  };
+
+  ['feeCount','feePerSession','feeStart'].forEach(id => {
+    document.getElementById(id).oninput = updateFeePreview;
+  });
+
+  updateFeePreview();
+  openModal('feeModal');
+}
+
+async function saveFee(e) {
+  e.preventDefault();
+  const id = document.getElementById('feeId').value || uid();
+  const classId = document.getElementById('feeClass').value;
+  const cls = classes.find(c => c.id === classId);
+  if (!cls) { toast('Chọn lớp trước'); return; }
+  const studentIdx = document.getElementById('feeStudent').value;
+  const student = (cls.students && studentIdx !== '') ? cls.students[Number(studentIdx)] : null;
+  const count = Number(document.getElementById('feeCount').value) || 10;
+  const start = document.getElementById('feeStart').value;
+  const per = Number(document.getElementById('feePerSession').value) || Number(cls.fee || 0);
+  const sessions = getNextSessionsForClass(cls, start, count);
+  const sessionDates = sessions.map(s => s.date);
+  const amount = sessionDates.length * per;
+
+  const data = {
+    id,
+    classId,
+    studentId: student ? student.name : null,
+    sessionsCount: count,
+    sessionDates,
+    pricePerSession: per,
+    amount,
+    note: document.getElementById('feeNote').value.trim(),
+    createdAt: new Date().toISOString(),
+  };
+  await dbPut('fees', data);
+  const idx = fees.findIndex(f => f.id === id);
+  if (idx >= 0) fees[idx] = data;
+  else fees.push(data);
+
+  closeModal('feeModal');
+  renderFees();
+  toast('✅ Đã lưu phiếu thu');
+}
+
+// Generate next N sessions (date + start/end) for a class starting from fromDate (ISO yyyy-mm-dd)
+function getNextSessionsForClass(cls, fromDateIso, count) {
+  if (!cls) return [];
+  const startDate = fromDateIso ? new Date(fromDateIso + 'T00:00:00') : new Date();
+  const scheduleDays = cls.schedules ? Object.keys(cls.schedules).map(Number) : (cls.days || []);
+  if (!scheduleDays || scheduleDays.length === 0) return [];
+  const result = [];
+  const maxIter = 365 * 3; // safety
+  let iter = 0;
+  const d = new Date(startDate);
+  while (result.length < count && iter < maxIter) {
+    const wd = d.getDay();
+    if (scheduleDays.includes(wd)) {
+      const schedule = cls.schedules && cls.schedules[wd] ? cls.schedules[wd] : null;
+      let start = schedule ? schedule.start : (cls.time || null);
+      let end = schedule ? schedule.end : (cls.time ? minutesToTime(timeToMinutes(cls.time) + (Number(cls.duration) || 90)) : null);
+      if (start && end) {
+        result.push({ date: localDateStr(d), start, end, day: wd });
+      }
+    }
+    d.setDate(d.getDate() + 1);
+    iter++;
+  }
+  return result;
+}
+
+function updateFeePreview() {
+  const classId = document.getElementById('feeClass').value;
+  const cls = classes.find(c => c.id === classId);
+  const count = Number(document.getElementById('feeCount').value) || 0;
+  const start = document.getElementById('feeStart').value;
+  const per = Number(document.getElementById('feePerSession').value) || (cls ? Number(cls.fee||0) : 0);
+  const sessions = cls ? getNextSessionsForClass(cls, start, count) : [];
+  document.getElementById('feeSessionsList').innerHTML = sessions.map((s,i) => `<div>${i+1}. ${fmtDate(s.date)} — ${s.start} - ${s.end}</div>`).join('') || '<div style="color:var(--text-secondary)">Không có buổi nào</div>';
+  document.getElementById('feeAmount').value = sessions.length * per;
+}
+
+async function deleteFee(id) {
+  if (!confirm('Xóa phiếu thu này?')) return;
+  await dbDelete('fees', id);
+  fees = fees.filter(f => f.id !== id);
+  renderFees();
+  toast('🗑 Đã xóa phiếu thu');
+}
+
+function viewFeeDetail(id, prefillReplacement) {
+  const f = fees.find(x => x.id === id);
+  if (!f) return;
+  const cls = classes.find(c => c.id === f.classId);
+  const title = `${cls ? esc(cls.name) : 'N/A'} · ${f.studentId || 'Tập thể'}`;
+  const sessions = (f.sessionDates || []).slice().sort();
+  const listHtml = sessions.map((d, i) => {
+    const timeStr = (() => {
+      const dayIdx = new Date(d + 'T00:00:00').getDay();
+      const t = cls ? (cls.schedules && cls.schedules[dayIdx] ? cls.schedules[dayIdx] : null) : null;
+      if (t) return `${t.start} - ${t.end}`;
+      if (cls && cls.time) return `${cls.time} - ${minutesToTime(timeToMinutes(cls.time) + (Number(cls.duration)||90))}`;
+      return '';
+    })();
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div>${i+1}. ${fmtDate(d)} ${timeStr ? '· ' + timeStr : ''}</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm btn-danger" onclick="deleteSession('${f.id}',${i});event.stopPropagation()">Xóa buổi</button>
+      </div>
+    </div>`;
+  }).join('') || '<div style="color:var(--text-secondary)">Không có buổi</div>';
+  // compute suggested replacement date: next class session after the last session in the invoice
+  let defaultReplacement = prefillReplacement || null;
+  if (!defaultReplacement && cls) {
+    const lastSession = sessions.length > 0 ? sessions[sessions.length - 1] : localDateStr(new Date());
+    defaultReplacement = nextScheduledDateAfter(cls, lastSession);
+  }
+
+  const replacementHtml = `
+    <div style="margin-top:12px;border-top:1px dashed var(--border);padding-top:12px">
+      <div style="font-weight:600">➕ Thêm buổi bù</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+        <input type="date" id="replacementDate-${f.id}" class="form-control" value="${defaultReplacement || ''}">
+        <button class="btn btn-primary btn-sm" onclick="addReplacement('${f.id}', document.getElementById('replacementDate-${f.id}').value);event.stopPropagation()">Thêm</button>
+      </div>
+      <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:6px">Gợi ý ngày: ${defaultReplacement ? fmtDate(defaultReplacement) : 'không có'}</div>
+    </div>
+  `;
+
+  document.getElementById('feeDetailContent').innerHTML = `
+    <div class="card">
+      <div style="font-weight:600;font-size:0.95rem">${title}</div>
+      <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:8px">Tổng: ${f.sessionsCount || (f.sessionDates||[]).length} buổi · ${fmtMoney(f.amount)}</div>
+      <div style="margin-top:12px">${listHtml}</div>
+      ${replacementHtml}
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-danger" onclick="deleteFee('${f.id}');event.stopPropagation();closeModal('feeDetailModal')">Xóa phiếu</button>
+      </div>
+    </div>
+  `;
+  openModal('feeDetailModal');
+}
+
+function openFeeForStudent(classId, studentName) {
+  openFeeModal();
+  const feeClassEl = document.getElementById('feeClass');
+  feeClassEl.value = classId;
+  // trigger onchange to populate students and defaults
+  feeClassEl.onchange && feeClassEl.onchange();
+  const studentSelect = document.getElementById('feeStudent');
+  for (let i = 0; i < studentSelect.options.length; i++) {
+    if (studentSelect.options[i].textContent === studentName) {
+      studentSelect.value = studentSelect.options[i].value;
+      break;
+    }
+  }
+  updateFeePreview();
+}
+
+async function shiftSession(feeId, idx) {
+  const f = fees.find(x => x.id === feeId);
+  if (!f) return;
+  const cls = classes.find(c => c.id === f.classId);
+  if (!cls) { toast('Lớp không tồn tại'); return; }
+  // find the last date in current sessions
+  const dates = (f.sessionDates || []).slice().map(d => d).sort();
+  const last = dates[dates.length - 1];
+  const after = new Date(last + 'T00:00:00');
+  after.setDate(after.getDate() + 1);
+  const next = getNextSessionsForClass(cls, localDateStr(after), 1)[0];
+  if (!next) { toast('Không tìm được buổi tiếp theo'); return; }
+  // ensure next.date not already in sessions
+  if ((f.sessionDates||[]).includes(next.date)) {
+    toast('Buổi tiếp theo đã có trong phiếu');
+    return;
+  }
+  f.sessionDates[idx] = next.date;
+  f.sessionDates = Array.from(new Set(f.sessionDates)).sort();
+  f.sessionsCount = f.sessionDates.length;
+  f.amount = (f.pricePerSession || 0) * f.sessionDates.length;
+  await dbPut('fees', f);
+  const i = fees.findIndex(x => x.id === f.id);
+  if (i >= 0) fees[i] = f;
+  renderFees();
+  viewFeeDetail(f.id);
+  toast('✅ Đã kéo buổi sang ngày khác');
+}
+
+async function deleteSession(feeId, idx) {
+  const f = fees.find(x => x.id === feeId);
+  if (!f) return;
+  if (!confirm('Xác nhận xóa buổi này khỏi phiếu?')) return;
+  // remove the date
+  f.sessionDates = (f.sessionDates || []).slice();
+  if (idx < 0 || idx >= f.sessionDates.length) return;
+  f.sessionDates.splice(idx, 1);
+
+  // recompute amount (sessionsCount remains as requested count)
+  f.amount = (f.pricePerSession || 0) * (f.sessionDates || []).length;
+  await dbPut('fees', f);
+  const i = fees.findIndex(x => x.id === f.id);
+  if (i >= 0) fees[i] = f;
+  renderFees();
+
+  // compute suggested replacement date: next class session in schedule after the last remaining session
+  const cls = classes.find(c => c.id === f.classId);
+  let defaultReplacement = null;
+  if (cls) {
+    const sorted = f.sessionDates.slice().sort();
+    const lastSession = sorted.length > 0 ? sorted[sorted.length - 1] : localDateStr(new Date());
+    defaultReplacement = nextScheduledDateAfter(cls, lastSession);
+  }
+
+  // show detail modal with replacement picker prefilled
+  viewFeeDetail(f.id, defaultReplacement);
+  toast('Đã xóa buổi; bạn có thể thêm buổi bù bằng ngày được gợi ý hoặc chọn ngày khác.');
+}
+
+async function addReplacement(feeId, dateStr) {
+  if (!dateStr) { toast('Chọn ngày để thêm buổi bù'); return; }
+  const f = fees.find(x => x.id === feeId);
+  if (!f) return;
+  if ((f.sessionDates || []).includes(dateStr)) { toast('Ngày này đã có trong phiếu'); return; }
+  const cls = classes.find(c => c.id === f.classId);
+  if (cls && cls.schedules) {
+    const wd = new Date(dateStr + 'T00:00:00').getDay();
+    if (!Object.keys(cls.schedules).map(Number).includes(wd)) {
+      if (!confirm('Ngày bạn chọn không khớp với ngày học thường lệ. Vẫn thêm ngày này?')) return;
+    }
+  }
+  f.sessionDates = (f.sessionDates || []).concat([dateStr]).sort();
+  f.amount = (f.pricePerSession || 0) * (f.sessionDates || []).length;
+  await dbPut('fees', f);
+  const i = fees.findIndex(x => x.id === f.id);
+  if (i >= 0) fees[i] = f;
+  renderFees();
+  viewFeeDetail(f.id);
+  toast('✅ Đã thêm buổi bù');
+}
+
+// ==========================================================
+// HELPER: populate class <select>
+// ==========================================================
+function populateClassSelect(select) {
+  select.innerHTML =
+    '<option value="">-- Chọn lớp --</option>';
+  classes.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.name;
+    select.appendChild(opt);
+  });
+}
+
+// ==========================================================
+// EXPORT / IMPORT
+// ==========================================================
+function exportData() {
+  const data = JSON.stringify({ classes, homework, fees }, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `tutor-backup-${
+    new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('💾 Đã xuất file sao lưu');
+}
+
+async function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (data.classes) {
+      for (const c of data.classes) await dbPut('classes', c);
+    }
+    if (data.homework) {
+      for (const h of data.homework) await dbPut('homework', h);
+    }
+    if (data.fees) {
+      for (const f of data.fees) await dbPut('fees', f);
+    }
+    await loadAll();
+    renderDashboard();
+    toast('✅ Đã khôi phục dữ liệu');
+  } catch (err) {
+    toast('❌ File không hợp lệ');
+    console.error(err);
+  }
+  event.target.value = '';
+}
+
+// ==========================================================
+// NOTIFICATION REMINDER
+// ==========================================================
+function checkReminders() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+  if (Notification.permission !== 'granted') return;
+
+  const now = new Date();
+  const dayIdx = now.getDay();
+  const currentMin = now.getHours() * 60 + now.getMinutes();
+
+  classes.forEach(c => {
+    if (!c.days || !c.days.includes(dayIdx)) return;
+    const t = getClassTimeForDay(c, dayIdx);
+    if (!t || isNaN(t.startMin)) return;
+    const classMin = t.startMin;
+    // Remind 15 minutes before
+    const diff = classMin - currentMin;
+    if (diff >= 14 && diff <= 16) {
+      // schedule or show a notification (use service worker when possible)
+      const when = Date.now();
+      scheduleNotificationAt('📚 Sắp đến giờ dạy!', `${c.name} lúc ${minutesToTime(classMin)}`, when, 'schedule-' + c.id);
+    }
+  });
+}
+
+// ==========================================================
+// INIT – patch classModal button
+// ==========================================================
+(function() {
+  const btn = document.querySelector('[onclick="openModal(\'classModal\')"]');
+  if (btn) {
+    btn.onclick = () => {
+      initClassForm(null);
+      openModal('classModal');
+    };
+  }
+})();
+
+// ==========================================================
+// TOOL MODAL
+// ==========================================================
+function openToolModal() {
+  renderTemplateList();
+  openModal('toolModal');
+}
+
+function switchToolTab(name, btn) {
+  document.querySelectorAll('.tool-tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('toolPanel-' + name).classList.add('active');
+  if (name === 'clipboard') renderTemplateList();
+}
+
+// ==========================================================
+// CLIPBOARD / TEMPLATES
+// ==========================================================
+const DEFAULT_TEMPLATES = [
+  {
+    id: 'tpl-default-1',
+    name: 'Nhắc lịch học',
+    content: 'Kính gửi phụ huynh #student#,\nXin nhắc lịch học lớp #class# vẫn diễn ra bình thường.\nTrân trọng.',
+  },
+  {
+    id: 'tpl-default-2',
+    name: 'Thông báo nghỉ học',
+    content: 'Kính gửi phụ huynh #student#,\nBuổi học lớp #class# hôm nay sẽ được nghỉ. Lịch bù sẽ thông báo sau.\nTrân trọng.',
+  },
+  {
+    id: 'tpl-default-3',
+    name: 'Thông báo học phí',
+    content: 'Kính gửi phụ huynh #student#,\nHọc phí lớp #class# tháng này đã đến hạn. Phụ huynh vui lòng thanh toán sớm.\nTrân trọng.',
+  },
+];
+
+async function ensureDefaultTemplates() {
+  if (templates.length === 0) {
+    for (const t of DEFAULT_TEMPLATES) {
+      const existing = templates.find(x => x.id === t.id);
+      if (!existing) {
+        const rec = { ...t, createdAt: new Date().toISOString() };
+        await dbPut('templates', rec);
+        templates.push(rec);
+      }
+    }
+  }
+}
+
+function renderTemplateList() {
+  const container = document.getElementById('templateList');
+  if (!container) return;
+  if (templates.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>Chưa có mẫu nào. Thêm mẫu ở trên.</p></div>`;
+    return;
+  }
+  container.innerHTML = templates.map(t => `
+    <div class="tpl-item">
+      <div class="tpl-title">
+        <span>${esc(t.name)}</span>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-outline btn-sm" onclick="editTemplate('${t.id}')">✏️ Sửa</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteTemplate('${t.id}')">🗑</button>
+        </div>
+      </div>
+      <div class="tpl-preview">${esc(t.content)}</div>
+      <button class="btn btn-primary btn-sm" onclick="openCopyPicker('${t.id}')">📋 Copy</button>
+    </div>
+  `).join('');
+}
+
+let editingTplId = null;
+
+function editTemplate(id) {
+  const t = templates.find(x => x.id === id);
+  if (!t) return;
+  editingTplId = id;
+  document.getElementById('tplName').value = t.name;
+  document.getElementById('tplContent').value = t.content;
+  document.getElementById('tplFormTitle').textContent = '✏️ Sửa mẫu tin nhắn';
+  document.getElementById('tplSaveBtn').textContent = '💾 Cập nhật mẫu';
+  document.getElementById('tplCancelBtn').style.display = 'inline-flex';
+  document.getElementById('tplName').focus();
+  document.getElementById('tplName').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function cancelEditTemplate() {
+  editingTplId = null;
+  document.getElementById('tplName').value = '';
+  document.getElementById('tplContent').value = '';
+  document.getElementById('tplFormTitle').textContent = '➕ Thêm mẫu tin nhắn';
+  document.getElementById('tplSaveBtn').textContent = '💾 Lưu mẫu';
+  document.getElementById('tplCancelBtn').style.display = 'none';
+}
+
+async function saveTemplate() {
+  const name = document.getElementById('tplName').value.trim();
+  const content = document.getElementById('tplContent').value.trim();
+  if (!name) { toast('⚠️ Nhập tên mẫu'); return; }
+  if (!content) { toast('⚠️ Nhập nội dung mẫu'); return; }
+
+  if (editingTplId) {
+    // Update existing template
+    const idx = templates.findIndex(t => t.id === editingTplId);
+    if (idx >= 0) {
+      templates[idx] = { ...templates[idx], name, content, updatedAt: new Date().toISOString() };
+      await dbPut('templates', templates[idx]);
+    }
+    cancelEditTemplate();
+    renderTemplateList();
+    toast('✅ Đã cập nhật mẫu tin nhắn');
+  } else {
+    // Create new template
+    const rec = { id: uid(), name, content, createdAt: new Date().toISOString() };
+    await dbPut('templates', rec);
+    templates.push(rec);
+    document.getElementById('tplName').value = '';
+    document.getElementById('tplContent').value = '';
+    renderTemplateList();
+    toast('✅ Đã lưu mẫu tin nhắn');
+  }
+}
+
+async function deleteTemplate(id) {
+  if (!confirm('Xóa mẫu tin nhắn này?')) return;
+  await dbDelete('templates', id);
+  templates = templates.filter(t => t.id !== id);
+  if (editingTplId === id) cancelEditTemplate();
+  renderTemplateList();
+  toast('🗑 Đã xóa mẫu');
+}
+
+// Copy picker state
+let currentCopyTplId = null;
+
+function openCopyPicker(tplId) {
+  currentCopyTplId = tplId;
+  // Reset picker state
+  document.getElementById('copyTargetType').value = 'all';
+  document.getElementById('copyClassRow').style.display = 'none';
+  document.getElementById('copyStudentRows').style.display = 'none';
+
+  // Populate class dropdowns
+  const classSelects = ['copyPickerClass', 'copyPickerClassForStu'];
+  classSelects.forEach(selId => {
+    const sel = document.getElementById(selId);
+    sel.innerHTML = '<option value="">-- Chọn lớp --</option>';
+    classes.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.name;
+      sel.appendChild(opt);
+    });
+  });
+  document.getElementById('copyPickerStudent').innerHTML = '<option value="">-- Chọn học sinh --</option>';
+
+  updateCopyPreview();
+  openModal('copyPickerModal');
+}
+
+function onCopyTargetChange() {
+  const type = document.getElementById('copyTargetType').value;
+  document.getElementById('copyClassRow').style.display = type === 'class' ? 'block' : 'none';
+  document.getElementById('copyStudentRows').style.display = type === 'student' ? 'block' : 'none';
+  updateCopyPreview();
+}
+
+function populateCopyStudents() {
+  const classId = document.getElementById('copyPickerClassForStu').value;
+  const cls = classes.find(c => c.id === classId);
+  const sel = document.getElementById('copyPickerStudent');
+  sel.innerHTML = '<option value="">-- Chọn học sinh --</option>';
+  if (cls && cls.students) {
+    cls.students.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.name;
+      opt.textContent = s.name;
+      sel.appendChild(opt);
+    });
+  }
+  updateCopyPreview();
+}
+
+function updateCopyPreview() {
+  const tpl = templates.find(t => t.id === currentCopyTplId);
+  if (!tpl) return;
+  const type = document.getElementById('copyTargetType').value;
+  let text = tpl.content;
+
+  if (type === 'class') {
+    const classId = document.getElementById('copyPickerClass').value;
+    const cls = classes.find(c => c.id === classId);
+    const className = cls ? cls.name : '#class#';
+    text = text.replaceAll('#class#', className).replaceAll('#student#', '#student#');
+  } else if (type === 'student') {
+    const classId = document.getElementById('copyPickerClassForStu').value;
+    const cls = classes.find(c => c.id === classId);
+    const className = cls ? cls.name : '#class#';
+    const studentName = document.getElementById('copyPickerStudent').value || '#student#';
+    text = text.replaceAll('#class#', className).replaceAll('#student#', studentName);
+  }
+  // 'all' → no replacement, show raw template
+  document.getElementById('copyPreviewBox').textContent = text;
+}
+
+async function doCopyToClipboard() {
+  const preview = document.getElementById('copyPreviewBox').textContent;
+  try {
+    await navigator.clipboard.writeText(preview);
+    toast('✅ Đã sao chép vào clipboard!');
+    closeModal('copyPickerModal');
+  } catch (err) {
+    // Fallback for older Android WebView
+    const ta = document.createElement('textarea');
+    ta.value = preview;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+      document.execCommand('copy');
+      toast('✅ Đã sao chép vào clipboard!');
+      closeModal('copyPickerModal');
+    } catch (e) {
+      toast('❌ Không thể sao chép, hãy chép thủ công');
+    }
+    document.body.removeChild(ta);
+  }
+}
+
+// ==========================================================
+// BOOT
+// ==========================================================
+// PWA, service worker, install prompt & app settings
+let deferredInstallPrompt = null;
+
+async function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.register('./sw.js');
+      console.log('ServiceWorker registered', reg);
+    } catch (err) {
+      console.warn('ServiceWorker registration failed', err);
+    }
+  }
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const btn = document.getElementById('installBtn');
+  if (btn) btn.style.display = 'inline-block';
+});
+
+async function promptInstall() {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  const choice = await deferredInstallPrompt.userChoice;
+  if (choice && choice.outcome === 'accepted') {
+    toast('Cảm ơn! Ứng dụng đã được cài đặt.');
+  } else {
+    toast('Bỏ qua cài đặt');
+  }
+  deferredInstallPrompt = null;
+  const btn = document.getElementById('installBtn');
+  if (btn) btn.style.display = 'none';
+}
+
+window.addEventListener('appinstalled', () => {
+  toast('Ứng dụng đã được cài đặt');
+});
+
+// Schedule notification using ServiceWorker showNotification + showTrigger when available,
+// fallback to setTimeout while page is open or immediate Notification.
+async function scheduleNotificationAt(title, body, timestamp, tag) {
+  try {
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+    const reg = await (navigator.serviceWorker && navigator.serviceWorker.getRegistration && navigator.serviceWorker.getRegistration());
+    const options = { body, tag, icon: './icons/icon.svg', badge: './icons/icon.svg', data: { tag } };
+    // Try showTrigger (Chrome on Android) if available
+    if (reg && typeof TimestampTrigger !== 'undefined') {
+      try {
+        options.showTrigger = new TimestampTrigger(timestamp);
+        await reg.showNotification(title, options);
+        return;
+      } catch (err) {
+        console.warn('showTrigger not supported or failed', err);
+      }
+    }
+    // fallback: schedule while page is open
+    const delay = timestamp - Date.now();
+    if (delay > 0 && delay < 2147483647) {
+      setTimeout(async () => {
+        if (reg && reg.showNotification) reg.showNotification(title, options);
+        else new Notification(title, options);
+      }, delay);
+    } else {
+      if (reg && reg.showNotification) reg.showNotification(title, options);
+      else new Notification(title, options);
+    }
+  } catch (err) {
+    console.error('scheduleNotificationAt error', err);
+  }
+}
+
+async function resetAppData() {
+  if (!confirm('Xác nhận xóa toàn bộ dữ liệu? Hành động không thể hoàn tác.')) return;
+  try {
+    await new Promise((resolve, reject) => {
+      const req = indexedDB.deleteDatabase(DB_NAME);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+      req.onblocked = () => {
+        console.warn('delete blocked');
+        resolve();
+      };
+    });
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+    localStorage.clear();
+    toast('🧹 Đã xóa dữ liệu. Tải lại trang...');
+    setTimeout(() => location.reload(), 800);
+  } catch (err) {
+    console.error(err);
+    toast('❌ Không thể xóa dữ liệu: ' + (err && err.message || err));
+  }
+}
+
+// BOOT
+async function init() {
+  await registerServiceWorker();
+  await loadAll();
+  await ensureDefaultTemplates();
+  renderDashboard();
+
+  // Request notification permission
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+
+  // Check reminders every minute
+  setInterval(checkReminders, 60000);
+  checkReminders();
+}
+
+init();
+</script>
+</body>
+</html>

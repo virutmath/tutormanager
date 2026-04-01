@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="40" viewBox="0 0 120 40">
+  <defs>
+    <linearGradient id="lg" x1="0" x2="1">
+      <stop offset="0" stop-color="#4f46e5"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <rect width="40" height="40" rx="8" fill="url(#lg)"/>
+  <g transform="translate(6,8)" fill="#fff">
+    <path d="M6 2h20v2H6zM6 8h20v2H6zM6 14h14v2H6z" />
+  </g>
+  <text x="54" y="24" font-family="Segoe UI, Roboto, sans-serif" font-size="12" fill="#0f172a" font-weight="700">Tutor Manager</text>
+</svg>
