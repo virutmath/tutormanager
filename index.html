@@ -465,7 +465,7 @@
   .section-title {
     font-size: 0.95rem;
     font-weight: 700;
-    margin: 20px 0 12px;
+    margin: 0px 0 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -475,7 +475,7 @@
   .filter-tabs {
     display: flex;
     gap: 6px;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
     overflow-x: auto;
     padding-bottom: 4px;
   }
@@ -495,6 +495,14 @@
     color: white;
     border-color: var(--primary);
   }
+  
+  /* ===== WEEK SCHEDULE HEADER (aligns with columns) ===== */
+  .ws-header { display: grid; grid-template-columns: 40px 1fr; align-items:center; gap:6px; margin-bottom:6px; }
+  .ws-header .ws-header-time { height:40px; }
+  .ws-header .ws-header-days { display: grid; grid-template-columns: repeat(7,1fr); gap:0; }
+  .ws-header .ws-header-day { text-align:center; padding:4px 6px; font-weight:700; color:var(--text-secondary); border-radius:14px; cursor:pointer; background:transparent; border: 2px solid transparent; font-size:0.85rem }
+  .ws-header .ws-header-day.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+  @media (max-width:700px) { .ws-header { grid-template-columns: 30px 1fr; } .ws-header .ws-header-time { height:40px; } }
 
   /* ===== TODAY MARKER ===== */
   .today-marker {
@@ -591,17 +599,24 @@
   }
 
   /* ===== WEEKLY SCHEDULER GRID ===== */
-  .week-scheduler { display:flex; gap:12px; align-items:flex-start; }
-  .week-scheduler .ws-timecol { width:64px; flex:0 0 64px; text-align:right; padding-right:8px; box-sizing:border-box; }
-  .week-scheduler .ws-time { height:48px; display:flex; align-items:center; justify-content:flex-end; color:var(--text-secondary); font-size:12px; padding-right:6px; border-top:1px solid #f0f0f0; box-sizing:border-box; }
+  .week-scheduler { display:flex; gap:6px; align-items:flex-start; }
+  .week-scheduler .ws-timecol { width:40px; flex:0 0 40px; text-align:right; padding-right:4px; box-sizing:border-box; }
+  .week-scheduler .ws-time { height:40px; display:flex; align-items:center; justify-content:flex-end; color:var(--text-secondary); font-size:11px; padding-right:6px; border-top:1px solid #f0f0f0; box-sizing:border-box; }
   .week-scheduler .ws-days { flex:1; display:grid; grid-template-columns: repeat(7,1fr); border:1px solid var(--border); border-radius:8px; overflow:hidden; background:var(--surface); }
-  .ws-day { position:relative; border-left:1px solid #f7f7f7; height: calc(48px * 14); box-sizing:border-box; }
-  .ws-day-header { position:sticky; top:0; background:var(--surface); border-bottom:1px solid var(--border); text-align:center; padding:6px 4px; font-weight:700; z-index:2; }
-  .ws-day-body { position:relative; height: calc(48px * 14); }
-  .ws-day-slot { height:48px; border-top:1px dashed #f5f5f5; }
-  .ws-event { position:absolute; left:6px; right:6px; border-radius:6px; padding:6px 8px; color:#fff; font-size:12px; box-shadow:0 2px 6px rgba(0,0,0,0.08); overflow:hidden; cursor:pointer; }
-  .ws-event .ev-time { font-size:11px; opacity:0.95; margin-top:4px; }
-  @media (max-width:700px) { .week-scheduler { flex-direction:column; } .ws-day { min-height: 320px; height:auto } }
+  .ws-day { position:relative; border-left:1px solid #f7f7f7; height: calc(40px * 14); box-sizing:border-box; }
+  .ws-day-body { position:relative; height: calc(40px * 14); }
+  .ws-day-slot { height:40px; border-top:1px dashed #f5f5f5; }
+  .ws-event { position:absolute; left:4px; right:4px; border-radius:6px; padding:3px 6px; color:#fff; font-size:12px; box-shadow:0 2px 6px rgba(0,0,0,0.08); overflow:hidden; cursor:pointer; }
+  .ws-event .ev-title { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-weight:600; }
+  .ws-event .ev-time { font-size:11px; opacity:0.9; margin-top:2px; }
+  .ws-event .ev-initial { display:none; font-size:15px; font-weight:800; line-height:1.2; text-align:center; }
+  @media (max-width:700px) {
+    .week-scheduler .ws-timecol { width:30px; flex:0 0 30px; }
+    .week-scheduler .ws-time { font-size:10px; padding-right:3px; }
+    .ws-event { left:1px; right:1px; padding:3px 2px; border-radius:4px; display:flex; align-items:center; justify-content:center; }
+    .ws-event .ev-title, .ws-event .ev-time { display:none; }
+    .ws-event .ev-initial { display:block; }
+  }
 
   /* ===== TOOL MODAL TABS ===== */
   .tool-tabs {
@@ -654,6 +669,60 @@
     max-height: 60px;
     overflow: hidden;
     margin-bottom: 8px;
+  }
+
+  /* ===== SYLLABUS PAGE ===== */
+  .syl-session-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    display: grid;
+    grid-template-columns: 60px 90px 1fr auto;
+    align-items: start;
+    gap: 8px;
+  }
+  .syl-session-num {
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--primary);
+    white-space: nowrap;
+  }
+  .syl-session-date {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+  .syl-session-content {
+    font-size: 0.85rem;
+    word-break: break-word;
+  }
+  .syl-session-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  /* Cancelled / rest-day session row */
+  .syl-session-row.cancelled {
+    background: rgba(239, 68, 68, 0.06);
+    border-color: rgba(239, 68, 68, 0.25);
+    opacity: 0.85;
+  }
+  .syl-session-cancelled-label {
+    color: var(--danger) !important;
+    font-weight: 600;
+    font-size: 0.75rem;
+  }
+  @media (max-width: 500px) {
+    .syl-session-row {
+      grid-template-columns: 1fr auto;
+      grid-template-rows: auto auto auto;
+    }
+    .syl-session-num  { grid-column: 1; }
+    .syl-session-date { grid-column: 1; font-size: 0.75rem; }
+    .syl-session-content { grid-column: 1 / 2; }
+    .syl-session-actions { grid-column: 2; grid-row: 1 / 4; align-self: start; }
   }
 </style>
 </head>
@@ -751,26 +820,79 @@
   </div>
 </div>
 
+<!-- ===== PAGE: SYLLABUS ===== -->
+<div class="page" id="page-syllabus">
+  <div class="section-title">
+    <span>📋 Syllabus: <span id="syllabus-class-name"></span></span>
+    <button class="btn btn-outline btn-sm" onclick="closeSyllabusPage()">← Quay lại</button>
+  </div>
+
+  <!-- Meta: roadmap + khai giảng -->
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-title" style="margin-bottom:10px">📌 Tổng quan lớp</div>
+    <div class="form-group">
+      <label>Ngày khai giảng</label>
+      <input type="date" class="form-control" id="syl-start-date">
+    </div>
+    <div class="form-group">
+      <label>Roadmap tổng thể</label>
+      <textarea class="form-control" id="syl-roadmap" rows="3"
+        placeholder="Mô tả mục tiêu, lộ trình tổng thể của lớp..."></textarea>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="saveSyllabusMeta()">💾 Lưu thông tin</button>
+  </div>
+
+  <!-- Session list -->
+  <div class="section-title">📚 Danh sách buổi học</div>
+  <div id="syl-session-list"></div>
+
+  <!-- Recalculate schedule dates (for when the class changes its weekly timetable) -->
+  <div class="card" style="margin-top:12px">
+    <div class="card-title" style="margin-bottom:8px">🔄 Tính lại lịch khi đổi giờ học</div>
+    <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;line-height:1.5">
+      Khi lớp đổi lịch học hàng tuần, chọn ngày áp dụng lịch mới. Các buổi từ ngày đó trở đi sẽ được tính lại theo lịch hiện tại của lớp. Các buổi trước ngày đó giữ nguyên.
+    </p>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="date" class="form-control" id="syl-recalc-from" style="flex:1">
+      <button class="btn btn-outline btn-sm" onclick="recalcSyllabusFromDate()">🔄 Tính lại</button>
+    </div>
+  </div>
+
+  <!-- Add sessions -->
+  <div class="card" style="margin-top:12px">
+    <div class="card-title" style="margin-bottom:10px">➕ Thêm buổi vào syllabus</div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+      <input type="number" class="form-control" id="syl-add-count"
+        value="10" min="1" max="100" style="width:90px">
+      <span style="font-size:0.85rem">buổi</span>
+      <button class="btn btn-outline btn-sm" onclick="generateSylAddInputs()">Tạo form nhập</button>
+    </div>
+    <div id="syl-add-section" style="display:none">
+      <div id="syl-add-inputs"></div>
+      <button class="btn btn-primary btn-block" onclick="appendSylSessions()">✅ Thêm vào syllabus</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== BOTTOM NAVIGATION ===== -->
-<nav class="bottom-nav">
-  <button class="nav-item active" onclick="switchPage('dashboard')">
+<nav class="bottom-nav">  <button class="nav-item active" data-page="dashboard" onclick="switchPage('dashboard')">
     <span class="nav-icon">🏠</span>
     <span>Tổng quan</span>
   </button>
-  <button class="nav-item" onclick="switchPage('classes')">
+  <button class="nav-item" data-page="classes" onclick="switchPage('classes')">
     <span class="nav-icon">👨‍🎓</span>
     <span>Lớp học</span>
   </button>
-  <button class="nav-item" onclick="switchPage('schedule')">
+  <button class="nav-item" data-page="schedule" onclick="switchPage('schedule')">
     <span class="nav-icon">📅</span>
     <span>Lịch học</span>
   </button>
-  <button class="nav-item" onclick="switchPage('homework')">
+  <button class="nav-item" data-page="homework" onclick="switchPage('homework')">
     <span class="nav-icon">📝</span>
     <span>Bài tập</span>
     <span class="nav-badge" id="hwBadge" style="display:none"></span>
   </button>
-  <button class="nav-item" onclick="switchPage('fees')">
+  <button class="nav-item" data-page="fees" onclick="switchPage('fees')">
     <span class="nav-icon">💰</span>
     <span>Học phí</span>
     <span class="nav-badge" id="feeBadge" style="display:none"></span>
@@ -1036,169 +1158,13 @@
   </div>
 </div>
 
+<script src="./db.js"></script>
+<script src="./utils.js"></script>
+<script src="./syllabus.js"></script>
 <script>
 // ==========================================================
-// DATABASE LAYER - IndexedDB wrapper
+// NOTE: DB layer → db.js | Utilities → utils.js | Syllabus → syllabus.js
 // ==========================================================
-const DB_NAME = 'TutorManagerDB';
-const DB_VERSION = 2;
-const STORES = ['classes', 'homework', 'fees', 'templates'];
-
-/** Open (or create) the IndexedDB database */
-function openDB() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = e => {
-      const db = e.target.result;
-      STORES.forEach(name => {
-        if (!db.objectStoreNames.contains(name)) {
-          db.createObjectStore(name, { keyPath: 'id' });
-        }
-      });
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-/** Generic helper – get all records from a store */
-async function dbGetAll(storeName) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readonly');
-    const store = tx.objectStore(storeName);
-    const req = store.getAll();
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-/** Put (insert / update) a record */
-async function dbPut(storeName, data) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readwrite');
-    const store = tx.objectStore(storeName);
-    const req = store.put(data);
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-/** Delete a record by id */
-async function dbDelete(storeName, id) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, 'readwrite');
-    const store = tx.objectStore(storeName);
-    const req = store.delete(id);
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  });
-}
-
-// ==========================================================
-// STATE – lightweight in-memory mirrors (synced with IDB)
-// ==========================================================
-let classes = [];
-let homework = [];
-let fees = [];
-let templates = [];
-
-async function loadAll() {
-  classes   = await dbGetAll('classes');
-  homework  = await dbGetAll('homework');
-  fees      = await dbGetAll('fees');
-  templates = await dbGetAll('templates');
-}
-
-// ==========================================================
-// UTILITY HELPERS
-// ==========================================================
-const uid = () =>
-  Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-
-const DAY_NAMES = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
-const DAY_FULL  = [
-  'Chủ nhật', 'Thứ 2', 'Thứ 3',
-  'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'
-];
-
-/** Format VNĐ */
-function fmtMoney(n) {
-  if (!n) return '0 ₫';
-  return Number(n).toLocaleString('vi-VN') + ' ₫';
-}
-
-/** Format date dd/mm/yyyy */
-function fmtDate(d) {
-  if (!d) return '';
-  const parts = d.split('-');
-  return `${parts[2]}/${parts[1]}/${parts[0]}`;
-}
-
-/** Convert time "HH:MM" to minutes since midnight */
-function timeToMinutes(str) {
-  if (!str) return NaN;
-  const parts = String(str).split(':').map(Number);
-  return (parts[0] || 0) * 60 + (parts[1] || 0);
-}
-
-/** Convert minutes since midnight to "HH:MM" */
-function minutesToTime(min) {
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
-}
-
-/** Format a Date object to local YYYY-MM-DD (avoids UTC timezone shift from toISOString) */
-function localDateStr(d) {
-  return d.getFullYear() + '-' +
-    String(d.getMonth() + 1).padStart(2, '0') + '-' +
-    String(d.getDate()).padStart(2, '0');
-}
-
-/**
- * Return the next ISO date (YYYY-MM-DD) in the class's weekly schedule
- * that is STRICTLY AFTER afterIso.
- * E.g. if schedule is T5+T7 and afterIso is a Saturday, returns the next Thursday.
- */
-function nextScheduledDateAfter(cls, afterIso) {
-  if (!cls || !afterIso) return null;
-  const d = new Date(afterIso + 'T00:00:00');
-  d.setDate(d.getDate() + 1); // one day past afterIso → strictly after
-  const result = getNextSessionsForClass(cls, localDateStr(d), 1);
-  return result.length > 0 ? result[0].date : null;
-}
-
-/** Get class time info for a specific weekday index */
-function getClassTimeForDay(c, dayIdx) {
-  if (!c) return null;
-  if (c.schedules && c.schedules[dayIdx]) {
-    const start = c.schedules[dayIdx].start;
-    const end = c.schedules[dayIdx].end;
-    const sMin = timeToMinutes(start);
-    const eMin = timeToMinutes(end);
-    const duration = (isNaN(sMin) || isNaN(eMin)) ? null : (eMin - sMin);
-    return { start, end, startMin: sMin, endMin: eMin, duration };
-  }
-  if (c.time) {
-    const start = c.time;
-    const sMin = timeToMinutes(start);
-    const duration = Number(c.duration) || 90;
-    const endMin = sMin + duration;
-    return { start, end: minutesToTime(endMin), startMin: sMin, endMin, duration };
-  }
-  return null;
-}
-
-/** Show a toast message */
-function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2500);
-}
 
 // ==========================================================
 // NAVIGATION
@@ -1209,7 +1175,9 @@ function switchPage(name) {
   document.getElementById('page-' + name).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n =>
     n.classList.remove('active'));
-  event.currentTarget.classList.add('active');
+  // Activate matching nav button by data-page attribute
+  const navBtn = document.querySelector(`.nav-item[data-page="${name}"]`);
+  if (navBtn) navBtn.classList.add('active');
   // Refresh the target page
   if (name === 'dashboard') renderDashboard();
   if (name === 'classes')   renderClasses();
@@ -1305,6 +1273,11 @@ function renderDashboard() {
         const t = getClassTimeForDay(c, dayIdx);
         const timeLabel = t ? `${t.start} - ${t.end}` : '--:--';
         const durLabel = t && t.duration ? `${t.duration} phút` : '';
+        const todayStr = localDateStr(now);
+        const sylInfo  = getSyllabusInfoForDate(c.id, todayStr);
+        const sylLabel = sylInfo
+          ? `<div style="font-size:0.72rem;color:var(--primary);margin-top:2px">Buổi ${sylInfo.sessionNum}${sylInfo.content ? ': ' + esc(sylInfo.content) : ''}</div>`
+          : '';
         return `
         <div class="schedule-item">
           <div class="schedule-time">
@@ -1316,6 +1289,7 @@ function renderDashboard() {
             <div class="subject">${esc(c.subject)}
               – ${(c.students||[]).map(s => esc(s.name)).join(', ') || 'Chưa có HS'}
             </div>
+            ${sylLabel}
           </div>
         </div>`;
       }).join('');
@@ -1395,14 +1369,6 @@ function updateBadges(hwCount, feeCount) {
   }
 }
 
-/** Escape HTML to prevent XSS */
-function esc(str) {
-  if (!str) return '';
-  const d = document.createElement('div');
-  d.textContent = str;
-  return d.innerHTML;
-}
-
 // ==========================================================
 // RENDER: CLASSES
 // ==========================================================
@@ -1456,14 +1422,16 @@ function renderClasses() {
 let selectedDay = new Date().getDay();
 
 function renderSchedule() {
-  // Day filter tabs (kept for quick filtering/highlight)
-  const filterHTML = DAY_NAMES.map((d, i) => `
-    <div class="filter-tab ${i === selectedDay ? 'active' : ''}"
-      onclick="selectedDay=${i};renderSchedule()">
-      ${d}
+  // Day header aligned with columns (aligns with the time column)
+  const headerHTML = `
+    <div class="ws-header">
+      <div class="ws-header-time"></div>
+      <div class="ws-header-days">
+        ${DAY_NAMES.map((d, i) => `<div class="ws-header-day ${i===selectedDay?'active':''}" onclick="selectedDay=${i};renderSchedule()">${d}</div>`).join('')}
+      </div>
     </div>
-  `).join('');
-  document.getElementById('dayFilter').innerHTML = filterHTML;
+  `;
+  document.getElementById('dayFilter').innerHTML = headerHTML;
 
   const container = document.getElementById('weekSchedule');
   container.innerHTML = '';
@@ -1479,7 +1447,7 @@ function renderSchedule() {
 
   const timeCol = document.createElement('div');
   timeCol.className = 'ws-timecol';
-  for (let h = START_HOUR; h <= END_HOUR; h++) {
+  for (let h = START_HOUR; h < END_HOUR; h++) {
     const lbl = document.createElement('div');
     lbl.className = 'ws-time';
     lbl.textContent = String(h).padStart(2, '0') + ':00';
@@ -1493,7 +1461,7 @@ function renderSchedule() {
     const dayCol = document.createElement('div');
     dayCol.className = 'ws-day';
     dayCol.dataset.day = d;
-    dayCol.innerHTML = `<div class="ws-day-header">${DAY_NAMES[d]}</div><div class="ws-day-body"></div>`;
+    dayCol.innerHTML = `<div class="ws-day-body"></div>`;
     const body = dayCol.querySelector('.ws-day-body');
     for (let i = 0; i < HOURS; i++) {
       const slot = document.createElement('div');
@@ -1504,6 +1472,9 @@ function renderSchedule() {
   }
   wrapper.appendChild(daysWrap);
   container.appendChild(wrapper);
+
+  // align header widths to calendar columns
+  alignScheduleHeader();
 
   // gather events from classes
   const eventsArr = [];
@@ -1534,15 +1505,26 @@ function renderSchedule() {
   });
 
   // render events
-  eventsArr.forEach((ev, idx) => {
+  const CLASS_COLORS = [
+    'linear-gradient(135deg,#6C8CF5,#6CCBFF)',
+    'linear-gradient(135deg,#34d399,#10b981)',
+    'linear-gradient(135deg,#F5B26C,#F58F6C)',
+    'linear-gradient(135deg,#B36CF5,#7B6CF5)',
+    'linear-gradient(135deg,#f472b6,#fb7185)',
+    'linear-gradient(135deg,#fbbf24,#f59e0b)',
+  ];
+  const classColorMap = {};
+  classes.forEach((c, i) => { classColorMap[c.id] = CLASS_COLORS[i % CLASS_COLORS.length]; });
+
+  eventsArr.forEach((ev) => {
     const colBody = container.querySelector(`.ws-day[data-day="${ev.day}"] .ws-day-body`);
     if (!colBody) return;
     const el = document.createElement('div');
     el.className = 'ws-event';
     el.style.top = ev.top + '%';
     el.style.height = ev.height + '%';
-    el.style.background = ['linear-gradient(90deg,#6C8CF5,#6CCBFF)','linear-gradient(90deg,#6CF5A6,#6CE5A6)','linear-gradient(90deg,#F5B26C,#F58F6C)','linear-gradient(90deg,#B36CF5,#7B6CF5)'][idx % 4];
-    el.innerHTML = `<div class="ev-title">${esc(ev.name)}</div><div class="ev-time">${ev.start} - ${ev.end}</div>`;
+    el.style.background = classColorMap[ev.classId] || CLASS_COLORS[0];
+    el.innerHTML = `<div class="ev-title">${esc(ev.name)}</div><div class="ev-time">${ev.start}–${ev.end}</div><div class="ev-initial">${esc(ev.name.charAt(0))}</div>`;
     el.addEventListener('click', function(e){ e.stopPropagation(); viewClassDetail(ev.classId); });
     colBody.appendChild(el);
   });
@@ -1551,6 +1533,35 @@ function renderSchedule() {
 // ==========================================================
 // RENDER: HOMEWORK
 // ==========================================================
+/**
+ * Ensure the header day cells match the calendar column widths.
+ * This sets the `.ws-header-days` width and the `.ws-header-time` width
+ * to match the computed size of the actual calendar grid so columns align
+ * exactly (accounts for borders, scrollbars and container sizing).
+ */
+function alignScheduleHeader() {
+  try {
+    const scheduleContainer = document.getElementById('weekSchedule');
+    if (!scheduleContainer) return;
+    const wrapper = scheduleContainer.querySelector('.week-scheduler');
+    if (!wrapper) return;
+    const daysGrid = wrapper.querySelector('.ws-days');
+    const timeCol = wrapper.querySelector('.ws-timecol');
+    const headerDays = document.querySelector('.ws-header-days');
+    const headerTime = document.querySelector('.ws-header-time');
+    if (daysGrid && headerDays) {
+      const w = daysGrid.getBoundingClientRect().width;
+      headerDays.style.width = Math.max(0, Math.floor(w)) + 'px';
+    }
+    if (timeCol && headerTime) {
+      const tw = timeCol.getBoundingClientRect().width;
+      headerTime.style.width = Math.max(0, Math.floor(tw)) + 'px';
+    }
+  } catch (err) {
+    // silently ignore alignment errors
+    // console.debug('alignScheduleHeader error', err);
+  }
+}
 let hwFilterVal = 'pending';
 
 function renderHomework() {
@@ -1976,6 +1987,8 @@ function viewClassDetail(id) {
     <div style="display:flex;gap:8px;margin-top:20px">
       <button class="btn btn-primary btn-block"
         onclick="editClass('${c.id}')">✏️ Sửa</button>
+      <button class="btn btn-outline btn-block"
+        onclick="closeModal('classDetailModal');openSyllabusPage('${c.id}')">📋 Syllabus</button>
       <button class="btn btn-danger btn-block"
         onclick="deleteClass('${c.id}')">🗑 Xóa</button>
     </div>
@@ -2341,7 +2354,7 @@ function populateClassSelect(select) {
 // EXPORT / IMPORT
 // ==========================================================
 function exportData() {
-  const data = JSON.stringify({ classes, homework, fees }, null, 2);
+  const data = JSON.stringify({ classes, homework, fees, syllabi }, null, 2);
   const blob = new Blob([data], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -2367,6 +2380,9 @@ async function importData(event) {
     }
     if (data.fees) {
       for (const f of data.fees) await dbPut('fees', f);
+    }
+    if (data.syllabi) {
+      for (const s of data.syllabi) await dbPut('syllabi', s);
     }
     await loadAll();
     renderDashboard();
@@ -2764,6 +2780,13 @@ async function init() {
   if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission();
   }
+
+  // Keep header aligned on resize (debounced)
+  let _alignResizeTimer = null;
+  window.addEventListener('resize', () => {
+    if (_alignResizeTimer) clearTimeout(_alignResizeTimer);
+    _alignResizeTimer = setTimeout(() => alignScheduleHeader(), 120);
+  });
 
   // Check reminders every minute
   setInterval(checkReminders, 60000);
