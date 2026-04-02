@@ -1979,7 +1979,7 @@ function viewClassDetail(id) {
           <div style="font-size:0.75rem;color:var(--text-secondary)">Chưa có phiếu thu</div>
         </div>
         <div style="display:flex;align-items:center">
-          <button class="btn btn-primary btn-sm" onclick="openFeeForStudent('${c.id}', ${JSON.stringify(s.name)});event.stopPropagation()">Tạo phiếu</button>
+          <button class="btn btn-primary btn-sm" onclick="openFeeForStudent('${c.id}', ${JSON.stringify(s.name).replace(/"/g, '&quot;')});event.stopPropagation()">Tạo phiếu</button>
         </div>
       </div>
     `).join('') : '<p style="color:var(--text-secondary);font-size:0.85rem">Đã thu đủ 👍</p>')}
