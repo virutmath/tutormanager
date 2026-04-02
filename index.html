@@ -119,9 +119,16 @@
   .nav-item.active {
     color: var(--primary);
   }
+  .nav-item.active .nav-icon {
+    background: rgba(79, 70, 229, 0.12);
+    border-radius: 12px;
+    padding: 3px 14px;
+    margin-bottom: 1px;
+  }
   .nav-item .nav-icon {
     font-size: 1.4rem;
     line-height: 1;
+    padding: 3px 14px; /* keep size stable so layout doesn't shift on activate */
   }
   .nav-badge {
     position: absolute;
@@ -1979,7 +1986,7 @@ function viewClassDetail(id) {
           <div style="font-size:0.75rem;color:var(--text-secondary)">Chưa có phiếu thu</div>
         </div>
         <div style="display:flex;align-items:center">
-          <button class="btn btn-primary btn-sm" onclick="openFeeForStudent('${c.id}', ${JSON.stringify(s.name).replace(/"/g, '&quot;')});event.stopPropagation()">Tạo phiếu</button>
+          <button class="btn btn-primary btn-sm" onclick="closeModal('classDetailModal');openFeeForStudent('${c.id}', ${JSON.stringify(s.name).replace(/"/g, '&quot;')});event.stopPropagation()">Tạo phiếu</button>
         </div>
       </div>
     `).join('') : '<p style="color:var(--text-secondary);font-size:0.85rem">Đã thu đủ 👍</p>')}
