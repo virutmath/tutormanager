@@ -3274,10 +3274,11 @@ function addRoadmapTimelineRow(month, goal, rowId) {
   container.appendChild(div);
 }
 
-const WEEKS_PER_MONTH = 4;
+const WEEKS_PER_MONTH = 4.33; // average weeks per month (52 / 12)
+const MINS_PER_HOUR = 60;
 
 function calcRoadmapValues(hours, spw, dur) {
-  const sessions = hours > 0 ? Math.ceil(hours * 60 / dur) : 0;
+  const sessions = hours > 0 ? Math.ceil(hours * MINS_PER_HOUR / dur) : 0;
   const months = sessions > 0 ? Math.ceil(sessions / (spw * WEEKS_PER_MONTH)) : 0;
   return { sessions, months };
 }
