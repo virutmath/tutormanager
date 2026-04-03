@@ -2,8 +2,8 @@
 // DATABASE LAYER - IndexedDB wrapper
 // ==========================================================
 const DB_NAME = 'TutorManagerDB';
-const DB_VERSION = 3; // bumped for syllabus store
-const STORES = ['classes', 'homework', 'fees', 'templates', 'syllabi'];
+const DB_VERSION = 4; // bumped for checklists, checklistReviews, roadmaps, settings stores
+const STORES = ['classes', 'homework', 'fees', 'templates', 'syllabi', 'checklists', 'checklistReviews', 'roadmaps', 'settings'];
 
 /** Open (or create) the IndexedDB database */
 function openDB() {
@@ -61,16 +61,25 @@ async function dbDelete(storeName, id) {
 // ==========================================================
 // STATE – in-memory mirrors
 // ==========================================================
-let classes   = [];
-let homework  = [];
-let fees      = [];
-let templates = [];
-let syllabi   = []; // array of { id, classId, startDate, roadmap, sessions: [{content}] }
+let classes          = [];
+let homework         = [];
+let fees             = [];
+let templates        = [];
+let syllabi          = []; // array of { id, classId, startDate, roadmap, sessions: [{content}] }
+let checklists       = [];
+let checklistReviews = [];
+let roadmaps         = [];
+let appSettings      = null;
 
 async function loadAll() {
-  classes   = await dbGetAll('classes');
-  homework  = await dbGetAll('homework');
-  fees      = await dbGetAll('fees');
-  templates = await dbGetAll('templates');
-  syllabi   = await dbGetAll('syllabi');
+  classes          = await dbGetAll('classes');
+  homework         = await dbGetAll('homework');
+  fees             = await dbGetAll('fees');
+  templates        = await dbGetAll('templates');
+  syllabi          = await dbGetAll('syllabi');
+  checklists       = await dbGetAll('checklists');
+  checklistReviews = await dbGetAll('checklistReviews');
+  roadmaps         = await dbGetAll('roadmaps');
+  const settingsArr = await dbGetAll('settings');
+  appSettings      = settingsArr[0] || null;
 }

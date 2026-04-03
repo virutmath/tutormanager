@@ -730,6 +730,98 @@
     .syl-session-content { grid-column: 1 / 2; }
     .syl-session-actions { grid-column: 2; grid-row: 1 / 4; align-self: start; }
   }
+
+  /* ===== TOOL LIST ===== */
+  .tool-list-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+    background: var(--surface);
+  }
+  .tool-list-item:active { background: var(--bg); }
+  .tool-list-icon { font-size: 1.7rem; width: 38px; text-align: center; flex-shrink: 0; }
+  .tool-list-info { flex: 1; }
+  .tool-list-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 2px; }
+  .tool-list-desc { font-size: 0.78rem; color: var(--text-secondary); }
+  .tool-list-arrow { font-size: 1.4rem; color: var(--text-secondary); font-weight: 300; }
+
+  /* ===== CHECKLIST ===== */
+  .chk-template-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    background: var(--surface);
+  }
+  .chk-review-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    background: var(--surface);
+    cursor: pointer;
+  }
+  .chk-review-item input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); flex-shrink: 0; }
+  .chk-review-item.chk-done { opacity: 0.55; }
+  .chk-review-item.chk-done label { text-decoration: line-through; }
+  .chk-progress-bar { height: 6px; background: var(--border); border-radius: 3px; margin-bottom: 8px; overflow: hidden; }
+  .chk-progress-fill { height: 100%; background: var(--primary); border-radius: 3px; transition: width 0.3s; }
+  .chk-edit-items { margin-bottom: 10px; }
+  .chk-edit-item-row { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; }
+  .chk-edit-item-row input { flex: 1; }
+
+  /* ===== ROADMAP ===== */
+  .rm-calc-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    margin: 12px 0;
+  }
+  .rm-calc-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem; }
+  .rm-calc-row:last-child { margin-bottom: 0; }
+  .rm-calc-val { font-weight: 700; color: var(--primary); }
+  .rm-timeline-row { display: flex; gap: 6px; margin-bottom: 8px; align-items: flex-start; }
+  .rm-timeline-row input { flex: 1; }
+  .rm-saved-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    margin-bottom: 10px;
+    background: var(--surface);
+  }
+  .rm-saved-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+  .rm-saved-meta { font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 8px; }
+
+  /* ===== PRINT: ROADMAP PDF ===== */
+  #roadmapPrintArea { display: none; }
+  @media print {
+    body > *:not(#roadmapPrintArea) { display: none !important; }
+    #roadmapPrintArea { display: block !important; padding: 20px; font-family: sans-serif; color: #000; }
+    .rp-header { text-align: center; margin-bottom: 24px; border-bottom: 2px solid #333; padding-bottom: 12px; }
+    .rp-center-name { font-size: 1.3rem; font-weight: 700; margin-bottom: 4px; }
+    .rp-center-phone { font-size: 0.9rem; color: #555; }
+    .rp-title { font-size: 1.15rem; font-weight: 700; margin: 16px 0 10px; border-left: 4px solid #4f46e5; padding-left: 8px; }
+    .rp-row { display: flex; gap: 32px; margin-bottom: 8px; }
+    .rp-label { font-weight: 600; min-width: 160px; }
+    .rp-val { flex: 1; }
+    .rp-timeline-item { padding: 8px 0; border-bottom: 1px solid #eee; display: flex; gap: 16px; }
+    .rp-timeline-month { font-weight: 600; min-width: 100px; }
+    .rp-footer { margin-top: 32px; text-align: right; font-size: 0.85rem; color: #666; }
+  }
 </style>
 </head>
 <body>
@@ -742,9 +834,7 @@
   </h1>
   <div class="header-actions">
     <button id="installBtn" style="display:none" onclick="promptInstall()">⬇️ Cài app</button>
-    <button onclick="exportData()">💾 Sao lưu</button>
-    <button onclick="document.getElementById('importFile').click()">📂 Khôi phục</button>
-    <button onclick="openToolModal()">🔧 Tool</button>
+    <button onclick="openToolListModal()">🔧 Tool</button>
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
   </div>
 </div>
@@ -1072,20 +1162,69 @@
   </div>
 </div>
 
-<!-- ===== MODAL: TOOL ===== -->
-<div class="modal-overlay" id="toolModal">
+<!-- ===== MODAL: TOOL LIST ===== -->
+<div class="modal-overlay" id="toolListModal">
   <div class="modal">
     <div class="modal-title">
       <span>🔧 Công cụ</span>
-      <button class="modal-close" onclick="closeModal('toolModal')">×</button>
+      <button class="modal-close" onclick="closeModal('toolListModal')">×</button>
+    </div>
+    <div class="tool-list-item" onclick="openSystemTool()">
+      <div class="tool-list-icon">⚙️</div>
+      <div class="tool-list-info">
+        <div class="tool-list-name">Hệ thống</div>
+        <div class="tool-list-desc">Sao lưu, khôi phục, đặt lại, cấu hình</div>
+      </div>
+      <div class="tool-list-arrow">›</div>
+    </div>
+    <div class="tool-list-item" onclick="openClipboardTool()">
+      <div class="tool-list-icon">📋</div>
+      <div class="tool-list-info">
+        <div class="tool-list-name">Clipboard</div>
+        <div class="tool-list-desc">Mẫu tin nhắn nhanh cho phụ huynh</div>
+      </div>
+      <div class="tool-list-arrow">›</div>
+    </div>
+    <div class="tool-list-item" onclick="openAuditTool('checklist')">
+      <div class="tool-list-icon">📊</div>
+      <div class="tool-list-info">
+        <div class="tool-list-name">Audit</div>
+        <div class="tool-list-desc">Checklist chất lượng, lộ trình học sinh</div>
+      </div>
+      <div class="tool-list-arrow">›</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: HỆ THỐNG ===== -->
+<div class="modal-overlay" id="systemToolModal">
+  <div class="modal">
+    <div class="modal-title">
+      <span>⚙️ Hệ thống</span>
+      <button class="modal-close" onclick="closeModal('systemToolModal')">×</button>
     </div>
     <div class="tool-tabs">
-      <button class="tool-tab-btn active" onclick="switchToolTab('reset',this)">🧹 Reset</button>
-      <button class="tool-tab-btn" onclick="switchToolTab('clipboard',this)">📋 Clipboard</button>
+      <button class="tool-tab-btn active" onclick="switchModalTab('sysPanel-','backup',this)">💾 Sao lưu</button>
+      <button class="tool-tab-btn" onclick="switchModalTab('sysPanel-','reset',this)">🧹 Đặt lại</button>
+      <button class="tool-tab-btn" onclick="switchModalTab('sysPanel-','config',this)">⚙️ Cấu hình</button>
+    </div>
+
+    <!-- Panel: Backup / Restore -->
+    <div id="sysPanel-backup" class="tool-panel active">
+      <div class="card" style="margin-bottom:12px">
+        <div style="font-weight:600;margin-bottom:12px">💾 Sao lưu dữ liệu</div>
+        <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:12px">Xuất toàn bộ dữ liệu ra file JSON để lưu trữ hoặc chuyển máy.</p>
+        <button class="btn btn-primary btn-block" onclick="exportData()">💾 Xuất file sao lưu</button>
+      </div>
+      <div class="card">
+        <div style="font-weight:600;margin-bottom:12px">📂 Khôi phục dữ liệu</div>
+        <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:12px">Nhập file JSON đã sao lưu để khôi phục dữ liệu. Dữ liệu hiện tại sẽ được ghi đè.</p>
+        <button class="btn btn-outline btn-block" onclick="document.getElementById('importFile').click()">📂 Chọn file khôi phục</button>
+      </div>
     </div>
 
     <!-- Panel: Reset -->
-    <div id="toolPanel-reset" class="tool-panel active">
+    <div id="sysPanel-reset" class="tool-panel">
       <div class="card">
         <div style="font-weight:600;margin-bottom:12px">Quản lý dữ liệu</div>
         <div style="margin-bottom:10px">
@@ -1106,28 +1245,172 @@
       </div>
     </div>
 
-    <!-- Panel: Clipboard -->
-    <div id="toolPanel-clipboard" class="tool-panel">
-      <div class="card" style="margin-bottom:14px">
-        <div style="font-weight:600;margin-bottom:10px" id="tplFormTitle">➕ Thêm mẫu tin nhắn</div>
+    <!-- Panel: Config -->
+    <div id="sysPanel-config" class="tool-panel">
+      <div class="card">
+        <div style="font-weight:600;margin-bottom:12px">⚙️ Thông tin trung tâm</div>
         <div class="form-group">
-          <label>Tên mẫu</label>
-          <input class="form-control" id="tplName" placeholder="VD: Nhắc lịch học tuần này">
+          <label>Tên trung tâm</label>
+          <input class="form-control" id="cfgCenterName" placeholder="VD: Trung tâm Anh ngữ ABC">
         </div>
-        <div class="form-group" style="margin-bottom:6px">
-          <label>Nội dung <span style="font-weight:400;color:var(--text-secondary)">(dùng <b>#class#</b> = tên lớp, <b>#student#</b> = tên học sinh)</span></label>
-          <textarea class="form-control" id="tplContent" rows="5"
-            placeholder="Kính gửi phụ huynh #student#,&#10;Lịch học lớp #class# tuần này vẫn diễn ra bình thường.&#10;Trân trọng."></textarea>
+        <div class="form-group">
+          <label>Số điện thoại</label>
+          <input class="form-control" id="cfgCenterPhone" type="tel" placeholder="VD: 0901 234 567">
         </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button class="btn btn-primary btn-sm" id="tplSaveBtn" onclick="saveTemplate()">💾 Lưu mẫu</button>
-          <button class="btn btn-outline btn-sm" id="tplCancelBtn" style="display:none" onclick="cancelEditTemplate()">✕ Hủy</button>
-        </div>
+        <button class="btn btn-primary" onclick="saveSystemConfig()">💾 Lưu cấu hình</button>
       </div>
-      <div id="templateList"></div>
     </div>
   </div>
 </div>
+
+<!-- ===== MODAL: CLIPBOARD ===== -->
+<div class="modal-overlay" id="clipboardToolModal">
+  <div class="modal">
+    <div class="modal-title">
+      <span>📋 Clipboard</span>
+      <button class="modal-close" onclick="closeModal('clipboardToolModal')">×</button>
+    </div>
+    <div class="card" style="margin-bottom:14px">
+      <div style="font-weight:600;margin-bottom:10px" id="tplFormTitle">➕ Thêm mẫu tin nhắn</div>
+      <div class="form-group">
+        <label>Tên mẫu</label>
+        <input class="form-control" id="tplName" placeholder="VD: Nhắc lịch học tuần này">
+      </div>
+      <div class="form-group" style="margin-bottom:6px">
+        <label>Nội dung <span style="font-weight:400;color:var(--text-secondary)">(dùng <b>#class#</b> = tên lớp, <b>#student#</b> = tên học sinh)</span></label>
+        <textarea class="form-control" id="tplContent" rows="5"
+          placeholder="Kính gửi phụ huynh #student#,&#10;Lịch học lớp #class# tuần này vẫn diễn ra bình thường.&#10;Trân trọng."></textarea>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-primary btn-sm" id="tplSaveBtn" onclick="saveTemplate()">💾 Lưu mẫu</button>
+        <button class="btn btn-outline btn-sm" id="tplCancelBtn" style="display:none" onclick="cancelEditTemplate()">✕ Hủy</button>
+      </div>
+    </div>
+    <div id="templateList"></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: AUDIT ===== -->
+<div class="modal-overlay" id="auditToolModal">
+  <div class="modal">
+    <div class="modal-title">
+      <span>📊 Audit</span>
+      <button class="modal-close" onclick="closeModal('auditToolModal')">×</button>
+    </div>
+    <div class="tool-tabs">
+      <button class="tool-tab-btn active" id="auditTab-checklist" onclick="switchModalTab('auditPanel-','checklist',this);renderChecklistTab()">✅ Checklist</button>
+      <button class="tool-tab-btn" id="auditTab-roadmap" onclick="switchModalTab('auditPanel-','roadmap',this);renderRoadmapTab()">🗺️ Roadmap</button>
+    </div>
+
+    <!-- Panel: Checklist -->
+    <div id="auditPanel-checklist" class="tool-panel active">
+      <!-- Checklist template management -->
+      <div style="font-weight:700;font-size:0.9rem;margin-bottom:8px">📋 Mẫu Checklist</div>
+      <div id="chkTemplateList"></div>
+      <button class="btn btn-outline btn-sm btn-block" style="margin-bottom:16px" onclick="openChecklistEdit(null)">➕ Tạo checklist mới</button>
+
+      <!-- Class review section -->
+      <div style="font-weight:700;font-size:0.9rem;margin-bottom:8px">🔍 Review lớp học</div>
+      <div class="form-group">
+        <label>Chọn lớp</label>
+        <select class="form-control" id="chkReviewClassSel" onchange="renderChecklistReview()">
+          <option value="">-- Chọn lớp --</option>
+        </select>
+      </div>
+      <div id="chkReviewArea"></div>
+    </div>
+
+    <!-- Panel: Roadmap -->
+    <div id="auditPanel-roadmap" class="tool-panel">
+      <button class="btn btn-primary btn-sm" style="margin-bottom:12px" onclick="openRoadmapForm(null)">➕ Tạo roadmap mới</button>
+      <div id="roadmapList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: CHECKLIST EDIT ===== -->
+<div class="modal-overlay" id="checklistEditModal" style="z-index:210">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="chkEditModalTitle">➕ Tạo Checklist</span>
+      <button class="modal-close" onclick="closeModal('checklistEditModal')">×</button>
+    </div>
+    <div class="form-group">
+      <label>Tên checklist</label>
+      <input class="form-control" id="chkEditName" placeholder="VD: Checklist Tiếng Anh">
+    </div>
+    <div style="font-weight:600;margin-bottom:8px;font-size:0.9rem">Các mục kiểm tra</div>
+    <div id="chkEditItems" class="chk-edit-items"></div>
+    <button class="btn btn-outline btn-sm" onclick="addChecklistItemRow()" style="margin-bottom:14px">➕ Thêm mục</button>
+    <button class="btn btn-primary btn-block" onclick="saveChecklistTemplate()">💾 Lưu checklist</button>
+  </div>
+</div>
+
+<!-- ===== MODAL: ROADMAP FORM ===== -->
+<div class="modal-overlay" id="roadmapFormModal" style="z-index:210">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="rmFormTitle">🗺️ Tạo Roadmap</span>
+      <button class="modal-close" onclick="closeModal('roadmapFormModal')">×</button>
+    </div>
+
+    <div class="form-group">
+      <label>Tên học sinh</label>
+      <input class="form-control" id="rmStudentName" placeholder="Nguyễn Văn A">
+    </div>
+    <div class="form-group">
+      <label>Điểm bài test</label>
+      <input class="form-control" id="rmTestScore" placeholder="VD: 6.5 / 10">
+    </div>
+    <div class="form-group">
+      <label>Nhận xét</label>
+      <textarea class="form-control" id="rmComments" rows="3" placeholder="Nhận xét về học sinh..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Trình độ hiện tại</label>
+      <input class="form-control" id="rmLevel" placeholder="VD: Beginner, A2, IELTS 4.5...">
+    </div>
+
+    <div style="font-weight:700;font-size:0.9rem;margin:14px 0 10px">📐 Lộ trình học</div>
+    <div class="form-group">
+      <label>Tổng số giờ học</label>
+      <input class="form-control" type="number" id="rmTotalHours" min="1" placeholder="VD: 120" oninput="calcRoadmap()">
+    </div>
+    <div class="form-group">
+      <label>Số buổi / tuần</label>
+      <select class="form-control" id="rmSessionsPerWeek" onchange="calcRoadmap()">
+        <option value="1">1 buổi/tuần</option>
+        <option value="2" selected>2 buổi/tuần</option>
+        <option value="3">3 buổi/tuần</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Thời lượng mỗi buổi</label>
+      <select class="form-control" id="rmSessionDuration" onchange="calcRoadmap()">
+        <option value="60">60 phút</option>
+        <option value="90" selected>90 phút</option>
+        <option value="120">120 phút</option>
+      </select>
+    </div>
+
+    <div class="rm-calc-box" id="rmCalcBox" style="display:none">
+      <div class="rm-calc-row"><span>Số buổi cần học:</span><span class="rm-calc-val" id="rmCalcSessions">-</span></div>
+      <div class="rm-calc-row"><span>Số tháng ước tính:</span><span class="rm-calc-val" id="rmCalcMonths">-</span></div>
+    </div>
+
+    <div style="font-weight:700;font-size:0.9rem;margin:14px 0 10px">📅 Timeline mục tiêu</div>
+    <div id="rmTimelineItems"></div>
+    <button class="btn btn-outline btn-sm" onclick="addRoadmapTimelineRow()" style="margin-bottom:14px">➕ Thêm mốc</button>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="saveRoadmap()">💾 Lưu roadmap</button>
+      <button class="btn btn-outline" id="rmExportBtn" style="display:none" onclick="exportRoadmapPdf()">📄 Xuất PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PRINT AREA: ROADMAP PDF ===== -->
+<div id="roadmapPrintArea"></div>
 
 <!-- ===== MODAL: COPY TARGET PICKER ===== -->
 <div class="modal-overlay" id="copyPickerModal">
@@ -2360,7 +2643,7 @@ function populateClassSelect(select) {
 // EXPORT / IMPORT
 // ==========================================================
 function exportData() {
-  const data = JSON.stringify({ classes, homework, fees, syllabi }, null, 2);
+  const data = JSON.stringify({ classes, homework, fees, syllabi, checklists, checklistReviews, roadmaps }, null, 2);
   const blob = new Blob([data], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -2378,18 +2661,13 @@ async function importData(event) {
   try {
     const text = await file.text();
     const data = JSON.parse(text);
-    if (data.classes) {
-      for (const c of data.classes) await dbPut('classes', c);
-    }
-    if (data.homework) {
-      for (const h of data.homework) await dbPut('homework', h);
-    }
-    if (data.fees) {
-      for (const f of data.fees) await dbPut('fees', f);
-    }
-    if (data.syllabi) {
-      for (const s of data.syllabi) await dbPut('syllabi', s);
-    }
+    if (data.classes)          { for (const c of data.classes) await dbPut('classes', c); }
+    if (data.homework)         { for (const h of data.homework) await dbPut('homework', h); }
+    if (data.fees)             { for (const f of data.fees) await dbPut('fees', f); }
+    if (data.syllabi)          { for (const s of data.syllabi) await dbPut('syllabi', s); }
+    if (data.checklists)       { for (const c of data.checklists) await dbPut('checklists', c); }
+    if (data.checklistReviews) { for (const r of data.checklistReviews) await dbPut('checklistReviews', r); }
+    if (data.roadmaps)         { for (const r of data.roadmaps) await dbPut('roadmaps', r); }
     await loadAll();
     renderDashboard();
     toast('✅ Đã khôi phục dữ liệu');
@@ -2443,19 +2721,55 @@ function checkReminders() {
 })();
 
 // ==========================================================
-// TOOL MODAL
+// TOOL MODALS
 // ==========================================================
-function openToolModal() {
-  renderTemplateList();
-  openModal('toolModal');
+function openToolListModal() {
+  openModal('toolListModal');
 }
 
-function switchToolTab(name, btn) {
-  document.querySelectorAll('.tool-tab-btn').forEach(b => b.classList.remove('active'));
+function switchModalTab(panelPrefix, name, btn) {
+  const modal = btn.closest('.modal');
+  modal.querySelectorAll('.tool-tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('toolPanel-' + name).classList.add('active');
-  if (name === 'clipboard') renderTemplateList();
+  modal.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(panelPrefix + name).classList.add('active');
+}
+
+function openSystemTool() {
+  closeModal('toolListModal');
+  const cfg = appSettings || {};
+  document.getElementById('cfgCenterName').value = cfg.centerName || '';
+  document.getElementById('cfgCenterPhone').value = cfg.centerPhone || '';
+  openModal('systemToolModal');
+}
+
+function openClipboardTool() {
+  closeModal('toolListModal');
+  renderTemplateList();
+  openModal('clipboardToolModal');
+}
+
+function openAuditTool(tab) {
+  closeModal('toolListModal');
+  openModal('auditToolModal');
+  if (tab === 'roadmap') {
+    const btn = document.getElementById('auditTab-roadmap');
+    switchModalTab('auditPanel-', 'roadmap', btn);
+    renderRoadmapTab();
+  } else {
+    const btn = document.getElementById('auditTab-checklist');
+    switchModalTab('auditPanel-', 'checklist', btn);
+    renderChecklistTab();
+  }
+}
+
+async function saveSystemConfig() {
+  const centerName = document.getElementById('cfgCenterName').value.trim();
+  const centerPhone = document.getElementById('cfgCenterPhone').value.trim();
+  const rec = { id: 'app-settings', centerName, centerPhone };
+  await dbPut('settings', rec);
+  appSettings = rec;
+  toast('✅ Đã lưu cấu hình');
 }
 
 // ==========================================================
@@ -2672,6 +2986,408 @@ async function doCopyToClipboard() {
     }
     document.body.removeChild(ta);
   }
+}
+
+// ==========================================================
+// CHECKLIST
+// ==========================================================
+let editingChecklistId = null;
+let chkEditItemCounter = 0;
+
+function renderChecklistTab() {
+  // Populate class selector
+  const sel = document.getElementById('chkReviewClassSel');
+  const prevVal = sel.value;
+  sel.innerHTML = '<option value="">-- Chọn lớp --</option>';
+  classes.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.name;
+    sel.appendChild(opt);
+  });
+  if (prevVal) sel.value = prevVal;
+
+  renderChecklistTemplateList();
+  renderChecklistReview();
+}
+
+function renderChecklistTemplateList() {
+  const container = document.getElementById('chkTemplateList');
+  if (!container) return;
+  if (checklists.length === 0) {
+    container.innerHTML = `<div class="empty-state" style="padding:12px 0"><p style="color:var(--text-secondary);font-size:0.85rem">Chưa có checklist nào.</p></div>`;
+    return;
+  }
+  container.innerHTML = checklists.map(cl => `
+    <div class="chk-template-row">
+      <div>
+        <div style="font-weight:600;font-size:0.88rem">${esc(cl.name)}</div>
+        <div style="font-size:0.75rem;color:var(--text-secondary)">${cl.items.length} mục</div>
+      </div>
+      <div style="display:flex;gap:4px">
+        <button class="btn btn-outline btn-sm" onclick="openChecklistEdit('${cl.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteChecklistTemplate('${cl.id}')">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderChecklistReview() {
+  const classId = document.getElementById('chkReviewClassSel').value;
+  const area = document.getElementById('chkReviewArea');
+  if (!classId) { area.innerHTML = ''; return; }
+
+  const review = checklistReviews.find(r => r.classId === classId);
+  const checklist = review ? checklists.find(cl => cl.id === review.checklistId) : null;
+
+  if (!review || !checklist) {
+    const opts = checklists.map(cl => `<option value="${cl.id}">${esc(cl.name)}</option>`).join('');
+    if (checklists.length === 0) {
+      area.innerHTML = `<div style="font-size:0.85rem;color:var(--text-secondary);padding:8px 0">Chưa có mẫu checklist nào. Hãy tạo checklist trước.</div>`;
+    } else {
+      area.innerHTML = `
+        <div style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:8px">Lớp này chưa được gán checklist.</div>
+        <div class="form-group">
+          <label>Chọn checklist để áp dụng</label>
+          <select class="form-control" id="chkAssignSel">${opts}</select>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="assignChecklistToClass()">✅ Áp dụng</button>
+      `;
+    }
+    return;
+  }
+
+  const checked = review.checkedItems || [];
+  const doneCount = checklist.items.filter(it => checked.includes(it.id)).length;
+  const total = checklist.items.length;
+  const pct = total > 0 ? Math.round(doneCount / total * 100) : 0;
+
+  area.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div style="font-weight:600;font-size:0.88rem">${esc(checklist.name)}</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span style="font-size:0.78rem;color:var(--text-secondary)">${doneCount}/${total}</span>
+        <button class="btn btn-outline btn-sm" style="font-size:0.7rem;padding:3px 8px" onclick="unassignChecklistFromClass()">Đổi</button>
+      </div>
+    </div>
+    <div class="chk-progress-bar"><div class="chk-progress-fill" style="width:${pct}%"></div></div>
+    <div id="chkItemsContainer">
+      ${checklist.items.map(it => {
+        const isDone = checked.includes(it.id);
+        return `
+          <div class="chk-review-item ${isDone ? 'chk-done' : ''}" onclick="toggleChecklistItem('${review.id}','${it.id}')">
+            <input type="checkbox" ${isDone ? 'checked' : ''} onclick="event.stopPropagation();toggleChecklistItem('${review.id}','${it.id}')">
+            <label style="flex:1;cursor:pointer">${esc(it.text)}</label>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+async function assignChecklistToClass() {
+  const classId = document.getElementById('chkReviewClassSel').value;
+  const checklistId = document.getElementById('chkAssignSel').value;
+  if (!classId || !checklistId) return;
+  const existing = checklistReviews.find(r => r.classId === classId);
+  if (existing) {
+    existing.checklistId = checklistId;
+    existing.checkedItems = [];
+    existing.updatedAt = new Date().toISOString();
+    await dbPut('checklistReviews', existing);
+  } else {
+    const rec = { id: uid(), classId, checklistId, checkedItems: [], updatedAt: new Date().toISOString() };
+    await dbPut('checklistReviews', rec);
+    checklistReviews.push(rec);
+  }
+  renderChecklistReview();
+  toast('✅ Đã gán checklist cho lớp');
+}
+
+async function unassignChecklistFromClass() {
+  const classId = document.getElementById('chkReviewClassSel').value;
+  const review = checklistReviews.find(r => r.classId === classId);
+  if (!review) return;
+  await dbDelete('checklistReviews', review.id);
+  checklistReviews = checklistReviews.filter(r => r.id !== review.id);
+  renderChecklistReview();
+}
+
+async function toggleChecklistItem(reviewId, itemId) {
+  const review = checklistReviews.find(r => r.id === reviewId);
+  if (!review) return;
+  const idx = (review.checkedItems || []).indexOf(itemId);
+  if (idx >= 0) {
+    review.checkedItems.splice(idx, 1);
+  } else {
+    review.checkedItems = review.checkedItems || [];
+    review.checkedItems.push(itemId);
+  }
+  review.updatedAt = new Date().toISOString();
+  await dbPut('checklistReviews', review);
+  renderChecklistReview();
+}
+
+function openChecklistEdit(id) {
+  editingChecklistId = id;
+  chkEditItemCounter = 0;
+  const container = document.getElementById('chkEditItems');
+  container.innerHTML = '';
+
+  if (id) {
+    const cl = checklists.find(c => c.id === id);
+    if (!cl) return;
+    document.getElementById('chkEditModalTitle').textContent = '✏️ Sửa Checklist';
+    document.getElementById('chkEditName').value = cl.name;
+    cl.items.forEach(it => addChecklistItemRow(it.text, it.id));
+  } else {
+    document.getElementById('chkEditModalTitle').textContent = '➕ Tạo Checklist';
+    document.getElementById('chkEditName').value = '';
+    addChecklistItemRow();
+  }
+  openModal('checklistEditModal');
+}
+
+function addChecklistItemRow(text, itemId) {
+  chkEditItemCounter++;
+  const rowId = 'chkItemRow-' + chkEditItemCounter;
+  const container = document.getElementById('chkEditItems');
+  const div = document.createElement('div');
+  div.className = 'chk-edit-item-row';
+  div.id = rowId;
+  div.dataset.itemId = itemId || '';
+  div.innerHTML = `
+    <input class="form-control" placeholder="Nhập mục kiểm tra..." value="${esc(text || '')}">
+    <button class="btn btn-danger btn-sm" onclick="document.getElementById('${rowId}').remove()" style="flex-shrink:0">✕</button>
+  `;
+  container.appendChild(div);
+}
+
+async function saveChecklistTemplate() {
+  const name = document.getElementById('chkEditName').value.trim();
+  if (!name) { toast('⚠️ Nhập tên checklist'); return; }
+
+  const rows = document.querySelectorAll('#chkEditItems .chk-edit-item-row');
+  const items = [];
+  rows.forEach(row => {
+    const text = row.querySelector('input').value.trim();
+    if (text) {
+      items.push({ id: row.dataset.itemId || uid(), text });
+    }
+  });
+  if (items.length === 0) { toast('⚠️ Thêm ít nhất 1 mục'); return; }
+
+  if (editingChecklistId) {
+    const idx = checklists.findIndex(c => c.id === editingChecklistId);
+    if (idx >= 0) {
+      checklists[idx] = { ...checklists[idx], name, items, updatedAt: new Date().toISOString() };
+      await dbPut('checklists', checklists[idx]);
+    }
+    toast('✅ Đã cập nhật checklist');
+  } else {
+    const rec = { id: uid(), name, items, createdAt: new Date().toISOString() };
+    await dbPut('checklists', rec);
+    checklists.push(rec);
+    toast('✅ Đã tạo checklist');
+  }
+  closeModal('checklistEditModal');
+  renderChecklistTemplateList();
+}
+
+async function deleteChecklistTemplate(id) {
+  if (!confirm('Xóa checklist này?')) return;
+  await dbDelete('checklists', id);
+  checklists = checklists.filter(c => c.id !== id);
+  const related = checklistReviews.filter(r => r.checklistId === id);
+  for (const r of related) await dbDelete('checklistReviews', r.id);
+  checklistReviews = checklistReviews.filter(r => r.checklistId !== id);
+  renderChecklistTemplateList();
+  renderChecklistReview();
+  toast('🗑 Đã xóa checklist');
+}
+
+// ==========================================================
+// ROADMAP
+// ==========================================================
+let editingRoadmapId = null;
+
+function renderRoadmapTab() {
+  const container = document.getElementById('roadmapList');
+  if (!container) return;
+  if (roadmaps.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">🗺️</div><p>Chưa có roadmap nào.</p></div>`;
+    return;
+  }
+  container.innerHTML = roadmaps.map(rm => `
+    <div class="rm-saved-item">
+      <div class="rm-saved-title">${esc(rm.studentName)}</div>
+      <div class="rm-saved-meta">Trình độ: ${esc(rm.level || '-')} · ${rm.calculatedSessions || '-'} buổi · ${rm.calculatedMonths || '-'} tháng</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-outline btn-sm" onclick="openRoadmapForm('${rm.id}')">✏️ Sửa</button>
+        <button class="btn btn-primary btn-sm" onclick="exportRoadmapPdf('${rm.id}')">📄 Xuất PDF</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteRoadmap('${rm.id}')">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openRoadmapForm(id) {
+  editingRoadmapId = id;
+  document.getElementById('rmFormTitle').textContent = id ? '✏️ Sửa Roadmap' : '🗺️ Tạo Roadmap';
+  document.getElementById('rmExportBtn').style.display = id ? 'inline-flex' : 'none';
+
+  const rm = id ? roadmaps.find(r => r.id === id) : null;
+  document.getElementById('rmStudentName').value = rm ? rm.studentName : '';
+  document.getElementById('rmTestScore').value = rm ? (rm.testScore || '') : '';
+  document.getElementById('rmComments').value = rm ? (rm.comments || '') : '';
+  document.getElementById('rmLevel').value = rm ? (rm.level || '') : '';
+  document.getElementById('rmTotalHours').value = rm ? (rm.totalHours || '') : '';
+  document.getElementById('rmSessionsPerWeek').value = rm ? (rm.sessionsPerWeek || '2') : '2';
+  document.getElementById('rmSessionDuration').value = rm ? (rm.sessionDuration || '90') : '90';
+
+  const timelineContainer = document.getElementById('rmTimelineItems');
+  timelineContainer.innerHTML = '';
+  const timeline = rm ? (rm.timeline || []) : [];
+  if (timeline.length > 0) {
+    timeline.forEach(t => addRoadmapTimelineRow(t.month, t.goal, t.id));
+  } else {
+    addRoadmapTimelineRow();
+  }
+
+  calcRoadmap();
+  openModal('roadmapFormModal');
+}
+
+function addRoadmapTimelineRow(month, goal, rowId) {
+  const container = document.getElementById('rmTimelineItems');
+  const id = 'rmTl-' + uid();
+  const div = document.createElement('div');
+  div.className = 'rm-timeline-row';
+  div.id = id;
+  div.dataset.rowId = rowId || uid();
+  div.innerHTML = `
+    <input class="form-control" style="flex:0 0 110px;max-width:110px" placeholder="Tháng thứ..." value="${esc(month || '')}">
+    <input class="form-control" placeholder="Mục tiêu đạt được..." value="${esc(goal || '')}">
+    <button class="btn btn-danger btn-sm" onclick="document.getElementById('${id}').remove()" style="flex-shrink:0">✕</button>
+  `;
+  container.appendChild(div);
+}
+
+function calcRoadmap() {
+  const hours = parseFloat(document.getElementById('rmTotalHours').value) || 0;
+  const spw = parseInt(document.getElementById('rmSessionsPerWeek').value) || 2;
+  const dur = parseInt(document.getElementById('rmSessionDuration').value) || 90;
+  const box = document.getElementById('rmCalcBox');
+
+  if (hours <= 0) { box.style.display = 'none'; return; }
+  const sessions = Math.ceil(hours * 60 / dur);
+  const months = Math.ceil(sessions / (spw * 4));
+  document.getElementById('rmCalcSessions').textContent = sessions + ' buổi';
+  document.getElementById('rmCalcMonths').textContent = months + ' tháng';
+  box.style.display = 'block';
+}
+
+async function saveRoadmap() {
+  const studentName = document.getElementById('rmStudentName').value.trim();
+  if (!studentName) { toast('⚠️ Nhập tên học sinh'); return; }
+
+  const hours = parseFloat(document.getElementById('rmTotalHours').value) || 0;
+  const spw = parseInt(document.getElementById('rmSessionsPerWeek').value) || 2;
+  const dur = parseInt(document.getElementById('rmSessionDuration').value) || 90;
+  const sessions = hours > 0 ? Math.ceil(hours * 60 / dur) : 0;
+  const months = sessions > 0 ? Math.ceil(sessions / (spw * 4)) : 0;
+
+  const tlRows = document.querySelectorAll('#rmTimelineItems .rm-timeline-row');
+  const timeline = [];
+  tlRows.forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    const month = inputs[0].value.trim();
+    const goal = inputs[1].value.trim();
+    if (month || goal) {
+      timeline.push({ id: row.dataset.rowId || uid(), month, goal });
+    }
+  });
+
+  const rec = {
+    id: editingRoadmapId || uid(),
+    studentName,
+    testScore: document.getElementById('rmTestScore').value.trim(),
+    comments: document.getElementById('rmComments').value.trim(),
+    level: document.getElementById('rmLevel').value.trim(),
+    totalHours: hours,
+    sessionsPerWeek: spw,
+    sessionDuration: dur,
+    calculatedSessions: sessions,
+    calculatedMonths: months,
+    timeline,
+    savedAt: new Date().toISOString(),
+  };
+
+  await dbPut('roadmaps', rec);
+  if (editingRoadmapId) {
+    const idx = roadmaps.findIndex(r => r.id === editingRoadmapId);
+    if (idx >= 0) roadmaps[idx] = rec; else roadmaps.push(rec);
+  } else {
+    roadmaps.push(rec);
+  }
+  editingRoadmapId = rec.id;
+  document.getElementById('rmExportBtn').style.display = 'inline-flex';
+  renderRoadmapTab();
+  toast('✅ Đã lưu roadmap');
+}
+
+async function deleteRoadmap(id) {
+  if (!confirm('Xóa roadmap này?')) return;
+  await dbDelete('roadmaps', id);
+  roadmaps = roadmaps.filter(r => r.id !== id);
+  renderRoadmapTab();
+  toast('🗑 Đã xóa roadmap');
+}
+
+function exportRoadmapPdf(id) {
+  const rmId = id || editingRoadmapId;
+  const rm = roadmaps.find(r => r.id === rmId);
+  if (!rm) { toast('⚠️ Hãy lưu roadmap trước khi xuất PDF'); return; }
+
+  const cfg = appSettings || {};
+  const centerName = cfg.centerName || 'Trung tâm Gia sư';
+  const centerPhone = cfg.centerPhone || '';
+
+  const printArea = document.getElementById('roadmapPrintArea');
+  printArea.innerHTML = `
+    <div class="rp-header">
+      <div class="rp-center-name">${esc(centerName)}</div>
+      ${centerPhone ? `<div class="rp-center-phone">📞 ${esc(centerPhone)}</div>` : ''}
+      <div style="font-size:1rem;font-weight:700;margin-top:10px">LỘ TRÌNH HỌC TẬP</div>
+    </div>
+
+    <div class="rp-title">I. Thông tin học sinh</div>
+    <div class="rp-row"><span class="rp-label">Tên học sinh:</span><span class="rp-val">${esc(rm.studentName)}</span></div>
+    ${rm.testScore ? `<div class="rp-row"><span class="rp-label">Điểm bài test:</span><span class="rp-val">${esc(rm.testScore)}</span></div>` : ''}
+    ${rm.level ? `<div class="rp-row"><span class="rp-label">Trình độ hiện tại:</span><span class="rp-val">${esc(rm.level)}</span></div>` : ''}
+    ${rm.comments ? `<div class="rp-row"><span class="rp-label">Nhận xét:</span><span class="rp-val" style="white-space:pre-wrap">${esc(rm.comments)}</span></div>` : ''}
+
+    <div class="rp-title">II. Lộ trình học</div>
+    ${rm.totalHours ? `<div class="rp-row"><span class="rp-label">Tổng số giờ học:</span><span class="rp-val">${rm.totalHours} giờ</span></div>` : ''}
+    <div class="rp-row"><span class="rp-label">Số buổi/tuần:</span><span class="rp-val">${rm.sessionsPerWeek} buổi</span></div>
+    <div class="rp-row"><span class="rp-label">Thời lượng/buổi:</span><span class="rp-val">${rm.sessionDuration} phút</span></div>
+    ${rm.calculatedSessions ? `<div class="rp-row"><span class="rp-label">Tổng số buổi học:</span><span class="rp-val">${rm.calculatedSessions} buổi</span></div>` : ''}
+    ${rm.calculatedMonths ? `<div class="rp-row"><span class="rp-label">Thời gian ước tính:</span><span class="rp-val">${rm.calculatedMonths} tháng</span></div>` : ''}
+
+    ${rm.timeline && rm.timeline.length > 0 ? `
+      <div class="rp-title">III. Timeline mục tiêu</div>
+      ${rm.timeline.map(t => `
+        <div class="rp-timeline-item">
+          <span class="rp-timeline-month">${esc(t.month)}</span>
+          <span>${esc(t.goal)}</span>
+        </div>
+      `).join('')}
+    ` : ''}
+
+    <div class="rp-footer">Ngày xuất: ${new Date().toLocaleDateString('vi-VN')}</div>
+  `;
+
+  window.print();
 }
 
 // ==========================================================
