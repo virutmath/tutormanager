@@ -2732,7 +2732,8 @@ function switchModalTab(panelPrefix, name, btn) {
   modal.querySelectorAll('.tool-tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   modal.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById(panelPrefix + name).classList.add('active');
+  const panel = document.getElementById(panelPrefix + name);
+  if (panel) panel.classList.add('active');
 }
 
 function openSystemTool() {
@@ -3273,6 +3274,14 @@ function addRoadmapTimelineRow(month, goal, rowId) {
   container.appendChild(div);
 }
 
+const WEEKS_PER_MONTH = 4;
+
+function calcRoadmapValues(hours, spw, dur) {
+  const sessions = hours > 0 ? Math.ceil(hours * 60 / dur) : 0;
+  const months = sessions > 0 ? Math.ceil(sessions / (spw * WEEKS_PER_MONTH)) : 0;
+  return { sessions, months };
+}
+
 function calcRoadmap() {
   const hours = parseFloat(document.getElementById('rmTotalHours').value) || 0;
   const spw = parseInt(document.getElementById('rmSessionsPerWeek').value) || 2;
@@ -3280,8 +3289,7 @@ function calcRoadmap() {
   const box = document.getElementById('rmCalcBox');
 
   if (hours <= 0) { box.style.display = 'none'; return; }
-  const sessions = Math.ceil(hours * 60 / dur);
-  const months = Math.ceil(sessions / (spw * 4));
+  const { sessions, months } = calcRoadmapValues(hours, spw, dur);
   document.getElementById('rmCalcSessions').textContent = sessions + ' buổi';
   document.getElementById('rmCalcMonths').textContent = months + ' tháng';
   box.style.display = 'block';
@@ -3294,8 +3302,7 @@ async function saveRoadmap() {
   const hours = parseFloat(document.getElementById('rmTotalHours').value) || 0;
   const spw = parseInt(document.getElementById('rmSessionsPerWeek').value) || 2;
   const dur = parseInt(document.getElementById('rmSessionDuration').value) || 90;
-  const sessions = hours > 0 ? Math.ceil(hours * 60 / dur) : 0;
-  const months = sessions > 0 ? Math.ceil(sessions / (spw * 4)) : 0;
+  const { sessions, months } = calcRoadmapValues(hours, spw, dur);
 
   const tlRows = document.querySelectorAll('#rmTimelineItems .rm-timeline-row');
   const timeline = [];
