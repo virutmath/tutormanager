@@ -703,6 +703,7 @@
   .syl-session-content {
     font-size: 0.85rem;
     word-break: break-word;
+    white-space: pre-wrap;
   }
   .syl-session-actions {
     display: flex;
@@ -936,6 +937,26 @@
         placeholder="Mô tả mục tiêu, lộ trình tổng thể của lớp..."></textarea>
     </div>
     <button class="btn btn-primary btn-sm" onclick="saveSyllabusMeta()">💾 Lưu thông tin</button>
+  </div>
+
+  <!-- Smart Syllabus -->
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-title" style="margin-bottom:8px">🤖 Tạo syllabus thông minh</div>
+    <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;line-height:1.5">
+      Tự động tạo 68 buổi học từ giáo trình <strong>Oxford Discover</strong>. Đặt ngày khai giảng trước để tự động khớp lịch.
+    </p>
+    <div style="display:flex;gap:8px;align-items:center">
+      <select class="form-control" id="syl-smart-level" style="flex:1">
+        <option value="">-- Chọn trình độ --</option>
+        <option value="D1">D1 – A1</option>
+        <option value="D2">D2 – A1 upper</option>
+        <option value="D3">D3 – A2</option>
+        <option value="D4">D4 – A2 upper / pre-B1</option>
+        <option value="D5">D5 – B1</option>
+        <option value="D6">D6 – pre-B2</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="applySmartSyllabus()">🚀 Tạo</button>
+    </div>
   </div>
 
   <!-- Session list -->

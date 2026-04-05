@@ -99,6 +99,8 @@ function closeSyllabusPage() {
 // ---- Temp state for "add sessions" form ----
 let _pendingSessionCount = 10;
 let _pendingSessionInputs = []; // array of content strings (from inputs)
+let _insertingAfterIdx = null;  // sessionIndex after which to insert (-1 = before first)
+let _syllabusDetailCache = null;
 
 function renderSyllabusPage() {
   const cls = classes.find(c => c.id === _syllabusClassId);
@@ -115,6 +117,7 @@ function renderSyllabusPage() {
   document.getElementById('syl-roadmap').value    = syl.roadmap || '';
 
   // Sessions list
+  _insertingAfterIdx = null;
   renderSyllabusSessionList(syl);
 
   // "Add sessions" form reset
@@ -130,13 +133,40 @@ function renderSyllabusSessionList(syl) {
     container.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>Chưa có buổi học nào trong syllabus</p></div>`;
     return;
   }
-  container.innerHTML = sessionDates.map(s => {
+
+  const insertFormHtml = (labelText) => `
+    <div style="background:var(--bg);border:2px dashed var(--primary);border-radius:10px;padding:10px;margin:4px 0">
+      <div style="font-size:0.85rem;font-weight:700;color:var(--primary);margin-bottom:8px">➕ Chèn buổi ${labelText}</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <input type="number" id="syl-insert-count" value="1" min="1" max="20" class="form-control" style="width:70px">
+        <span style="font-size:0.82rem">buổi</span>
+        <button class="btn btn-outline btn-sm" onclick="generateInsertInputs()">Tạo form</button>
+      </div>
+      <div id="syl-insert-inputs"></div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-primary btn-sm" onclick="confirmInsertSylSessions()">✅ Chèn vào</button>
+        <button class="btn btn-outline btn-sm" onclick="cancelInsertSylSessions()">Hủy</button>
+      </div>
+    </div>
+  `;
+
+  let html = '';
+
+  if (_insertingAfterIdx === -1) {
+    html += insertFormHtml('vào đầu danh sách');
+  } else {
+    html += `<div style="text-align:center;margin-bottom:4px">
+      <button class="btn btn-outline btn-sm" style="font-size:0.75rem;opacity:0.7" onclick="startInsertSylSessions(-1)">➕ Chèn trước buổi đầu</button>
+    </div>`;
+  }
+
+  for (const s of sessionDates) {
     const dateHtml = s.date
       ? fmtDate(s.date)
       : '<span style="color:var(--warning)">Chưa xác định ngày</span>';
 
     if (s.cancelled) {
-      return `
+      html += `
         <div class="syl-session-row cancelled" id="syl-row-${s.sessionIndex}" data-idx="${s.sessionIndex}">
           <div class="syl-session-num syl-session-cancelled-label">Buổi nghỉ</div>
           <div class="syl-session-date">${dateHtml}</div>
@@ -145,25 +175,33 @@ function renderSyllabusSessionList(syl) {
             ${s.cancelReason ? `<br><span style="font-size:0.78rem;color:var(--danger)">Lý do: ${esc(s.cancelReason)}</span>` : ''}
           </div>
           <div class="syl-session-actions">
+            <button class="btn btn-outline btn-sm" title="Chèn buổi sau đây" onclick="startInsertSylSessions(${s.sessionIndex})">➕</button>
             <button class="btn btn-outline btn-sm" title="Khôi phục buổi học" onclick="restoreSylSession(${s.sessionIndex})">↩️</button>
             <button class="btn btn-danger btn-sm" title="Xóa hoàn toàn" onclick="permanentDeleteSylSession(${s.sessionIndex})">🗑</button>
           </div>
         </div>
       `;
+    } else {
+      html += `
+        <div class="syl-session-row" id="syl-row-${s.sessionIndex}" data-idx="${s.sessionIndex}">
+          <div class="syl-session-num">Buổi ${s.sessionNum}</div>
+          <div class="syl-session-date">${dateHtml}</div>
+          <div class="syl-session-content" id="syl-content-${s.sessionIndex}">${esc(s.content) || '<span style="color:var(--text-secondary)">Chưa có nội dung</span>'}</div>
+          <div class="syl-session-actions">
+            <button class="btn btn-outline btn-sm" title="Chèn buổi sau đây" onclick="startInsertSylSessions(${s.sessionIndex})">➕</button>
+            <button class="btn btn-outline btn-sm" onclick="editSylSession(${s.sessionIndex})">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="cancelSylSession(${s.sessionIndex})">🗑</button>
+          </div>
+        </div>
+      `;
     }
 
-    return `
-      <div class="syl-session-row" id="syl-row-${s.sessionIndex}" data-idx="${s.sessionIndex}">
-        <div class="syl-session-num">Buổi ${s.sessionNum}</div>
-        <div class="syl-session-date">${dateHtml}</div>
-        <div class="syl-session-content" id="syl-content-${s.sessionIndex}">${esc(s.content) || '<span style="color:var(--text-secondary)">Chưa có nội dung</span>'}</div>
-        <div class="syl-session-actions">
-          <button class="btn btn-outline btn-sm" onclick="editSylSession(${s.sessionIndex})">✏️</button>
-          <button class="btn btn-danger btn-sm" onclick="cancelSylSession(${s.sessionIndex})">🗑</button>
-        </div>
-      </div>
-    `;
-  }).join('');
+    if (_insertingAfterIdx === s.sessionIndex) {
+      html += insertFormHtml(`sau Buổi ${s.sessionNum !== null ? s.sessionNum : '(nghỉ)'}`);
+    }
+  }
+
+  container.innerHTML = html;
 }
 
 // ---- Save meta (startDate + roadmap) ----
@@ -205,15 +243,16 @@ async function saveSyllabusMeta() {
 function generateSylAddInputs() {
   const count = Math.max(1, Math.min(100, Number(document.getElementById('syl-add-count').value) || 10));
   const syl = syllabi.find(s => s.classId === _syllabusClassId);
-  const existing = syl ? (syl.sessions || []).length : 0;
+  // Use only non-cancelled sessions for the sequential label numbering
+  const existingActive = syl ? (syl.sessions || []).filter(s => !s.cancelled).length : 0;
   const section = document.getElementById('syl-add-section');
   section.style.display = 'block';
   const container = document.getElementById('syl-add-inputs');
   container.innerHTML = Array.from({ length: count }, (_, i) => `
     <div class="form-group" style="margin-bottom:8px">
-      <label style="font-size:0.8rem;color:var(--text-secondary)">Buổi ${existing + i + 1}</label>
+      <label style="font-size:0.8rem;color:var(--text-secondary)">Buổi ${existingActive + i + 1}</label>
       <input class="form-control syl-add-input" data-offset="${i}"
-        placeholder="Nội dung buổi ${existing + i + 1}...">
+        placeholder="Nội dung buổi ${existingActive + i + 1}...">
     </div>
   `).join('');
 }
@@ -289,26 +328,147 @@ async function appendSylSessions() {
   toast(`✅ Đã thêm ${newSessions.length} buổi vào syllabus`);
 }
 
+// ---- Insert sessions between existing sessions ----
+function startInsertSylSessions(afterIdx) {
+  _insertingAfterIdx = afterIdx;
+  const syl = syllabi.find(s => s.classId === _syllabusClassId);
+  renderSyllabusSessionList(syl);
+  generateInsertInputs(); // auto-show 1 input by default
+}
+
+function cancelInsertSylSessions() {
+  _insertingAfterIdx = null;
+  const syl = syllabi.find(s => s.classId === _syllabusClassId);
+  renderSyllabusSessionList(syl);
+}
+
+function generateInsertInputs() {
+  const countEl = document.getElementById('syl-insert-count');
+  const count = Math.max(1, Math.min(20, Number(countEl ? countEl.value : 1) || 1));
+  const container = document.getElementById('syl-insert-inputs');
+  if (!container) return;
+  container.innerHTML = Array.from({ length: count }, (_, i) => `
+    <div class="form-group" style="margin-bottom:6px">
+      <label style="font-size:0.78rem;color:var(--text-secondary)">Buổi chèn ${i + 1}</label>
+      <input class="form-control syl-ins-input" placeholder="Nội dung buổi chèn ${i + 1}...">
+    </div>
+  `).join('');
+}
+
+async function confirmInsertSylSessions() {
+  const inputs = document.querySelectorAll('#syl-insert-inputs .syl-ins-input');
+  const contents = Array.from(inputs).map(inp => inp.value.trim());
+  if (!contents.length) { toast('Hãy nhấn "Tạo form" để nhập nội dung trước'); return; }
+
+  const syl = syllabi.find(s => s.classId === _syllabusClassId);
+  if (!syl) return;
+
+  const afterIdx = _insertingAfterIdx;
+  const newItems = contents.map(c => ({ content: c, date: null }));
+
+  if (afterIdx === -1) {
+    syl.sessions = [...newItems, ...syl.sessions];
+  } else {
+    syl.sessions = [
+      ...syl.sessions.slice(0, afterIdx + 1),
+      ...newItems,
+      ...syl.sessions.slice(afterIdx + 1),
+    ];
+  }
+
+  _insertingAfterIdx = null;
+  syl.updatedAt = new Date().toISOString();
+  await dbPut('syllabi', syl);
+  renderSyllabusSessionList(syl);
+  toast(`✅ Đã chèn ${newItems.length} buổi vào syllabus`);
+}
+
+// ---- Smart Syllabus from Oxford Discover ----
+async function loadSyllabusDetail() {
+  if (_syllabusDetailCache) return _syllabusDetailCache;
+  try {
+    const resp = await fetch('./syllabus_detail.json');
+    _syllabusDetailCache = await resp.json();
+    return _syllabusDetailCache;
+  } catch (e) {
+    toast('❌ Không thể tải dữ liệu syllabus chi tiết');
+    return null;
+  }
+}
+
+async function applySmartSyllabus() {
+  const select = document.getElementById('syl-smart-level');
+  const levelClass = select ? select.value : '';
+  if (!levelClass) { toast('Vui lòng chọn trình độ'); return; }
+
+  const data = await loadSyllabusDetail();
+  if (!data) return;
+
+  const levelData = data.find(d => d.class === levelClass);
+  if (!levelData) { toast('Không tìm thấy dữ liệu cho trình độ này'); return; }
+
+  let syl = syllabi.find(s => s.classId === _syllabusClassId);
+  if (syl && syl.sessions && syl.sessions.length > 0) {
+    const ok = confirm(
+      `Syllabus đã có ${syl.sessions.filter(s => !s.cancelled).length} buổi.\n` +
+      `OK = Thay thế toàn bộ bằng ${levelData.days.length} buổi của ${levelClass} (${levelData.cefr})\n` +
+      `Cancel = Hủy bỏ`
+    );
+    if (!ok) return;
+    syl.sessions = [];
+  }
+
+  const startDate = document.getElementById('syl-start-date').value;
+  const roadmap   = document.getElementById('syl-roadmap').value.trim();
+
+  if (!syl) {
+    syl = { id: uid(), classId: _syllabusClassId, startDate: startDate || '', roadmap: roadmap || '', sessions: [] };
+    syllabi.push(syl);
+  }
+  if (!syl.roadmap) syl.roadmap = `Oxford Discover ${levelClass} (${levelData.cefr})`;
+
+  const contentSessions = levelData.days.map(d => ({ content: d.content, date: null }));
+
+  const cls = classes.find(c => c.id === _syllabusClassId);
+  if (cls && syl.startDate) {
+    const computedDates = getNextSessionsForClass(cls, syl.startDate, contentSessions.length);
+    syl.sessions = contentSessions.map((s, i) => ({
+      ...s, date: computedDates[i] ? computedDates[i].date : null,
+    }));
+  } else {
+    syl.sessions = contentSessions;
+  }
+
+  syl.updatedAt = new Date().toISOString();
+  await dbPut('syllabi', syl);
+  renderSyllabusPage();
+  toast(`✅ Đã tạo syllabus ${levelData.days.length} buổi cho ${levelClass} (${levelData.cefr})`);
+}
+
 // ---- Edit single session ----
 function editSylSession(idx) {
   const syl = syllabi.find(s => s.classId === _syllabusClassId);
   if (!syl || !syl.sessions[idx]) return;
   const row = document.getElementById(`syl-row-${idx}`);
   const current = syl.sessions[idx].content || '';
-  row.querySelector('.syl-session-content').innerHTML = `
-    <input type="text" class="form-control" id="syl-edit-input-${idx}"
-      value="${esc(current)}" style="margin-bottom:4px">
+  const contentDiv = row.querySelector('.syl-session-content');
+  contentDiv.innerHTML = `
+    <textarea class="form-control" id="syl-edit-input-${idx}" rows="4"
+      style="margin-bottom:4px;resize:vertical"></textarea>
     <div style="display:flex;gap:6px">
       <button class="btn btn-primary btn-sm" onclick="saveSylSession(${idx})">💾 Lưu</button>
-      <button class="btn btn-outline btn-sm" onclick="cancelEditSylSession(${idx}, ${JSON.stringify(current)})">Hủy</button>
+      <button class="btn btn-outline btn-sm" onclick="cancelEditSylSession(${idx})">Hủy</button>
     </div>
   `;
+  // Set value after DOM insertion to preserve \n and avoid HTML encoding issues
+  document.getElementById(`syl-edit-input-${idx}`).value = current;
 }
 
-function cancelEditSylSession(idx, original) {
+function cancelEditSylSession(idx) {
   const syl = syllabi.find(s => s.classId === _syllabusClassId);
   const row = document.getElementById(`syl-row-${idx}`);
-  if (!row) return;
+  if (!row || !syl) return;
+  const original = (syl.sessions[idx] && syl.sessions[idx].content) || '';
   row.querySelector('.syl-session-content').innerHTML =
     esc(original) || '<span style="color:var(--text-secondary)">Chưa có nội dung</span>';
 }
