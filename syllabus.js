@@ -629,3 +629,75 @@ async function recalcSyllabusFromDate() {
   renderSyllabusSessionList(syl);
   toast(`✅ Đã tính lại lịch cho ${count} buổi từ ngày ${fmtDate(fromDate)}`);
 }
+
+// ---- Export syllabus to PDF ----
+function exportSyllabusPdf() {
+  const cls = classes.find(c => c.id === _syllabusClassId);
+  const syl = syllabi.find(s => s.classId === _syllabusClassId);
+  if (!syl || !syl.sessions || !syl.sessions.length) {
+    toast('⚠️ Chưa có buổi học nào trong syllabus');
+    return;
+  }
+
+  const cfg = appSettings || {};
+  const centerName = cfg.centerName || 'Trung tâm Gia sư';
+  const centerPhone = cfg.centerPhone || '';
+  const className = cls ? cls.name : 'Lớp học';
+  const roadmap = syl.roadmap || '';
+  const startDate = syl.startDate ? fmtDate(syl.startDate) : '';
+
+  const sessionDates = getSyllabusSessionDates(syl);
+
+  const rows = sessionDates.map(s => {
+    const dateText = s.date ? fmtDate(s.date) : 'Chưa xác định';
+    if (s.cancelled) {
+      return `<tr class="sp-cancelled">
+        <td class="sp-num">Nghỉ</td>
+        <td class="sp-date">${dateText}</td>
+        <td class="sp-content">${esc(s.content)}${s.cancelReason ? '\nLý do: ' + esc(s.cancelReason) : ''}</td>
+      </tr>`;
+    }
+    return `<tr>
+      <td class="sp-num">Buổi ${s.sessionNum}</td>
+      <td class="sp-date">${dateText}</td>
+      <td class="sp-content">${esc(s.content) || ''}</td>
+    </tr>`;
+  }).join('');
+
+  const activeCount = sessionDates.filter(s => !s.cancelled).length;
+  const cancelledCount = sessionDates.filter(s => s.cancelled).length;
+
+  const printArea = document.getElementById('syllabusPrintArea');
+  printArea.innerHTML = `
+    <div class="rp-header">
+      <div class="rp-center-name">${esc(centerName)}</div>
+      ${centerPhone ? `<div class="rp-center-phone">📞 ${esc(centerPhone)}</div>` : ''}
+      <div style="font-size:1.1rem;font-weight:700;margin-top:10px">KẾ HOẠCH GIẢNG DẠY</div>
+    </div>
+
+    <div class="rp-title">Thông tin lớp học</div>
+    <div class="rp-row"><span class="rp-label">Lớp:</span><span class="rp-val">${esc(className)}</span></div>
+    ${startDate ? `<div class="rp-row"><span class="rp-label">Ngày khai giảng:</span><span class="rp-val">${startDate}</span></div>` : ''}
+    ${roadmap ? `<div class="rp-row"><span class="rp-label">Lộ trình:</span><span class="rp-val" style="white-space:pre-wrap">${esc(roadmap)}</span></div>` : ''}
+    <div class="rp-row">
+      <span class="rp-label">Tổng số buổi:</span>
+      <span class="rp-val">${activeCount} buổi học</span>
+    </div>
+
+    <div class="rp-title">Danh sách buổi học</div>
+    <table class="sp-table">
+      <thead>
+        <tr>
+          <th>Buổi</th>
+          <th>Ngày</th>
+          <th>Nội dung</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+
+    <div class="rp-footer">Ngày xuất: ${new Date().toLocaleDateString('vi-VN')}</div>
+  `;
+
+  window.print();
+}

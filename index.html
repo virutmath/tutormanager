@@ -819,9 +819,11 @@
 
   /* ===== PRINT: ROADMAP PDF ===== */
   #roadmapPrintArea { display: none; }
+  #syllabusPrintArea { display: none; }
   @media print {
-    body > *:not(#roadmapPrintArea) { display: none !important; }
+    body > *:not(#roadmapPrintArea):not(#syllabusPrintArea) { display: none !important; }
     #roadmapPrintArea { display: block !important; padding: 20px; font-family: sans-serif; color: #000; }
+    #syllabusPrintArea { display: block !important; padding: 20px; font-family: sans-serif; color: #000; }
     .rp-header { text-align: center; margin-bottom: 24px; border-bottom: 2px solid #333; padding-bottom: 12px; }
     .rp-center-name { font-size: 1.3rem; font-weight: 700; margin-bottom: 4px; }
     .rp-center-phone { font-size: 0.9rem; color: #555; }
@@ -832,6 +834,15 @@
     .rp-timeline-item { padding: 8px 0; border-bottom: 1px solid #eee; display: flex; gap: 16px; }
     .rp-timeline-month { font-weight: 600; min-width: 100px; }
     .rp-footer { margin-top: 32px; text-align: right; font-size: 0.85rem; color: #666; }
+    /* Syllabus print styles */
+    .sp-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.82rem; }
+    .sp-table th, .sp-table td { border: 1px solid #ccc; padding: 6px 8px; vertical-align: top; text-align: left; }
+    .sp-table th { background: #f0f0f0; font-weight: 700; white-space: nowrap; }
+    .sp-table td.sp-num { white-space: nowrap; font-weight: 700; color: #4f46e5; width: 56px; }
+    .sp-table td.sp-date { white-space: nowrap; width: 90px; color: #555; }
+    .sp-table td.sp-content { white-space: pre-wrap; word-break: break-word; line-height: 1.5; }
+    .sp-table tr.sp-cancelled { background: #fff0f0; color: #999; }
+    .sp-table tr.sp-cancelled td.sp-content { text-decoration: line-through; }
   }
 </style>
 </head>
@@ -931,7 +942,10 @@
 <div class="page" id="page-syllabus">
   <div class="section-title">
     <span>📋 Syllabus: <span id="syllabus-class-name"></span></span>
-    <button class="btn btn-outline btn-sm" onclick="closeSyllabusPage()">← Quay lại</button>
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-outline btn-sm" onclick="exportSyllabusPdf()">📄 Xuất PDF</button>
+      <button class="btn btn-outline btn-sm" onclick="closeSyllabusPage()">← Quay lại</button>
+    </div>
   </div>
 
   <!-- Meta: roadmap + khai giảng -->
@@ -1442,6 +1456,7 @@
 
 <!-- ===== PRINT AREA: ROADMAP PDF ===== -->
 <div id="roadmapPrintArea"></div>
+<div id="syllabusPrintArea"></div>
 
 <!-- ===== MODAL: COPY TARGET PICKER ===== -->
 <div class="modal-overlay" id="copyPickerModal">
