@@ -384,24 +384,77 @@ async function confirmInsertSylSessions() {
 }
 
 // ---- Smart Syllabus from Oxford Discover ----
-async function loadSyllabusDetail() {
-  if (_syllabusDetailCache) return _syllabusDetailCache;
+// Cache per filename
+const _syllabusDetailCaches = {};
+
+async function loadSyllabusDetailFile(filename) {
+  if (_syllabusDetailCaches[filename]) return _syllabusDetailCaches[filename];
   try {
-    const resp = await fetch('./syllabus_detail.json');
-    _syllabusDetailCache = await resp.json();
-    return _syllabusDetailCache;
+    const resp = await fetch('./' + filename);
+    _syllabusDetailCaches[filename] = await resp.json();
+    return _syllabusDetailCaches[filename];
   } catch (e) {
-    toast('❌ Không thể tải dữ liệu syllabus chi tiết');
+    toast('❌ Không thể tải dữ liệu: ' + filename);
     return null;
   }
 }
 
+function onSessionModeChange() {
+  const mode = document.getElementById('syl-session-mode').value;
+  // Show grammar-level override only for modes 2, 3, 4
+  const row = document.getElementById('syl-grammar-level-row');
+  if (row) row.style.display = (mode === '1') ? 'none' : 'block';
+}
+
+// Resolve content for a day entry: apply grammar-level override when available
+function resolveContent(day, grammarLevel) {
+  if (!grammarLevel) return day.content;
+
+  // Mode 2 / 3: single grammar variant
+  if (day.grammarVariants && day.grammarVariants[grammarLevel]) {
+    const v = day.grammarVariants[grammarLevel];
+    let content = day.content;
+    // Replace the grammar line
+    content = content.replace(/Gramma: .+/g, `Gramma: ${v.gramma}`);
+    content = content.replace(/Grammar Review: .+/g, `Grammar Review: ${v.gramma}`);
+    content = content.replace(/Writing: .+/g, `Writing: ${v.writing}`);
+    return content;
+  }
+
+  // Mode 4: dual grammar variants – content now uses combined "Label: v1\nv2" format
+  if (day.grammarVariants1 || day.grammarVariants2) {
+    let content = day.content;
+    const v1 = day.grammarVariants1 && day.grammarVariants1[grammarLevel];
+    const v2 = day.grammarVariants2 && day.grammarVariants2[grammarLevel];
+    if (v1 || v2) {
+      const g1 = v1 ? v1.gramma   : (day.defaultGramma1  || '');
+      const g2 = v2 ? v2.gramma   : (day.defaultGramma2  || '');
+      const w1 = v1 ? v1.writing  : (day.defaultWriting1 || '');
+      const w2 = v2 ? v2.writing  : (day.defaultWriting2 || '');
+      // Buổi 2: "Gramma: g1\ng2"
+      content = content.replace(/Gramma: [^\n]+\n[^\n]+/, `Gramma: ${g1}\n${g2}`);
+      // Buổi 3: "Grammar: g1\ng2" (inside Grammar mở rộng block)
+      content = content.replace(/Grammar: [^\n]+\n[^\n]+/, `Grammar: ${g1}\n${g2}`);
+      // Buổi 4: "Writing: w1\nw2"
+      content = content.replace(/Writing: [^\n]+\n[^\n]+/, `Writing: ${w1}\n${w2}`);
+    }
+    return content;
+  }
+
+  return day.content;
+}
+
 async function applySmartSyllabus() {
-  const select = document.getElementById('syl-smart-level');
-  const levelClass = select ? select.value : '';
+  const levelClass = (document.getElementById('syl-smart-level') || {}).value || '';
   if (!levelClass) { toast('Vui lòng chọn trình độ'); return; }
 
-  const data = await loadSyllabusDetail();
+  const mode = (document.getElementById('syl-session-mode') || {}).value || '1';
+  const grammarLevel = (document.getElementById('syl-grammar-level') || {}).value || '';
+
+  const fileMap = { '1': 'syllabus_detail.json', '2': 'syllabus_detail2.json', '3': 'syllabus_detail3.json', '4': 'syllabus_detail4.json' };
+  const filename = fileMap[mode] || 'syllabus_detail.json';
+
+  const data = await loadSyllabusDetailFile(filename);
   if (!data) return;
 
   const levelData = data.find(d => d.class === levelClass);
@@ -409,25 +462,35 @@ async function applySmartSyllabus() {
 
   let syl = syllabi.find(s => s.classId === _syllabusClassId);
   if (syl && syl.sessions && syl.sessions.length > 0) {
+    const modeLabels = { '1': '3 buổi/unit chuẩn', '2': '3 buổi/unit bổ sung ngữ pháp', '3': '4 buổi/unit', '4': '4 buổi/2 unit gộp' };
     const ok = confirm(
       `Syllabus đã có ${syl.sessions.filter(s => !s.cancelled).length} buổi.\n` +
-      `OK = Thay thế toàn bộ bằng ${levelData.days.length} buổi của ${levelClass} (${levelData.cefr})\n` +
-      `Cancel = Hủy bỏ`
+      `OK = Thay thế toàn bộ bằng ${levelData.days.length} buổi\n` +
+      `Chế độ: ${modeLabels[mode]} | Trình độ: ${levelClass} (${levelData.cefr})` +
+      (grammarLevel ? `\nGrammar/Writing: ${grammarLevel}` : '') +
+      `\nCancel = Hủy bỏ`
     );
     if (!ok) return;
     syl.sessions = [];
   }
 
   const startDate = document.getElementById('syl-start-date').value;
-  const roadmap   = document.getElementById('syl-roadmap').value.trim();
+  const roadmapVal = document.getElementById('syl-roadmap').value.trim();
 
   if (!syl) {
-    syl = { id: uid(), classId: _syllabusClassId, startDate: startDate || '', roadmap: roadmap || '', sessions: [] };
+    syl = { id: uid(), classId: _syllabusClassId, startDate: startDate || '', roadmap: roadmapVal || '', sessions: [] };
     syllabi.push(syl);
   }
-  if (!syl.roadmap) syl.roadmap = `Oxford Discover ${levelClass} (${levelData.cefr})`;
+  if (!syl.roadmap) {
+    const modeNote = mode !== '1' ? ` (${['','3buổi chuẩn','3buổi ngữ pháp','4buổi','4buổi/2unit'][mode]})` : '';
+    syl.roadmap = `Oxford Discover ${levelClass} (${levelData.cefr})${modeNote}`;
+  }
 
-  const contentSessions = levelData.days.map(d => ({ content: d.content, date: null }));
+  // Build sessions with resolved grammar override
+  const contentSessions = levelData.days.map(d => ({
+    content: resolveContent(d, grammarLevel || null),
+    date: null,
+  }));
 
   const cls = classes.find(c => c.id === _syllabusClassId);
   if (cls && syl.startDate) {

@@ -965,12 +965,13 @@
 
   <!-- Smart Syllabus -->
   <div class="card" style="margin-bottom:12px">
-    <div class="card-title" style="margin-bottom:8px">🤖 Tạo syllabus thông minh</div>
+    <div class="card-title" style="margin-bottom:10px">🤖 Tạo syllabus thông minh</div>
     <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;line-height:1.5">
-      Tự động tạo 68 buổi học từ giáo trình <strong>Oxford Discover</strong>. Đặt ngày khai giảng trước để tự động khớp lịch.
+      Tự động tạo syllabus từ giáo trình <strong>Oxford Discover</strong>. Đặt ngày khai giảng trước để tự động khớp lịch.
     </p>
-    <div style="display:flex;gap:8px;align-items:center">
-      <select class="form-control" id="syl-smart-level" style="flex:1">
+    <div class="form-group">
+      <label>Trình độ tổng thể (Vocab / Reading / Listening / Speaking)</label>
+      <select class="form-control" id="syl-smart-level">
         <option value="">-- Chọn trình độ --</option>
         <option value="D1">D1 – A1</option>
         <option value="D2">D2 – A1 upper</option>
@@ -979,8 +980,31 @@
         <option value="D5">D5 – B1</option>
         <option value="D6">D6 – pre-B2</option>
       </select>
-      <button class="btn btn-primary btn-sm" onclick="applySmartSyllabus()">🚀 Tạo</button>
     </div>
+    <div class="form-group">
+      <label>Số buổi / unit</label>
+      <select class="form-control" id="syl-session-mode" onchange="onSessionModeChange()">
+        <option value="1">3 buổi/unit – chuẩn (Vocab+Reading+Listening | Gramma+Speaking+Writing | Review)</option>
+        <option value="2">3 buổi/unit – bổ sung ngữ pháp (Vocab+Reading+Listening+Speaking | Gramma+Writing | Review)</option>
+        <option value="3">4 buổi/unit (Reading+Vocab | Listening+Speaking | Gramma+Writing | Review)</option>
+        <option value="4">4 buổi/2 unit gộp (Vocab+Reading+Listening | Gramma | Gramma mở rộng | Review topic)</option>
+      </select>
+    </div>
+    <div id="syl-grammar-level-row" style="display:none">
+      <div class="form-group">
+        <label>Trình độ Grammar + Writing (nếu khác trình độ tổng thể)</label>
+        <select class="form-control" id="syl-grammar-level">
+          <option value="">Giống trình độ tổng thể</option>
+          <option value="D1">D1 – A1</option>
+          <option value="D2">D2 – A1 upper</option>
+          <option value="D3">D3 – A2</option>
+          <option value="D4">D4 – A2 upper / pre-B1</option>
+          <option value="D5">D5 – B1</option>
+          <option value="D6">D6 – pre-B2</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="applySmartSyllabus()">🚀 Tạo syllabus</button>
   </div>
 
   <!-- Session list -->
