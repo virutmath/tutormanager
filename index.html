@@ -3728,8 +3728,8 @@ function renderFlashcardManage() {
         ${fc.createdBy ? `<div class="fc-list-meta">👤 ${esc(fc.createdBy)}</div>` : ''}
       </div>
       <div class="fc-list-actions">
-        <button class="btn btn-sm btn-outline" onclick="openFlashcardForm('${fc.id}');event.stopPropagation()">✏️</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteFlashcard('${fc.id}');event.stopPropagation()">🗑</button>
+        <button class="btn btn-sm btn-outline" onclick="openFlashcardForm('${esc(fc.id)}');event.stopPropagation()">✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteFlashcard('${esc(fc.id)}');event.stopPropagation()">🗑</button>
       </div>
     </div>
   `).join('');
@@ -3786,7 +3786,7 @@ function renderStudyCard() {
       <button class="btn btn-outline btn-sm" onclick="fcStudyNext();event.stopPropagation()">Tiếp ▶</button>
     </div>
     <div style="text-align:center;margin-top:8px">
-      <button class="btn btn-danger btn-sm" onclick="deleteFlashcardByCreator('${fc.id}');event.stopPropagation()">🗑 Xóa (người tạo)</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteFlashcardFromStudy('${esc(fc.id)}');event.stopPropagation()">🗑 Xóa (người tạo)</button>
     </div>
   `;
 }
@@ -3860,13 +3860,14 @@ async function deleteFlashcard(id) {
   toast('🗑 Đã xóa flashcard');
 }
 
-async function deleteFlashcardByCreator(id) {
+async function deleteFlashcardFromStudy(id) {
   const fc = flashcards.find(f => f.id === id);
   if (!fc) return;
   if (!confirm(`Xóa flashcard "${fc.term}"?`)) return;
   await dbDelete('flashcards', id);
   flashcards = flashcards.filter(f => f.id !== id);
-  if (fcStudyIndex >= flashcards.length) fcStudyIndex = Math.max(0, flashcards.length - 1);
+  fcStudyCards = fcStudyCards.filter(f => f.id !== id);
+  if (fcStudyIndex >= fcStudyCards.length) fcStudyIndex = Math.max(0, fcStudyCards.length - 1);
   renderFlashcardStudy();
   toast('🗑 Đã xóa flashcard');
 }
