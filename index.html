@@ -817,6 +817,63 @@
   .rm-saved-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
   .rm-saved-meta { font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 8px; }
 
+  /* ===== FLASHCARD ===== */
+  .fc-list-item {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    background: var(--surface);
+  }
+  .fc-list-item-body { flex: 1; min-width: 0; }
+  .fc-list-term { font-weight: 700; font-size: 0.92rem; margin-bottom: 3px; word-break: break-word; }
+  .fc-list-def { font-size: 0.82rem; color: var(--text-secondary); word-break: break-word; }
+  .fc-list-meta { font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px; }
+  .fc-list-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .fc-scene { width: 100%; perspective: 800px; margin: 16px 0; cursor: pointer; }
+  .fc-card-wrap {
+    width: 100%;
+    min-height: 160px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.45s;
+  }
+  .fc-card-wrap.flipped { transform: rotateY(180deg); }
+  .fc-face {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius);
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 16px;
+    text-align: center;
+    min-height: 160px;
+    box-shadow: var(--shadow-md);
+  }
+  .fc-face-front { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; }
+  .fc-face-back  { background: var(--surface); color: var(--text); transform: rotateY(180deg); border: 2px solid var(--primary-light); }
+  .fc-face-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.7; margin-bottom: 8px; }
+  .fc-face-text  { font-size: 1.1rem; font-weight: 700; line-height: 1.4; }
+  .fc-face-hint  { font-size: 0.78rem; opacity: 0.6; margin-top: 10px; }
+  .fc-study-nav  { display: flex; gap: 8px; justify-content: center; align-items: center; margin-top: 12px; }
+  .fc-study-counter { font-size: 0.85rem; color: var(--text-secondary); min-width: 60px; text-align: center; }
+  .fc-subject-badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(79,70,229,0.12);
+    color: var(--primary);
+    margin-bottom: 4px;
+  }
+
   /* ===== PRINT: ROADMAP PDF ===== */
   #roadmapPrintArea { display: none; }
   #syllabusPrintArea { display: none; }
@@ -1262,6 +1319,14 @@
       </div>
       <div class="tool-list-arrow">›</div>
     </div>
+    <div class="tool-list-item" onclick="openFlashcardTool()">
+      <div class="tool-list-icon">📇</div>
+      <div class="tool-list-info">
+        <div class="tool-list-name">Flashcard</div>
+        <div class="tool-list-desc">Tạo và học flashcard ôn tập</div>
+      </div>
+      <div class="tool-list-arrow">›</div>
+    </div>
   </div>
 </div>
 
@@ -1481,6 +1546,70 @@
 <!-- ===== PRINT AREA: ROADMAP PDF ===== -->
 <div id="roadmapPrintArea"></div>
 <div id="syllabusPrintArea"></div>
+
+<!-- ===== MODAL: FLASHCARD TOOL ===== -->
+<div class="modal-overlay" id="flashcardToolModal">
+  <div class="modal">
+    <div class="modal-title">
+      <span>📇 Flashcard</span>
+      <button class="modal-close" onclick="closeModal('flashcardToolModal')">×</button>
+    </div>
+    <div class="tool-tabs">
+      <button class="tool-tab-btn active" id="fcTab-manage" onclick="switchModalTab('fcPanel-','manage',this);renderFlashcardManage()">📂 Quản lý</button>
+      <button class="tool-tab-btn" id="fcTab-study" onclick="switchModalTab('fcPanel-','study',this);renderFlashcardStudy()">🎯 Học</button>
+    </div>
+
+    <!-- Panel: Admin manage -->
+    <div id="fcPanel-manage" class="tool-panel active">
+      <button class="btn btn-primary btn-sm btn-block" style="margin-bottom:12px" onclick="openFlashcardForm(null)">➕ Thêm flashcard mới</button>
+      <div id="fcManageList"></div>
+    </div>
+
+    <!-- Panel: Study -->
+    <div id="fcPanel-study" class="tool-panel">
+      <div class="form-group">
+        <label>Lọc theo chủ đề</label>
+        <select class="form-control" id="fcStudySubjectFilter" onchange="renderFlashcardStudy()">
+          <option value="">-- Tất cả --</option>
+        </select>
+      </div>
+      <div id="fcStudyArea"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: FLASHCARD FORM ===== -->
+<div class="modal-overlay" id="flashcardFormModal" style="z-index:210">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="fcFormTitle">➕ Thêm Flashcard</span>
+      <button class="modal-close" onclick="closeModal('flashcardFormModal')">×</button>
+    </div>
+    <form onsubmit="saveFlashcard(event)">
+      <input type="hidden" id="fcFormId">
+      <div class="form-group">
+        <label>Mặt trước (Thuật ngữ / Câu hỏi) *</label>
+        <textarea class="form-control" id="fcFormTerm" rows="3" placeholder="VD: Photosynthesis" required></textarea>
+      </div>
+      <div class="form-group">
+        <label>Mặt sau (Định nghĩa / Câu trả lời) *</label>
+        <textarea class="form-control" id="fcFormDef" rows="3" placeholder="VD: Quá trình thực vật tổng hợp thức ăn từ ánh sáng mặt trời" required></textarea>
+      </div>
+      <div class="form-group">
+        <label>Chủ đề</label>
+        <input class="form-control" id="fcFormSubject" placeholder="VD: Sinh học, Toán, Tiếng Anh...">
+      </div>
+      <div class="form-group">
+        <label>Người tạo</label>
+        <input class="form-control" id="fcFormCreator" placeholder="Tên người tạo">
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" type="submit">💾 Lưu</button>
+        <button class="btn btn-outline" type="button" onclick="closeModal('flashcardFormModal')">Hủy</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <!-- ===== MODAL: COPY TARGET PICKER ===== -->
 <div class="modal-overlay" id="copyPickerModal">
@@ -2713,7 +2842,7 @@ function populateClassSelect(select) {
 // EXPORT / IMPORT
 // ==========================================================
 function exportData() {
-  const data = JSON.stringify({ classes, homework, fees, syllabi, checklists, checklistReviews, roadmaps }, null, 2);
+  const data = JSON.stringify({ classes, homework, fees, syllabi, checklists, checklistReviews, roadmaps, flashcards }, null, 2);
   const blob = new Blob([data], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -2738,6 +2867,7 @@ async function importData(event) {
     if (data.checklists)       { for (const c of data.checklists) await dbPut('checklists', c); }
     if (data.checklistReviews) { for (const r of data.checklistReviews) await dbPut('checklistReviews', r); }
     if (data.roadmaps)         { for (const r of data.roadmaps) await dbPut('roadmaps', r); }
+    if (data.flashcards)       { for (const f of data.flashcards) await dbPut('flashcards', f); }
     await loadAll();
     renderDashboard();
     toast('✅ Đã khôi phục dữ liệu');
@@ -3567,6 +3697,178 @@ async function resetAppData() {
     console.error(err);
     toast('❌ Không thể xóa dữ liệu: ' + (err && err.message || err));
   }
+}
+
+// ==========================================================
+// FLASHCARD
+// ==========================================================
+let fcStudyIndex  = 0;
+let fcStudyCards  = [];
+let fcStudyFlipped = false;
+
+function openFlashcardTool() {
+  closeModal('toolListModal');
+  renderFlashcardManage();
+  openModal('flashcardToolModal');
+}
+
+function renderFlashcardManage() {
+  const container = document.getElementById('fcManageList');
+  if (!container) return;
+  if (flashcards.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-secondary);font-size:0.85rem;text-align:center;padding:16px">Chưa có flashcard nào. Nhấn ➕ để thêm.</div>';
+    return;
+  }
+  container.innerHTML = flashcards.map(fc => `
+    <div class="fc-list-item">
+      <div class="fc-list-item-body">
+        ${fc.subject ? `<span class="fc-subject-badge">${esc(fc.subject)}</span>` : ''}
+        <div class="fc-list-term">${esc(fc.term)}</div>
+        <div class="fc-list-def">${esc(fc.definition)}</div>
+        ${fc.createdBy ? `<div class="fc-list-meta">👤 ${esc(fc.createdBy)}</div>` : ''}
+      </div>
+      <div class="fc-list-actions">
+        <button class="btn btn-sm btn-outline" onclick="openFlashcardForm('${fc.id}');event.stopPropagation()">✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteFlashcard('${fc.id}');event.stopPropagation()">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderFlashcardStudy() {
+  const area = document.getElementById('fcStudyArea');
+  const filterEl = document.getElementById('fcStudySubjectFilter');
+  if (!area || !filterEl) return;
+
+  // Populate subject filter
+  const subjects = [...new Set(flashcards.map(fc => fc.subject).filter(Boolean))];
+  const currentFilter = filterEl.value;
+  filterEl.innerHTML = '<option value="">-- Tất cả --</option>' +
+    subjects.map(s => `<option value="${esc(s)}" ${s === currentFilter ? 'selected' : ''}>${esc(s)}</option>`).join('');
+
+  fcStudyCards = currentFilter
+    ? flashcards.filter(fc => fc.subject === currentFilter)
+    : [...flashcards];
+
+  if (fcStudyCards.length === 0) {
+    area.innerHTML = '<div style="color:var(--text-secondary);font-size:0.85rem;text-align:center;padding:16px">Không có flashcard nào.</div>';
+    return;
+  }
+
+  if (fcStudyIndex >= fcStudyCards.length) fcStudyIndex = 0;
+  fcStudyFlipped = false;
+  renderStudyCard();
+}
+
+function renderStudyCard() {
+  const area = document.getElementById('fcStudyArea');
+  if (!area || fcStudyCards.length === 0) return;
+  const fc = fcStudyCards[fcStudyIndex];
+  area.innerHTML = `
+    <div class="fc-scene" onclick="flipStudyCard()">
+      <div class="fc-card-wrap" id="fcCardWrap">
+        <div class="fc-face fc-face-front">
+          ${fc.subject ? `<span class="fc-subject-badge" style="background:rgba(255,255,255,0.25);color:#fff">${esc(fc.subject)}</span>` : ''}
+          <div class="fc-face-label">Mặt trước</div>
+          <div class="fc-face-text">${esc(fc.term)}</div>
+          <div class="fc-face-hint">Nhấn để xem đáp án</div>
+        </div>
+        <div class="fc-face fc-face-back">
+          <div class="fc-face-label">Mặt sau</div>
+          <div class="fc-face-text">${esc(fc.definition)}</div>
+          ${fc.createdBy ? `<div class="fc-face-hint">👤 ${esc(fc.createdBy)}</div>` : ''}
+        </div>
+      </div>
+    </div>
+    <div class="fc-study-nav">
+      <button class="btn btn-outline btn-sm" onclick="fcStudyPrev();event.stopPropagation()">◀ Trước</button>
+      <span class="fc-study-counter">${fcStudyIndex + 1} / ${fcStudyCards.length}</span>
+      <button class="btn btn-outline btn-sm" onclick="fcStudyNext();event.stopPropagation()">Tiếp ▶</button>
+    </div>
+    <div style="text-align:center;margin-top:8px">
+      <button class="btn btn-danger btn-sm" onclick="deleteFlashcardByCreator('${fc.id}');event.stopPropagation()">🗑 Xóa (người tạo)</button>
+    </div>
+  `;
+}
+
+function flipStudyCard() {
+  fcStudyFlipped = !fcStudyFlipped;
+  const wrap = document.getElementById('fcCardWrap');
+  if (wrap) wrap.classList.toggle('flipped', fcStudyFlipped);
+}
+
+function fcStudyNext() {
+  if (fcStudyCards.length === 0) return;
+  fcStudyIndex = (fcStudyIndex + 1) % fcStudyCards.length;
+  fcStudyFlipped = false;
+  renderStudyCard();
+}
+
+function fcStudyPrev() {
+  if (fcStudyCards.length === 0) return;
+  fcStudyIndex = (fcStudyIndex - 1 + fcStudyCards.length) % fcStudyCards.length;
+  fcStudyFlipped = false;
+  renderStudyCard();
+}
+
+function openFlashcardForm(id) {
+  const fc = id ? flashcards.find(f => f.id === id) : null;
+  document.getElementById('fcFormTitle').textContent = fc ? '✏️ Sửa Flashcard' : '➕ Thêm Flashcard';
+  document.getElementById('fcFormId').value    = fc ? fc.id : '';
+  document.getElementById('fcFormTerm').value  = fc ? fc.term : '';
+  document.getElementById('fcFormDef').value   = fc ? fc.definition : '';
+  document.getElementById('fcFormSubject').value = fc ? (fc.subject || '') : '';
+  document.getElementById('fcFormCreator').value = fc ? (fc.createdBy || '') : (appSettings && appSettings.centerName ? appSettings.centerName : '');
+  openModal('flashcardFormModal');
+}
+
+async function saveFlashcard(event) {
+  event.preventDefault();
+  const id      = document.getElementById('fcFormId').value.trim();
+  const term    = document.getElementById('fcFormTerm').value.trim();
+  const def     = document.getElementById('fcFormDef').value.trim();
+  const subject = document.getElementById('fcFormSubject').value.trim();
+  const creator = document.getElementById('fcFormCreator').value.trim();
+  if (!term || !def) { toast('⚠️ Vui lòng nhập mặt trước và mặt sau'); return; }
+  const now = new Date().toISOString();
+  const rec = {
+    id:         id || ('fc_' + Date.now()),
+    term,
+    definition: def,
+    subject,
+    createdBy:  creator,
+    createdAt:  id ? (flashcards.find(f => f.id === id) || {}).createdAt || now : now,
+    updatedAt:  now,
+  };
+  await dbPut('flashcards', rec);
+  if (id) {
+    const idx = flashcards.findIndex(f => f.id === id);
+    if (idx >= 0) flashcards[idx] = rec; else flashcards.push(rec);
+  } else {
+    flashcards.push(rec);
+  }
+  closeModal('flashcardFormModal');
+  renderFlashcardManage();
+  toast('✅ Đã lưu flashcard');
+}
+
+async function deleteFlashcard(id) {
+  if (!confirm('Xóa flashcard này?')) return;
+  await dbDelete('flashcards', id);
+  flashcards = flashcards.filter(f => f.id !== id);
+  renderFlashcardManage();
+  toast('🗑 Đã xóa flashcard');
+}
+
+async function deleteFlashcardByCreator(id) {
+  const fc = flashcards.find(f => f.id === id);
+  if (!fc) return;
+  if (!confirm(`Xóa flashcard "${fc.term}"?`)) return;
+  await dbDelete('flashcards', id);
+  flashcards = flashcards.filter(f => f.id !== id);
+  if (fcStudyIndex >= flashcards.length) fcStudyIndex = Math.max(0, flashcards.length - 1);
+  renderFlashcardStudy();
+  toast('🗑 Đã xóa flashcard');
 }
 
 // BOOT

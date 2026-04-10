@@ -2,8 +2,8 @@
 // DATABASE LAYER - IndexedDB wrapper
 // ==========================================================
 const DB_NAME = 'TutorManagerDB';
-const DB_VERSION = 4; // bumped for checklists, checklistReviews, roadmaps, settings stores
-const STORES = ['classes', 'homework', 'fees', 'templates', 'syllabi', 'checklists', 'checklistReviews', 'roadmaps', 'settings'];
+const DB_VERSION = 5; // bumped for flashcards store
+const STORES = ['classes', 'homework', 'fees', 'templates', 'syllabi', 'checklists', 'checklistReviews', 'roadmaps', 'settings', 'flashcards'];
 
 /** Open (or create) the IndexedDB database */
 function openDB() {
@@ -69,6 +69,7 @@ let syllabi          = []; // array of { id, classId, startDate, roadmap, sessio
 let checklists       = [];
 let checklistReviews = [];
 let roadmaps         = [];
+let flashcards       = [];
 let appSettings      = null;
 
 async function loadAll() {
@@ -80,6 +81,7 @@ async function loadAll() {
   checklists       = await dbGetAll('checklists');
   checklistReviews = await dbGetAll('checklistReviews');
   roadmaps         = await dbGetAll('roadmaps');
+  flashcards       = await dbGetAll('flashcards');
   const settingsArr = await dbGetAll('settings');
   appSettings      = settingsArr[0] || null;
 }
