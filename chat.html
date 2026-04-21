@@ -431,6 +431,10 @@
 
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
+// ===== CONSTANTS =====
+const MAX_HISTORY = 500;
+const MAX_STORAGE_BYTES = 4 * 1024 * 1024; // 4 MB
+
 // ===== EMOJI LIST =====
 const EMOJIS = [
   '😀','😂','🥹','😍','🥰','😘','😎','🤩','😜','🤪','😅','😭','😤','🥺','😱',
@@ -771,13 +775,13 @@ function saveMessage(msg) {
     const history = loadHistory();
     history.push(msg);
     // Keep last 500 messages; avoid overflowing localStorage
-    const trimmed = history.slice(-500);
+    const trimmed = history.slice(-MAX_HISTORY);
     // Strip image data if storage is getting large
     let serialized = JSON.stringify(trimmed);
-    if (serialized.length > 4 * 1024 * 1024) {
+    if (serialized.length > MAX_STORAGE_BYTES) {
       // Remove oldest image messages until under limit
       let i = 0;
-      while (serialized.length > 4 * 1024 * 1024 && i < trimmed.length) {
+      while (serialized.length > MAX_STORAGE_BYTES && i < trimmed.length) {
         if (trimmed[i].type === 'image') trimmed[i].content = '[image]';
         serialized = JSON.stringify(trimmed);
         i++;
@@ -855,7 +859,6 @@ function renderMessage(msg, noScroll) {
       bubble.appendChild(imgEl);
       bubble.style.padding = '4px';
       bubble.style.background = isMe ? 'rgba(79,70,229,0.15)' : 'transparent';
-      if (!isMe) bubble.style.background = 'transparent';
     }
   }
 
