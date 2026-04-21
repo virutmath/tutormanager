@@ -590,9 +590,11 @@ function setupConnEvents(c) {
     updateHeaderStatus('offline', 'Đã ngắt kết nối');
     addSystemMsg('Kết nối bị đóng');
     // Attempt to reconnect after channel closes
+    // Capture peerNick now in case it changes before the timeout fires
+    const targetPeerId = nickToPeerId(peerNick);
     if (peer && !peer.destroyed) {
       setTimeout(() => {
-        if (!isConnected) attemptConnect(nickToPeerId(peerNick));
+        if (!isConnected) attemptConnect(targetPeerId);
       }, 2000);
     }
   });
