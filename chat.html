@@ -513,8 +513,10 @@ function startConnection() {
   });
 
   peer.on('disconnected', () => {
-    setStatus('connecting', 'Mất kết nối, đang thử lại...');
+    if (!isConnected) setStatus('connecting', 'Mất kết nối, đang thử lại...');
     try { peer.reconnect(); } catch(e){}
+    // After re-registering with signaling server, retry data channel
+    setTimeout(() => { if (!isConnected) attemptConnect(peerId); }, 1000);
   });
 }
 
@@ -535,6 +537,14 @@ function simpleHash(str) {
 
 function attemptConnect(peerId) {
   if (isConnected) return;
+  const myId = nickToPeerId(myNick);
+  // Only the lexicographically smaller peer ID initiates the connection.
+  // This prevents a race condition where both peers simultaneously connect to
+  // each other, each closing the other's incoming connection before it opens.
+  if (myId > peerId) {
+    setStatus('connecting', `Đang chờ ${peerNick} kết nối...`);
+    return;
+  }
   try {
     const c = peer.connect(peerId, {
       reliable: true,
@@ -547,17 +557,24 @@ function attemptConnect(peerId) {
 }
 
 function handleConnection(incoming) {
-  // Accept incoming
+  // Accept incoming connection
   setupConnEvents(incoming);
 }
 
 function setupConnEvents(c) {
+  // Don't close an already-established connection
+  if (isConnected) {
+    try { c.close(); } catch(e) {}
+    return;
+  }
   if (conn && conn !== c) {
     try { conn.close(); } catch(e) {}
   }
   conn = c;
+  const thisConn = c;
 
   conn.on('open', () => {
+    if (conn !== thisConn) return; // stale connection, ignore
     isConnected = true;
     openChatScreen();
     // Announce our nick
@@ -572,6 +589,12 @@ function setupConnEvents(c) {
     isConnected = false;
     updateHeaderStatus('offline', 'Đã ngắt kết nối');
     addSystemMsg('Kết nối bị đóng');
+    // Attempt to reconnect after channel closes
+    if (peer && !peer.destroyed) {
+      setTimeout(() => {
+        if (!isConnected) attemptConnect(nickToPeerId(peerNick));
+      }, 2000);
+    }
   });
 
   conn.on('error', (err) => {
