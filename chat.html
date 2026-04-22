@@ -159,7 +159,7 @@
   }
   .msg-row.me .msg-avatar { background: var(--primary-dark); }
   .msg-bubble {
-    max-width: 72%;
+    max-width: 100%;
     padding: 9px 13px;
     border-radius: 18px;
     font-size: 0.9375rem;
@@ -429,11 +429,21 @@
 <!-- Toast -->
 <div id="toast"></div>
 
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
+// ===== SUPABASE CONFIG =====
+// 1. Vào project Supabase > Settings > API, copy "Project URL" và "anon public" key vào đây
+// 2. Vào Realtime > Configuration, đảm bảo Broadcast và Presence đã được bật
+const SUPABASE_URL = 'https://ihnysophoizwiuddivbw.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlobnlzb3Bob2l6d2l1ZGRpdmJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4MzgxMzMsImV4cCI6MjA5MjQxNDEzM30.3d8wh7m-Pnu-CNP2T-Qh3XwrDIbduddI9lpVDRqQpjM';
+
 // ===== CONSTANTS =====
 const MAX_HISTORY = 500;
 const MAX_STORAGE_BYTES = 4 * 1024 * 1024; // 4 MB
+// Giới hạn ảnh gửi qua Supabase Broadcast (~200 KB sau base64 overhead)
+const IMG_MAX_PX = 800;
+const IMG_QUALITY = 0.72;
+const IMG_MAX_B64 = 200 * 1024;
 
 // ===== EMOJI LIST =====
 const EMOJIS = [
@@ -446,9 +456,12 @@ const EMOJIS = [
   '🌈','⚡','🌙','☀️','❄️','🍕','🍔','🍜','🍰','🎂','🍺','☕','🧋','🥤','🍹'
 ];
 
+// ===== SUPABASE CLIENT =====
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 // ===== STATE =====
 let myNick = '', peerNick = '';
-let peer = null, conn = null;
+let channel = null;
 let isConnected = false;
 const STORAGE_KEY_PREFIX = 'peerchat_';
 let storageKey = '';
@@ -460,83 +473,70 @@ function startConnection() {
   peerNick = document.getElementById('peer-nick').value.trim();
   if (!myNick) { showToast('Vui lòng nhập biệt danh của bạn'); return; }
   if (!peerNick) { showToast('Vui lòng nhập biệt danh người kia'); return; }
+  if (myNick === peerNick) { showToast('Biệt danh của bạn và người kia phải khác nhau'); return; }
 
-  // Derive a consistent peer ID from nickname (sanitized)
-  const myId = nickToPeerId(myNick);
-  const peerId = nickToPeerId(peerNick);
-  storageKey = STORAGE_KEY_PREFIX + [myId, peerId].sort().join('_');
+  // Derive a stable channel name from both nicks (same regardless of who initiates)
+  const myKey = nickToKey(myNick);
+  const peerKey = nickToKey(peerNick);
+  const channelName = 'chat__' + [myKey, peerKey].sort().join('__');
+  storageKey = STORAGE_KEY_PREFIX + channelName;
 
   document.getElementById('connect-btn').disabled = true;
   document.getElementById('status-info').style.display = '';
   setStatus('connecting', 'Đang kết nối đến máy chủ...');
 
-  // Destroy old peer if any
-  if (peer) { try { peer.destroy(); } catch(e){} }
+  // Remove previous channel if any
+  if (channel) {
+    channel.untrack();
+    sb.removeChannel(channel);
+    channel = null;
+  }
 
-  peer = new Peer(myId, {
-    host: '0.peerjs.com',
-    port: 443,
-    path: '/',
-    secure: true,
-    debug: 0,
+  // Presence key must be a stable string (URL-safe nick key)
+  channel = sb.channel(channelName, {
     config: {
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        {
-          urls: 'turn:openrelay.metered.ca:80',
-          username: 'openrelayproject',
-          credential: 'openrelayproject'
-        },
-        {
-          urls: 'turn:openrelay.metered.ca:443',
-          username: 'openrelayproject',
-          credential: 'openrelayproject'
-        },
-        {
-          urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-          username: 'openrelayproject',
-          credential: 'openrelayproject'
-        }
-      ]
+      broadcast: { self: false, ack: false },
+      presence: { key: myKey }
     }
   });
 
-  peer.on('open', (id) => {
-    setStatus('online', 'Đã kết nối máy chủ. Đang gọi...');
-    // Try to connect to peer
-    attemptConnect(peerId);
-  });
-
-  peer.on('connection', (incoming) => {
-    handleConnection(incoming);
-  });
-
-  peer.on('error', (err) => {
-    console.error('PeerJS error:', err);
-    if (err.type === 'unavailable-id') {
-      // ID taken – user is probably already connected from another tab, just listen
-      setStatus('connecting', 'ID đã dùng. Đang chờ kết nối...');
-    } else if (err.type === 'peer-unavailable') {
-      setStatus('connecting', `Chưa thấy ${peerNick}, đang chờ...`);
-      // Retry after 3s
-      setTimeout(() => { if (!isConnected) attemptConnect(peerId); }, 3000);
-    } else {
-      setStatus('offline', 'Lỗi: ' + (err.message || err.type));
-      document.getElementById('connect-btn').disabled = false;
-    }
-  });
-
-  peer.on('disconnected', () => {
-    setStatus('connecting', 'Mất kết nối, đang thử lại...');
-    try { peer.reconnect(); } catch(e){}
-  });
+  channel
+    .on('broadcast', { event: 'msg' }, ({ payload }) => {
+      handleIncoming(payload);
+    })
+    .on('presence', { event: 'sync' }, () => {
+      refreshPresence();
+    })
+    .on('presence', { event: 'join' }, ({ newPresences }) => {
+      // Show system message when peer joins
+      if (newPresences && newPresences.some(p => p.nick === peerNick)) {
+        addSystemMsg(`${peerNick} đã tham gia cuộc trò chuyện 👋`);
+      }
+      refreshPresence();
+    })
+    .on('presence', { event: 'leave' }, ({ leftPresences }) => {
+      if (leftPresences && leftPresences.some(p => p.nick === peerNick)) {
+        addSystemMsg(`${peerNick} đã rời cuộc trò chuyện`);
+      }
+      refreshPresence();
+    })
+    .subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        setStatus('online', 'Đã kết nối máy chủ');
+        // Track our presence with actual nick in payload
+        await channel.track({ nick: myNick });
+        openChatScreen();
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        setStatus('offline', 'Lỗi kết nối, thử lại...');
+        document.getElementById('connect-btn').disabled = false;
+      }
+    });
 }
 
-function nickToPeerId(nick) {
-  // Create a URL-safe peer ID from nickname, max 50 chars
-  return 'pc_' + nick.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 30) + '_' +
-    simpleHash(nick).toString(16).slice(0, 6);
+function nickToKey(nick) {
+  // Derive a URL-safe, stable key from a nickname
+  return nick.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 30) +
+    '_' + simpleHash(nick).toString(16).slice(0, 6);
 }
 
 function simpleHash(str) {
@@ -548,67 +548,28 @@ function simpleHash(str) {
   return h;
 }
 
-function attemptConnect(peerId) {
-  if (isConnected) return;
-  try {
-    const c = peer.connect(peerId, {
-      reliable: true,
-      metadata: { nick: myNick }
-    });
-    setupConnEvents(c);
-  } catch(e) {
-    console.error('connect error', e);
+function refreshPresence() {
+  if (!channel) return;
+  const state = channel.presenceState();
+  // Each value is an array of presences for that key; check if peer's nick is present
+  const peerPresent = Object.values(state).flat().some(p => p.nick === peerNick);
+  isConnected = peerPresent;
+  if (peerPresent) {
+    updateHeaderStatus('online', 'Đã kết nối');
+  } else {
+    updateHeaderStatus('connecting', `Đang chờ ${peerNick}...`);
   }
-}
-
-function handleConnection(incoming) {
-  // Accept incoming
-  setupConnEvents(incoming);
-}
-
-function setupConnEvents(c) {
-  if (conn && conn !== c) {
-    try { conn.close(); } catch(e) {}
-  }
-  conn = c;
-
-  conn.on('open', () => {
-    isConnected = true;
-    openChatScreen();
-    // Announce our nick
-    conn.send({ type: 'nick', nick: myNick });
-  });
-
-  conn.on('data', (data) => {
-    handleIncoming(data);
-  });
-
-  conn.on('close', () => {
-    isConnected = false;
-    updateHeaderStatus('offline', 'Đã ngắt kết nối');
-    addSystemMsg('Kết nối bị đóng');
-  });
-
-  conn.on('error', (err) => {
-    console.error('conn error', err);
-    isConnected = false;
-    updateHeaderStatus('offline', 'Lỗi kết nối');
-  });
 }
 
 function openChatScreen() {
   document.getElementById('setup-screen').classList.remove('active');
   document.getElementById('chat-screen').classList.add('active');
 
-  // Set header info
   document.getElementById('header-peer-name').textContent = peerNick;
   document.getElementById('peer-avatar').textContent = peerNick.charAt(0).toUpperCase();
-  updateHeaderStatus('online', 'Đã kết nối');
+  updateHeaderStatus('connecting', `Đang chờ ${peerNick}...`);
 
-  // Build emoji picker
   buildEmojiPicker();
-
-  // Load history
   loadMessages();
 }
 
@@ -630,21 +591,16 @@ function goBack() {
   document.getElementById('connect-btn').disabled = false;
   document.getElementById('status-info').style.display = 'none';
   isConnected = false;
-  if (conn) { try { conn.close(); } catch(e){} conn = null; }
+  if (channel) {
+    channel.untrack();
+    sb.removeChannel(channel);
+    channel = null;
+  }
 }
 
 // ===== INCOMING MESSAGES =====
 function handleIncoming(data) {
   if (!data || !data.type) return;
-  if (data.type === 'nick') {
-    // Update peer nick if sent
-    if (data.nick) {
-      peerNick = data.nick;
-      document.getElementById('header-peer-name').textContent = peerNick;
-      document.getElementById('peer-avatar').textContent = peerNick.charAt(0).toUpperCase();
-    }
-    return;
-  }
   if (data.type === 'text' || data.type === 'image') {
     const msg = {
       id: data.id || genId(),
@@ -664,28 +620,42 @@ function sendText() {
   const textarea = document.getElementById('msg-input');
   const text = textarea.value.trim();
   if (!text) return;
-  if (!isConnected) { showToast('Chưa kết nối với bạn chat'); return; }
+  if (!isConnected) { showToast('Bạn chat chưa kết nối'); return; }
 
   const msg = { id: genId(), from: 'me', type: 'text', content: text, time: Date.now() };
   saveMessage(msg);
   renderMessage(msg);
   scrollToBottom();
 
-  conn.send({ type: 'text', id: msg.id, content: text, time: msg.time });
+  channel.send({
+    type: 'broadcast',
+    event: 'msg',
+    payload: { type: 'text', id: msg.id, content: text, time: msg.time }
+  });
 
   textarea.value = '';
   textarea.style.height = '';
 }
 
 function sendImage(dataUrl) {
-  if (!isConnected) { showToast('Chưa kết nối với bạn chat'); return; }
+  if (!isConnected) { showToast('Bạn chat chưa kết nối'); return; }
+
+  // Guard: base64 string too large for Supabase Broadcast free tier
+  if (dataUrl.length > IMG_MAX_B64 * 1.4) {
+    showToast('Ảnh quá lớn để gửi, hãy chọn ảnh nhỏ hơn');
+    return;
+  }
 
   const msg = { id: genId(), from: 'me', type: 'image', content: dataUrl, time: Date.now() };
   saveMessage(msg);
   renderMessage(msg);
   scrollToBottom();
 
-  conn.send({ type: 'image', id: msg.id, content: dataUrl, time: msg.time });
+  channel.send({
+    type: 'broadcast',
+    event: 'msg',
+    payload: { type: 'image', id: msg.id, content: dataUrl, time: msg.time }
+  });
 }
 
 // ===== FILE INPUT =====
@@ -698,10 +668,9 @@ function handleFileInput(e) {
 }
 
 function readImageFile(file) {
-  // Compress before send
   const reader = new FileReader();
   reader.onload = (ev) => {
-    compressImage(ev.target.result, 1200, 0.82, (dataUrl) => {
+    compressImage(ev.target.result, IMG_MAX_PX, IMG_QUALITY, (dataUrl) => {
       sendImage(dataUrl);
     });
   };
@@ -954,6 +923,11 @@ document.getElementById('my-nick').addEventListener('input', function() {
 });
 document.getElementById('peer-nick').addEventListener('input', function() {
   localStorage.setItem('peerchat_peerNick', this.value.trim());
+});
+
+// Clean up presence on page close/reload
+window.addEventListener('beforeunload', () => {
+  if (channel) channel.untrack();
 });
 </script>
 </body>
