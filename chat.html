@@ -123,6 +123,18 @@
     transition: background 0.15s;
   }
   .btn-back:active { background: rgba(255,255,255,0.3); }
+  .btn-home {
+    background: rgba(255,255,255,0.18);
+    border: none; color: white;
+    width: 36px; height: 36px;
+    border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s;
+    text-decoration: none;
+  }
+  .btn-home:active { background: rgba(255,255,255,0.3); }
+  .btn-home svg { width: 18px; height: 18px; }
   .chat-header-info { flex: 1; min-width: 0; }
   .chat-header-info .peer-name { font-weight: 700; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .chat-header-info .conn-status { font-size: 0.75rem; opacity: 0.85; display: flex; align-items: center; gap: 4px; margin-top: 1px; }
@@ -384,6 +396,12 @@
         <span id="header-status-text">Đang kết nối...</span>
       </div>
     </div>
+    <a href="./index.html" class="btn-home" title="Về trang chủ">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9.5z"/>
+        <polyline points="9 21 9 12 15 12 15 21"/>
+      </svg>
+    </a>
   </div>
 
   <div id="messages"></div>
