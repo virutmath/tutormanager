@@ -435,6 +435,54 @@
 const MAX_HISTORY = 500;
 const MAX_STORAGE_BYTES = 4 * 1024 * 1024; // 4 MB
 
+// ===== TURN CONFIGURATION =====
+// Để dùng Metered.ca TURN (đáng tin cậy hơn, cần tạo tài khoản tại metered.ca):
+// Điền URL dạng: 'https://YOUR-SUBDOMAIN.metered.live/api/v1/turn/credentials?apiKey=YOUR-KEY'
+const METERED_TURN_URL = '';
+
+const STATIC_ICE_SERVERS = [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+  { urls: 'stun:stun2.l.google.com:19302' },
+  {
+    urls: 'turn:openrelay.metered.ca:80',
+    username: 'openrelayproject',
+    credential: 'openrelayproject'
+  },
+  {
+    urls: 'turn:openrelay.metered.ca:443',
+    username: 'openrelayproject',
+    credential: 'openrelayproject'
+  },
+  {
+    urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+    username: 'openrelayproject',
+    credential: 'openrelayproject'
+  },
+  {
+    urls: 'turns:openrelay.metered.ca:5349',
+    username: 'openrelayproject',
+    credential: 'openrelayproject'
+  }
+];
+
+async function getIceServers() {
+  if (METERED_TURN_URL) {
+    try {
+      const res = await fetch(METERED_TURN_URL);
+      if (res.ok) {
+        const servers = await res.json();
+        if (Array.isArray(servers) && servers.length) return servers;
+      } else {
+        console.warn('TURN credential fetch returned status', res.status, '- using static servers.');
+      }
+    } catch (e) {
+      console.warn('Failed to fetch TURN credentials from Metered, using static servers.', e);
+    }
+  }
+  return STATIC_ICE_SERVERS;
+}
+
 // ===== EMOJI LIST =====
 const EMOJIS = [
   '😀','😂','🥹','😍','🥰','😘','😎','🤩','😜','🤪','😅','😭','😤','🥺','😱',
@@ -455,7 +503,7 @@ let storageKey = '';
 let lastDateLabel = '';
 
 // ===== SETUP =====
-function startConnection() {
+async function startConnection() {
   myNick = document.getElementById('my-nick').value.trim();
   peerNick = document.getElementById('peer-nick').value.trim();
   if (!myNick) { showToast('Vui lòng nhập biệt danh của bạn'); return; }
@@ -468,10 +516,13 @@ function startConnection() {
 
   document.getElementById('connect-btn').disabled = true;
   document.getElementById('status-info').style.display = '';
-  setStatus('connecting', 'Đang kết nối đến máy chủ...');
+  setStatus('connecting', 'Đang lấy cấu hình kết nối...');
 
   // Destroy old peer if any
   if (peer) { try { peer.destroy(); } catch(e){} }
+
+  const iceServers = await getIceServers();
+  setStatus('connecting', 'Đang kết nối đến máy chủ...');
 
   peer = new Peer(myId, {
     host: '0.peerjs.com',
@@ -479,27 +530,7 @@ function startConnection() {
     path: '/',
     secure: true,
     debug: 0,
-    config: {
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        {
-          urls: 'turn:openrelay.metered.ca:80',
-          username: 'openrelayproject',
-          credential: 'openrelayproject'
-        },
-        {
-          urls: 'turn:openrelay.metered.ca:443',
-          username: 'openrelayproject',
-          credential: 'openrelayproject'
-        },
-        {
-          urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-          username: 'openrelayproject',
-          credential: 'openrelayproject'
-        }
-      ]
-    }
+    config: { iceServers }
   });
 
   peer.on('open', (id) => {
