@@ -8,15 +8,15 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
-  const urlToOpen = new URL('/', self.location).href;
+  const urlToOpen = new URL('/chat.html', self.location).href;
   event.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
     for (let i = 0; i < windowClients.length; i++) {
       const client = windowClients[i];
-      if (client.url === urlToOpen || client.url === location.origin + '/') {
+      if (client.url === urlToOpen) {
         return client.focus();
       }
     }
-    if (clients.openWindow) return clients.openWindow('/');
+    if (clients.openWindow) return clients.openWindow('/chat.html');
   }));
 });
 

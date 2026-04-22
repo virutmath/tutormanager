@@ -485,6 +485,48 @@ const STORAGE_KEY_PREFIX = 'peerchat_';
 let storageKey = '';
 let lastDateLabel = '';
 
+// ===== NOTIFICATIONS =====
+let unreadCount = 0;
+const BASE_TITLE = document.title;
+
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+function notifyIncoming(msg) {
+  // Only notify when page is not visible or not focused
+  if (!document.hidden && document.hasFocus()) return;
+
+  // Update unread count and page title (visible in browser tab on desktop)
+  unreadCount++;
+  document.title = '(' + unreadCount + ') ' + BASE_TITLE;
+
+  // Show browser/OS notification if permission was granted
+  if ('Notification' in window && Notification.permission === 'granted') {
+    const body = msg.type === 'image' ? '📷 Đã gửi một ảnh' : msg.content;
+    const notification = new Notification(peerNick, {
+      body: body,
+      icon: '/icons/icon.svg',
+      badge: '/icons/icon.svg',
+      tag: 'chat-message',
+    });
+    notification.onclick = () => {
+      window.focus();
+      notification.close();
+    };
+  }
+}
+
+// Clear unread indicator when user returns to the page
+function clearUnreadCount() {
+  unreadCount = 0;
+  document.title = BASE_TITLE;
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) clearUnreadCount(); });
+window.addEventListener('focus', clearUnreadCount);
+
 // ===== SETUP =====
 function startConnection() {
   myNick = document.getElementById('my-nick').value.trim();
@@ -587,6 +629,7 @@ function openChatScreen() {
   document.getElementById('peer-avatar').textContent = peerNick.charAt(0).toUpperCase();
   updateHeaderStatus('connecting', `Đang chờ ${peerNick}...`);
 
+  requestNotificationPermission();
   buildEmojiPicker();
   loadMessages();
 }
@@ -630,6 +673,7 @@ function handleIncoming(data) {
     saveMessage(msg);
     renderMessage(msg);
     scrollToBottom();
+    notifyIncoming(msg);
   }
 }
 
