@@ -54,6 +54,11 @@
     z-index: 100;
     box-shadow: var(--shadow-md);
   }
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
   .header h1 {
     font-size: 1.25rem;
     font-weight: 700;
@@ -69,6 +74,23 @@
     padding: 6px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.12);
   }
+  .btn-chat {
+    background: rgba(255,255,255,0.18);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s;
+    text-decoration: none;
+  }
+  .btn-chat:hover, .btn-chat:active { background: rgba(255,255,255,0.3); }
+  .btn-chat svg { width: 22px; height: 22px; }
   .header-actions {
     display: flex;
     gap: 8px;
@@ -850,10 +872,17 @@
 
 <!-- ===== HEADER ===== -->
 <div class="header">
-  <h1>
-    <img src="./assets/logo.svg" alt="Tutor Manager" class="app-logo">
-    Tutor Manager
-  </h1>
+  <div class="header-top">
+    <h1>
+      <img src="./assets/logo.svg" alt="Tutor Manager" class="app-logo">
+      Tutor Manager
+    </h1>
+    <a href="./chat.html" class="btn-chat" title="Chat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+    </a>
+  </div>
   <div class="header-actions">
     <button id="installBtn" style="display:none" onclick="promptInstall()">⬇️ Cài app</button>
     <button onclick="openToolListModal()">🔧 Tool</button>
