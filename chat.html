@@ -582,6 +582,10 @@
     font-size: 1rem;
   }
 
+  .theme-modal-content h3.terminal-scheme-label {
+    margin-top: 16px;
+  }
+
   .theme-modal-content .scheme-option {
     display: flex;
     align-items: center;
@@ -747,7 +751,7 @@
       <input type="radio" id="mode-terminal" name="theme-mode" value="terminal" onchange="setThemeMode('terminal')">
       <label for="mode-terminal">Chế độ Terminal</label>
     </div>
-    <h3 style="margin-top: 16px;">Lựa chọn màu sắc Terminal</h3>
+    <h3 class="terminal-scheme-label">Lựa chọn màu sắc Terminal</h3>
     <div class="scheme-option">
       <input type="radio" id="scheme-windows" name="terminal-scheme" value="windows" onchange="setTerminalScheme('windows')">
       <label for="scheme-windows">Windows (Xanh lục)</label>
@@ -863,20 +867,28 @@ function toggleThemeModal() {
   const modal = document.getElementById('theme-modal');
   modal.classList.add('open');
   // Focus the first radio button for accessibility
-  document.getElementById('mode-normal').focus();
+  const firstRadio = document.getElementById('mode-normal');
+  if (firstRadio) firstRadio.focus();
 }
 
 function closeThemeModal(e) {
-  // Allow closing by clicking on modal background, but not on content
-  if (e && e.target.id !== 'theme-modal') return;
-  document.getElementById('theme-modal').classList.remove('open');
+  // Close modal when clicking on the background (modal element itself)
+  // Allow modal content to have event.stopPropagation() to prevent closing
+  if (e && e.target && e.target.id === 'theme-modal') {
+    document.getElementById('theme-modal').classList.remove('open');
+  }
+  // Also handle programmatic calls (no event parameter)
+  else if (!e) {
+    const modal = document.getElementById('theme-modal');
+    if (modal) modal.classList.remove('open');
+  }
 }
 
 // Handle Escape key to close modal
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     const modal = document.getElementById('theme-modal');
-    if (modal.classList.contains('open')) {
+    if (modal && modal.classList.contains('open')) {
       modal.classList.remove('open');
     }
   }
