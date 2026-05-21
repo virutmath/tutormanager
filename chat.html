@@ -690,7 +690,7 @@
         <span id="header-status-text">Đang kết nối...</span>
       </div>
     </div>
-    <button class="theme-toggle-btn" id="theme-toggle-btn" title="Chế độ Terminal" aria-label="Chế độ Terminal" onclick="toggleThemeModal()">
+    <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Chế độ Terminal" onclick="toggleThemeModal()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
         <polyline points="4 17 10 11 4 5"/>
         <line x1="12" y1="19" x2="20" y2="19"/>
@@ -740,8 +740,8 @@
 </div>
 
 <!-- Theme Modal -->
-<div id="theme-modal" role="presentation" onclick="closeThemeModal(event)">
-  <div class="theme-modal-content" tabindex="0" role="dialog" aria-labelledby="theme-modal-title" onclick="event.stopPropagation()">
+<div id="theme-modal" role="dialog" onclick="closeThemeModal(event)">
+  <div class="theme-modal-content" tabindex="0" aria-labelledby="theme-modal-title" onclick="event.stopPropagation()">
     <h3 id="theme-modal-title">Chế độ Hiển thị</h3>
     <div class="scheme-option">
       <input type="radio" id="mode-normal" name="theme-mode" value="normal" onchange="setThemeMode('normal')">
@@ -751,7 +751,7 @@
       <input type="radio" id="mode-terminal" name="theme-mode" value="terminal" onchange="setThemeMode('terminal')">
       <label for="mode-terminal">Chế độ Terminal</label>
     </div>
-    <h3 class="terminal-scheme-label">Lựa chọn màu sắc Terminal</h3>
+    <h3 class="terminal-scheme-label" id="terminal-scheme-title">Lựa chọn màu sắc Terminal</h3>
     <div class="scheme-option">
       <input type="radio" id="scheme-windows" name="terminal-scheme" value="windows" onchange="setTerminalScheme('windows')">
       <label for="scheme-windows">Windows (Xanh lục)</label>
@@ -891,10 +891,7 @@ function closeThemeModal(e) {
 // Handle Escape key to close modal
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    const modal = document.getElementById('theme-modal');
-    if (modal && modal.classList.contains('open')) {
-      modal.classList.remove('open');
-    }
+    closeThemeModal();
   }
 });
 
@@ -1067,9 +1064,6 @@ function goBack() {
   document.getElementById('connect-btn').disabled = false;
   document.getElementById('status-info').style.display = 'none';
   document.getElementById('theme-modal').classList.remove('open');
-  
-  // Reset theme to normal when going back and persist to localStorage
-  setThemeMode('normal');
   
   isConnected = false;
   if (channel) {
