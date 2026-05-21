@@ -690,7 +690,7 @@
         <span id="header-status-text">Đang kết nối...</span>
       </div>
     </div>
-    <button class="theme-toggle-btn" id="theme-toggle-btn" title="Chế độ Terminal" onclick="toggleThemeModal()">
+    <button class="theme-toggle-btn" id="theme-toggle-btn" title="Chế độ Terminal" aria-label="Chế độ Terminal" onclick="toggleThemeModal()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
         <polyline points="4 17 10 11 4 5"/>
         <line x1="12" y1="19" x2="20" y2="19"/>
@@ -740,8 +740,8 @@
 </div>
 
 <!-- Theme Modal -->
-<div id="theme-modal" onclick="closeThemeModal(event)">
-  <div class="theme-modal-content" onclick="event.stopPropagation()" tabindex="0" role="dialog" aria-labelledby="theme-modal-title">
+<div id="theme-modal" role="presentation" onclick="closeThemeModal(event)">
+  <div class="theme-modal-content" tabindex="0" role="dialog" aria-labelledby="theme-modal-title" onclick="event.stopPropagation()">
     <h3 id="theme-modal-title">Chế độ Hiển thị</h3>
     <div class="scheme-option">
       <input type="radio" id="mode-normal" name="theme-mode" value="normal" onchange="setThemeMode('normal')">
@@ -845,8 +845,8 @@ function applyTheme() {
   }
   
   // Update radio buttons in modal if they exist
-  const modeRadio = document.getElementById('mode-' + currentThemeMode);
-  const schemeRadio = document.getElementById('scheme-' + currentTerminalScheme);
+  const modeRadio = document.getElementById(`mode-${currentThemeMode}`);
+  const schemeRadio = document.getElementById(`scheme-${currentTerminalScheme}`);
   if (modeRadio) modeRadio.checked = true;
   if (schemeRadio) schemeRadio.checked = true;
 }
@@ -865,22 +865,26 @@ function setTerminalScheme(scheme) {
 
 function toggleThemeModal() {
   const modal = document.getElementById('theme-modal');
-  modal.classList.add('open');
-  // Focus the first radio button for accessibility
-  const firstRadio = document.getElementById('mode-normal');
-  if (firstRadio) firstRadio.focus();
+  if (modal) {
+    modal.classList.add('open');
+    // Focus the modal content div to allow screen readers to announce title first
+    const modalContent = modal.querySelector('.theme-modal-content');
+    if (modalContent) modalContent.focus();
+  }
 }
 
 function closeThemeModal(e) {
+  const modal = document.getElementById('theme-modal');
+  if (!modal) return;
+  
   // Close modal when clicking on the background (modal element itself)
-  // Allow modal content to have event.stopPropagation() to prevent closing
+  // Don't close when clicking on modal content because of event handling
   if (e && e.target && e.target.id === 'theme-modal') {
-    document.getElementById('theme-modal').classList.remove('open');
+    modal.classList.remove('open');
   }
   // Also handle programmatic calls (no event parameter)
   else if (!e) {
-    const modal = document.getElementById('theme-modal');
-    if (modal) modal.classList.remove('open');
+    modal.classList.remove('open');
   }
 }
 
