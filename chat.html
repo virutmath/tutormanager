@@ -740,7 +740,7 @@
 </div>
 
 <!-- Theme Modal -->
-<div id="theme-modal" role="dialog" onclick="closeThemeModal(event)">
+<div id="theme-modal" role="dialog" aria-modal="true" onclick="closeThemeModal(event)">
   <div class="theme-modal-content" tabindex="0" aria-labelledby="theme-modal-title" onclick="event.stopPropagation()">
     <h3 id="theme-modal-title">Chế độ Hiển thị</h3>
     <div class="scheme-option">
@@ -867,9 +867,11 @@ function toggleThemeModal() {
   const modal = document.getElementById('theme-modal');
   if (modal) {
     modal.classList.add('open');
-    // Focus the modal content div to allow screen readers to announce title first
-    const modalContent = modal.querySelector('.theme-modal-content');
-    if (modalContent) modalContent.focus();
+    // Add Escape key listener when modal opens
+    document.addEventListener('keydown', handleEscapeKey);
+    // Focus the first radio button for better keyboard interaction
+    const firstRadio = document.getElementById('mode-normal');
+    if (firstRadio) firstRadio.focus();
   }
 }
 
@@ -878,22 +880,29 @@ function closeThemeModal(e) {
   if (!modal) return;
   
   // Close modal when clicking on the background (modal element itself)
-  // Don't close when clicking on modal content because of event handling
+  // event.stopPropagation() on content div prevents closing from clicks inside content
   if (e && e.target && e.target.id === 'theme-modal') {
     modal.classList.remove('open');
+    // Remove Escape key listener when modal closes
+    document.removeEventListener('keydown', handleEscapeKey);
   }
   // Also handle programmatic calls (no event parameter)
   else if (!e) {
     modal.classList.remove('open');
+    // Remove Escape key listener when modal closes
+    document.removeEventListener('keydown', handleEscapeKey);
   }
 }
 
 // Handle Escape key to close modal
-document.addEventListener('keydown', (e) => {
+function handleEscapeKey(e) {
   if (e.key === 'Escape') {
-    closeThemeModal();
+    const modal = document.getElementById('theme-modal');
+    if (modal && modal.classList.contains('open')) {
+      closeThemeModal();
+    }
   }
-});
+}
 
 // ===== NOTIFICATIONS =====
 let unreadCount = 0;
@@ -1063,7 +1072,13 @@ function goBack() {
   document.getElementById('setup-screen').classList.add('active');
   document.getElementById('connect-btn').disabled = false;
   document.getElementById('status-info').style.display = 'none';
-  document.getElementById('theme-modal').classList.remove('open');
+  
+  // Close theme modal if open
+  const themeModal = document.getElementById('theme-modal');
+  if (themeModal) {
+    themeModal.classList.remove('open');
+    document.removeEventListener('keydown', handleEscapeKey);
+  }
   
   isConnected = false;
   if (channel) {
