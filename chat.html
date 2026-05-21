@@ -918,9 +918,10 @@ function handleEscapeKey(e) {
 }
 
 // ===== VIETNAMESE DIACRITIC REMOVAL =====
-function removeDiacriticsVietnam(text) {
-  if (!text || typeof text !== 'string') {
-    return '';
+function removeVietnameseDiacritics(text) {
+  // Ensure text is a string; return as-is if not
+  if (typeof text !== 'string') {
+    return String(text || '');
   }
   
   // Map of Vietnamese characters with diacritics to non-diacritic versions
@@ -958,10 +959,10 @@ function removeDiacriticsVietnam(text) {
   return text.split('').map(char => diacriticMap[char] || char).join('');
 }
 
-// Helper function to apply diacritic removal if in terminal mode
-function applyDiacriticConversionIfTerminal(text) {
+// Apply text conversion based on terminal mode
+function applyTerminalTextConversion(text) {
   if (currentThemeMode === 'terminal') {
-    return removeDiacriticsVietnam(text);
+    return removeVietnameseDiacritics(text);
   }
   return text;
 }
@@ -1108,7 +1109,7 @@ function openChatScreen() {
 
   initTheme(); // Initialize theme when opening chat
 
-  document.getElementById('header-peer-name').textContent = applyDiacriticConversionIfTerminal(peerNick);
+  document.getElementById('header-peer-name').textContent = applyTerminalTextConversion(peerNick);
   document.getElementById('peer-avatar').textContent = peerNick.charAt(0).toUpperCase();
   updateHeaderStatus('connecting', `Đang chờ ${peerNick}...`);
 
@@ -1120,13 +1121,13 @@ function openChatScreen() {
 function updateHeaderStatus(state, text) {
   const dot = document.getElementById('header-status-dot');
   dot.className = 'status-dot ' + state;
-  document.getElementById('header-status-text').textContent = applyDiacriticConversionIfTerminal(text);
+  document.getElementById('header-status-text').textContent = applyTerminalTextConversion(text);
 }
 
 function setStatus(state, text) {
   const dot = document.getElementById('status-dot');
   dot.className = 'status-dot ' + state;
-  document.getElementById('status-text').textContent = applyDiacriticConversionIfTerminal(text);
+  document.getElementById('status-text').textContent = applyTerminalTextConversion(text);
 }
 
 function goBack() {
@@ -1383,10 +1384,10 @@ function renderMessage(msg, noScroll) {
   bubble.className = 'msg-bubble';
 
   if (msg.type === 'text') {
-    bubble.textContent = applyDiacriticConversionIfTerminal(msg.content);
+    bubble.textContent = applyTerminalTextConversion(msg.content);
   } else if (msg.type === 'image') {
     if (msg.content === '[image]') {
-      bubble.textContent = applyDiacriticConversionIfTerminal('📷 [Ảnh không còn lưu]');
+      bubble.textContent = applyTerminalTextConversion('📷 [Ảnh không còn lưu]');
     } else {
       const imgEl = document.createElement('img');
       imgEl.src = msg.content;
@@ -1414,7 +1415,7 @@ function addSystemMsg(text) {
   const container = document.getElementById('messages');
   const el = document.createElement('div');
   el.className = 'system-msg';
-  el.textContent = applyDiacriticConversionIfTerminal(text);
+  el.textContent = applyTerminalTextConversion(text);
   container.appendChild(el);
 }
 
@@ -1437,7 +1438,7 @@ function closeLightbox() {
 // ===== TOAST =====
 function showToast(msg) {
   const el = document.getElementById('toast');
-  el.textContent = applyDiacriticConversionIfTerminal(msg);
+  el.textContent = applyTerminalTextConversion(msg);
   el.classList.add('show');
   clearTimeout(el._t);
   el._t = setTimeout(() => el.classList.remove('show'), 2500);
@@ -1463,7 +1464,7 @@ function formatDate(ts) {
   else if (y === ny && m === nm && day === nd - 1) result = 'Hôm qua';
   else result = `${day.toString().padStart(2,'0')}/${(m+1).toString().padStart(2,'0')}/${y}`;
   
-  return applyDiacriticConversionIfTerminal(result);
+  return applyTerminalTextConversion(result);
 }
 
 // ===== RESTORE SETUP FROM STORAGE =====
