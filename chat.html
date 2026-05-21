@@ -855,6 +855,11 @@ function setThemeMode(mode) {
   currentThemeMode = mode;
   localStorage.setItem('peerchat_theme_mode', mode);
   applyTheme();
+  // Re-render messages to apply diacritic conversion if theme changed
+  const chatScreen = document.getElementById('chat-screen');
+  if (chatScreen && chatScreen.classList.contains('active')) {
+    loadMessages();
+  }
 }
 
 function setTerminalScheme(scheme) {
@@ -913,8 +918,10 @@ function handleEscapeKey(e) {
 }
 
 // ===== VIETNAMESE DIACRITIC REMOVAL =====
-function removeVietnameseDiacritics(text) {
-  if (!text || typeof text !== 'string') return text;
+function removeDiacriticsVietnam(text) {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
   
   // Map of Vietnamese characters with diacritics to non-diacritic versions
   const diacriticMap = {
@@ -951,10 +958,10 @@ function removeVietnameseDiacritics(text) {
   return text.split('').map(char => diacriticMap[char] || char).join('');
 }
 
-// Helper function to apply unsigning if in terminal mode
-function applyTerminalUnsign(text) {
+// Helper function to apply diacritic removal if in terminal mode
+function applyDiacriticConversionIfTerminal(text) {
   if (currentThemeMode === 'terminal') {
-    return removeVietnameseDiacritics(text);
+    return removeDiacriticsVietnam(text);
   }
   return text;
 }
@@ -1101,7 +1108,7 @@ function openChatScreen() {
 
   initTheme(); // Initialize theme when opening chat
 
-  document.getElementById('header-peer-name').textContent = applyTerminalUnsign(peerNick);
+  document.getElementById('header-peer-name').textContent = applyDiacriticConversionIfTerminal(peerNick);
   document.getElementById('peer-avatar').textContent = peerNick.charAt(0).toUpperCase();
   updateHeaderStatus('connecting', `Đang chờ ${peerNick}...`);
 
@@ -1113,13 +1120,13 @@ function openChatScreen() {
 function updateHeaderStatus(state, text) {
   const dot = document.getElementById('header-status-dot');
   dot.className = 'status-dot ' + state;
-  document.getElementById('header-status-text').textContent = applyTerminalUnsign(text);
+  document.getElementById('header-status-text').textContent = applyDiacriticConversionIfTerminal(text);
 }
 
 function setStatus(state, text) {
   const dot = document.getElementById('status-dot');
   dot.className = 'status-dot ' + state;
-  document.getElementById('status-text').textContent = applyTerminalUnsign(text);
+  document.getElementById('status-text').textContent = applyDiacriticConversionIfTerminal(text);
 }
 
 function goBack() {
@@ -1376,10 +1383,10 @@ function renderMessage(msg, noScroll) {
   bubble.className = 'msg-bubble';
 
   if (msg.type === 'text') {
-    bubble.textContent = applyTerminalUnsign(msg.content);
+    bubble.textContent = applyDiacriticConversionIfTerminal(msg.content);
   } else if (msg.type === 'image') {
     if (msg.content === '[image]') {
-      bubble.textContent = applyTerminalUnsign('📷 [Ảnh không còn lưu]');
+      bubble.textContent = applyDiacriticConversionIfTerminal('📷 [Ảnh không còn lưu]');
     } else {
       const imgEl = document.createElement('img');
       imgEl.src = msg.content;
@@ -1407,7 +1414,7 @@ function addSystemMsg(text) {
   const container = document.getElementById('messages');
   const el = document.createElement('div');
   el.className = 'system-msg';
-  el.textContent = applyTerminalUnsign(text);
+  el.textContent = applyDiacriticConversionIfTerminal(text);
   container.appendChild(el);
 }
 
@@ -1430,7 +1437,7 @@ function closeLightbox() {
 // ===== TOAST =====
 function showToast(msg) {
   const el = document.getElementById('toast');
-  el.textContent = applyTerminalUnsign(msg);
+  el.textContent = applyDiacriticConversionIfTerminal(msg);
   el.classList.add('show');
   clearTimeout(el._t);
   el._t = setTimeout(() => el.classList.remove('show'), 2500);
@@ -1456,7 +1463,7 @@ function formatDate(ts) {
   else if (y === ny && m === nm && day === nd - 1) result = 'Hôm qua';
   else result = `${day.toString().padStart(2,'0')}/${(m+1).toString().padStart(2,'0')}/${y}`;
   
-  return applyTerminalUnsign(result);
+  return applyDiacriticConversionIfTerminal(result);
 }
 
 // ===== RESTORE SETUP FROM STORAGE =====
