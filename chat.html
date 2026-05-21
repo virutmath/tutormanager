@@ -912,6 +912,53 @@ function handleEscapeKey(e) {
   }
 }
 
+// ===== VIETNAMESE DIACRITIC REMOVAL =====
+function removeVietnameseDiacritics(text) {
+  if (!text || typeof text !== 'string') return text;
+  
+  // Map of Vietnamese characters with diacritics to non-diacritic versions
+  const diacriticMap = {
+    // Uppercase vowels with tone marks
+    'À': 'A', 'Á': 'A', 'Ả': 'A', 'Ã': 'A', 'Ạ': 'A',
+    'Ă': 'A', 'Ằ': 'A', 'Ắ': 'A', 'Ẳ': 'A', 'Ẵ': 'A', 'Ặ': 'A',
+    'Â': 'A', 'Ầ': 'A', 'Ấ': 'A', 'Ẩ': 'A', 'Ẫ': 'A', 'Ậ': 'A',
+    'È': 'E', 'É': 'E', 'Ẻ': 'E', 'Ẽ': 'E', 'Ẹ': 'E',
+    'Ê': 'E', 'Ề': 'E', 'Ế': 'E', 'Ể': 'E', 'Ễ': 'E', 'Ệ': 'E',
+    'Ì': 'I', 'Í': 'I', 'Ỉ': 'I', 'Ĩ': 'I', 'Ị': 'I',
+    'Ò': 'O', 'Ó': 'O', 'Ỏ': 'O', 'Õ': 'O', 'Ọ': 'O',
+    'Ô': 'O', 'Ồ': 'O', 'Ố': 'O', 'Ổ': 'O', 'Ỗ': 'O', 'Ộ': 'O',
+    'Ơ': 'O', 'Ờ': 'O', 'Ớ': 'O', 'Ở': 'O', 'Ỡ': 'O', 'Ợ': 'O',
+    'Ù': 'U', 'Ú': 'U', 'Ủ': 'U', 'Ũ': 'U', 'Ụ': 'U',
+    'Ư': 'U', 'Ừ': 'U', 'Ứ': 'U', 'Ử': 'U', 'Ữ': 'U', 'Ự': 'U',
+    'Ỳ': 'Y', 'Ý': 'Y', 'Ỷ': 'Y', 'Ỹ': 'Y', 'Ỵ': 'Y',
+    'Đ': 'D',
+    // Lowercase vowels with tone marks
+    'à': 'a', 'á': 'a', 'ả': 'a', 'ã': 'a', 'ạ': 'a',
+    'ă': 'a', 'ằ': 'a', 'ắ': 'a', 'ẳ': 'a', 'ẵ': 'a', 'ặ': 'a',
+    'â': 'a', 'ầ': 'a', 'ấ': 'a', 'ẩ': 'a', 'ẫ': 'a', 'ậ': 'a',
+    'è': 'e', 'é': 'e', 'ẻ': 'e', 'ẽ': 'e', 'ẹ': 'e',
+    'ê': 'e', 'ề': 'e', 'ế': 'e', 'ể': 'e', 'ễ': 'e', 'ệ': 'e',
+    'ì': 'i', 'í': 'i', 'ỉ': 'i', 'ĩ': 'i', 'ị': 'i',
+    'ò': 'o', 'ó': 'o', 'ỏ': 'o', 'õ': 'o', 'ọ': 'o',
+    'ô': 'o', 'ồ': 'o', 'ố': 'o', 'ổ': 'o', 'ỗ': 'o', 'ộ': 'o',
+    'ơ': 'o', 'ờ': 'o', 'ớ': 'o', 'ở': 'o', 'ỡ': 'o', 'ợ': 'o',
+    'ù': 'u', 'ú': 'u', 'ủ': 'u', 'ũ': 'u', 'ụ': 'u',
+    'ư': 'u', 'ừ': 'u', 'ứ': 'u', 'ử': 'u', 'ữ': 'u', 'ự': 'u',
+    'ỳ': 'y', 'ý': 'y', 'ỷ': 'y', 'ỹ': 'y', 'ỵ': 'y',
+    'đ': 'd'
+  };
+  
+  return text.split('').map(char => diacriticMap[char] || char).join('');
+}
+
+// Helper function to apply unsigning if in terminal mode
+function applyTerminalUnsign(text) {
+  if (currentThemeMode === 'terminal') {
+    return removeVietnameseDiacritics(text);
+  }
+  return text;
+}
+
 // ===== NOTIFICATIONS =====
 let unreadCount = 0;
 const BASE_TITLE = document.title;
@@ -1054,7 +1101,7 @@ function openChatScreen() {
 
   initTheme(); // Initialize theme when opening chat
 
-  document.getElementById('header-peer-name').textContent = peerNick;
+  document.getElementById('header-peer-name').textContent = applyTerminalUnsign(peerNick);
   document.getElementById('peer-avatar').textContent = peerNick.charAt(0).toUpperCase();
   updateHeaderStatus('connecting', `Đang chờ ${peerNick}...`);
 
@@ -1066,13 +1113,13 @@ function openChatScreen() {
 function updateHeaderStatus(state, text) {
   const dot = document.getElementById('header-status-dot');
   dot.className = 'status-dot ' + state;
-  document.getElementById('header-status-text').textContent = text;
+  document.getElementById('header-status-text').textContent = applyTerminalUnsign(text);
 }
 
 function setStatus(state, text) {
   const dot = document.getElementById('status-dot');
   dot.className = 'status-dot ' + state;
-  document.getElementById('status-text').textContent = text;
+  document.getElementById('status-text').textContent = applyTerminalUnsign(text);
 }
 
 function goBack() {
@@ -1329,10 +1376,10 @@ function renderMessage(msg, noScroll) {
   bubble.className = 'msg-bubble';
 
   if (msg.type === 'text') {
-    bubble.textContent = msg.content;
+    bubble.textContent = applyTerminalUnsign(msg.content);
   } else if (msg.type === 'image') {
     if (msg.content === '[image]') {
-      bubble.textContent = '📷 [Ảnh không còn lưu]';
+      bubble.textContent = applyTerminalUnsign('📷 [Ảnh không còn lưu]');
     } else {
       const imgEl = document.createElement('img');
       imgEl.src = msg.content;
@@ -1360,7 +1407,7 @@ function addSystemMsg(text) {
   const container = document.getElementById('messages');
   const el = document.createElement('div');
   el.className = 'system-msg';
-  el.textContent = text;
+  el.textContent = applyTerminalUnsign(text);
   container.appendChild(el);
 }
 
@@ -1383,7 +1430,7 @@ function closeLightbox() {
 // ===== TOAST =====
 function showToast(msg) {
   const el = document.getElementById('toast');
-  el.textContent = msg;
+  el.textContent = applyTerminalUnsign(msg);
   el.classList.add('show');
   clearTimeout(el._t);
   el._t = setTimeout(() => el.classList.remove('show'), 2500);
@@ -1404,9 +1451,12 @@ function formatDate(ts) {
   const now = new Date();
   const y = d.getFullYear(), m = d.getMonth(), day = d.getDate();
   const ny = now.getFullYear(), nm = now.getMonth(), nd = now.getDate();
-  if (y === ny && m === nm && day === nd) return 'Hôm nay';
-  if (y === ny && m === nm && day === nd - 1) return 'Hôm qua';
-  return `${day.toString().padStart(2,'0')}/${(m+1).toString().padStart(2,'0')}/${y}`;
+  let result;
+  if (y === ny && m === nm && day === nd) result = 'Hôm nay';
+  else if (y === ny && m === nm && day === nd - 1) result = 'Hôm qua';
+  else result = `${day.toString().padStart(2,'0')}/${(m+1).toString().padStart(2,'0')}/${y}`;
+  
+  return applyTerminalUnsign(result);
 }
 
 // ===== RESTORE SETUP FROM STORAGE =====
