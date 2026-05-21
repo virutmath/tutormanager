@@ -344,6 +344,296 @@
   /* ===== SCROLLBAR ===== */
   #messages::-webkit-scrollbar { width: 4px; }
   #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ===== TERMINAL MODE ===== */
+  :root.terminal-windows {
+    --terminal-bg: #000000;
+    --terminal-text: #0cc40c;
+    --terminal-accent: #107C10;
+    --terminal-secondary: #666666;
+  }
+  
+  :root.terminal-ubuntu {
+    --terminal-bg: #000000;
+    --terminal-text: #ff6600;
+    --terminal-accent: #E95420;
+    --terminal-secondary: #666666;
+  }
+
+  body.terminal-mode {
+    background: var(--terminal-bg);
+    color: var(--terminal-text);
+    font-family: 'Courier New', 'Courier', monospace;
+  }
+
+  .terminal-mode #chat-screen {
+    background: var(--terminal-bg);
+  }
+
+  .terminal-mode .chat-header {
+    background: var(--terminal-bg);
+    border-bottom: 2px solid var(--terminal-accent);
+  }
+
+  .terminal-mode .chat-header-info .peer-name {
+    color: var(--terminal-text);
+  }
+
+  .terminal-mode .chat-header-info .conn-status {
+    color: var(--terminal-secondary);
+  }
+
+  .terminal-mode #messages {
+    background: var(--terminal-bg);
+    font-family: 'Courier New', 'Courier', monospace;
+  }
+
+  .terminal-mode .msg-bubble {
+    background: transparent;
+    border: 1px solid var(--terminal-text);
+    border-radius: 2px;
+    padding: 8px 12px;
+    font-family: 'Courier New', 'Courier', monospace;
+  }
+
+  .terminal-mode .msg-row.me .msg-bubble {
+    background: transparent;
+    color: var(--terminal-text);
+    border-left: 3px solid var(--terminal-text);
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+    padding-left: 12px;
+  }
+
+  .terminal-mode .msg-row.them .msg-bubble {
+    background: transparent;
+    color: var(--terminal-secondary);
+    border-right: 3px solid var(--terminal-secondary);
+    border-left: none;
+    border-top: none;
+    border-bottom: none;
+    padding-right: 12px;
+  }
+
+  .terminal-mode .msg-bubble::before {
+    content: '$ ';
+    color: var(--terminal-text);
+  }
+
+  .terminal-mode .msg-row.them .msg-bubble::before {
+    content: '> ';
+    color: var(--terminal-secondary);
+  }
+
+  .terminal-mode .msg-time {
+    color: var(--terminal-secondary);
+    font-size: 0.8rem;
+  }
+
+  .terminal-mode .chat-bottom {
+    background: var(--terminal-bg);
+    border-top: 2px solid var(--terminal-accent);
+  }
+
+  .terminal-mode #msg-input {
+    background: var(--terminal-bg);
+    color: var(--terminal-text);
+    border: 1px solid var(--terminal-text);
+    font-family: 'Courier New', 'Courier', monospace;
+  }
+
+  .terminal-mode #msg-input:focus {
+    border-color: var(--terminal-accent);
+    background: var(--terminal-bg);
+  }
+
+  .terminal-mode #msg-input::placeholder {
+    color: var(--terminal-secondary);
+  }
+
+  .terminal-mode #send-btn {
+    background: transparent;
+    border: 1px solid var(--terminal-text);
+    color: var(--terminal-text);
+  }
+
+  .terminal-mode .icon-btn {
+    color: var(--terminal-text);
+  }
+
+  .terminal-mode .icon-btn:active,
+  .terminal-mode .icon-btn.active {
+    background: transparent;
+    color: var(--terminal-accent);
+    border: 1px solid var(--terminal-accent);
+    border-radius: 2px;
+  }
+
+  .terminal-mode .emoji-row {
+    background: var(--terminal-bg);
+    border-bottom: 1px solid var(--terminal-text);
+  }
+
+  .terminal-mode .system-msg {
+    background: transparent;
+    border: 1px solid var(--terminal-secondary);
+    color: var(--terminal-secondary);
+    border-radius: 0;
+  }
+
+  .terminal-mode .date-divider {
+    color: var(--terminal-secondary);
+  }
+
+  .terminal-mode .date-divider::before,
+  .terminal-mode .date-divider::after {
+    background: var(--terminal-secondary);
+  }
+
+  .terminal-mode .btn-back,
+  .terminal-mode .btn-home {
+    background: transparent;
+    border: 1px solid var(--terminal-text);
+    color: var(--terminal-text);
+    border-radius: 2px;
+  }
+
+  .terminal-mode .btn-back:active,
+  .terminal-mode .btn-home:active {
+    background: var(--terminal-accent);
+    color: var(--terminal-bg);
+  }
+
+  .terminal-mode .theme-toggle-btn {
+    background: transparent;
+    border: 1px solid var(--terminal-text);
+    color: var(--terminal-text);
+    border-radius: 2px;
+    width: auto;
+    padding: 6px 10px;
+    font-family: 'Courier New', 'Courier', monospace;
+    font-size: 0.75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+
+  .terminal-mode .theme-toggle-btn:active {
+    background: var(--terminal-accent);
+    color: var(--terminal-bg);
+  }
+
+  .theme-toggle-btn {
+    background: transparent;
+    border: 1px solid var(--primary);
+    color: white;
+    border-radius: 2px;
+    width: auto;
+    padding: 6px 10px;
+    font-family: inherit;
+    font-size: 0.75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .theme-toggle-btn:active {
+    background: rgba(255,255,255,0.1);
+  }
+
+  /* Theme scheme selector modal */
+  #theme-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  #theme-modal.open {
+    display: flex;
+  }
+
+  .theme-modal-content {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 20px;
+    max-width: 300px;
+    box-shadow: var(--shadow-md);
+  }
+
+  .terminal-mode .theme-modal-content {
+    background: var(--terminal-bg);
+    border: 2px solid var(--terminal-accent);
+    color: var(--terminal-text);
+  }
+
+  .theme-modal-content h3 {
+    margin-bottom: 16px;
+    font-size: 1rem;
+  }
+
+  .theme-modal-content .scheme-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+
+  .theme-modal-content .scheme-option:hover {
+    background: var(--bg);
+  }
+
+  .terminal-mode .theme-modal-content .scheme-option:hover {
+    background: transparent;
+    border: 1px solid var(--terminal-text);
+  }
+
+  .theme-modal-content .scheme-option input[type="radio"] {
+    cursor: pointer;
+  }
+
+  .theme-modal-content .scheme-option label {
+    cursor: pointer;
+    flex: 1;
+    margin: 0;
+  }
+
+  .theme-modal-close {
+    margin-top: 16px;
+    width: 100%;
+    padding: 10px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: opacity 0.15s;
+  }
+
+  .terminal-mode .theme-modal-close {
+    background: transparent;
+    border: 1px solid var(--terminal-accent);
+    color: var(--terminal-accent);
+  }
+
+  .theme-modal-close:active {
+    opacity: 0.8;
+  }
 </style>
 </head>
 <body>
@@ -396,6 +686,13 @@
         <span id="header-status-text">Đang kết nối...</span>
       </div>
     </div>
+    <button class="theme-toggle-btn" id="theme-toggle-btn" title="Chế độ Terminal" onclick="toggleThemeModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+        <polyline points="4 17 10 11 4 5"/>
+        <line x1="12" y1="19" x2="20" y2="19"/>
+      </svg>
+      <span>Terminal</span>
+    </button>
     <a href="./index.html" class="btn-home" title="Về trang chủ">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9.5z"/>
@@ -435,6 +732,31 @@
         </svg>
       </button>
     </div>
+  </div>
+</div>
+
+<!-- Theme Modal -->
+<div id="theme-modal" onclick="closeThemeModal(event)">
+  <div class="theme-modal-content" onclick="event.stopPropagation()">
+    <h3>Chế độ Hiển thị</h3>
+    <div class="scheme-option">
+      <input type="radio" id="mode-normal" name="theme-mode" value="normal" onchange="setThemeMode('normal')">
+      <label for="mode-normal">Giao diện bình thường</label>
+    </div>
+    <div class="scheme-option">
+      <input type="radio" id="mode-terminal" name="theme-mode" value="terminal" onchange="setThemeMode('terminal')">
+      <label for="mode-terminal">Chế độ Terminal</label>
+    </div>
+    <h3 style="margin-top: 16px;">Lựa chọn màu sắc Terminal</h3>
+    <div class="scheme-option">
+      <input type="radio" id="scheme-windows" name="terminal-scheme" value="windows" onchange="setTerminalScheme('windows')">
+      <label for="scheme-windows">Windows (Xanh lục)</label>
+    </div>
+    <div class="scheme-option">
+      <input type="radio" id="scheme-ubuntu" name="terminal-scheme" value="ubuntu" onchange="setTerminalScheme('ubuntu')">
+      <label for="scheme-ubuntu">Ubuntu (Cam/Đỏ)</label>
+    </div>
+    <button class="theme-modal-close" onclick="closeThemeModal()">Đóng</button>
   </div>
 </div>
 
@@ -484,6 +806,66 @@ let isConnected = false;
 const STORAGE_KEY_PREFIX = 'peerchat_';
 let storageKey = '';
 let lastDateLabel = '';
+let currentThemeMode = 'normal'; // 'normal' or 'terminal'
+let currentTerminalScheme = 'windows'; // 'windows' or 'ubuntu'
+
+// ===== THEME MANAGEMENT =====
+function initTheme() {
+  // Load theme preferences from localStorage
+  const savedMode = localStorage.getItem('peerchat_theme_mode') || 'normal';
+  const savedScheme = localStorage.getItem('peerchat_terminal_scheme') || 'windows';
+  
+  currentThemeMode = savedMode;
+  currentTerminalScheme = savedScheme;
+  
+  // Apply theme
+  applyTheme();
+}
+
+function applyTheme() {
+  const htmlEl = document.documentElement;
+  const bodyEl = document.body;
+  
+  if (currentThemeMode === 'terminal') {
+    bodyEl.classList.add('terminal-mode');
+    if (currentTerminalScheme === 'windows') {
+      htmlEl.classList.remove('terminal-ubuntu');
+      htmlEl.classList.add('terminal-windows');
+    } else {
+      htmlEl.classList.remove('terminal-windows');
+      htmlEl.classList.add('terminal-ubuntu');
+    }
+  } else {
+    bodyEl.classList.remove('terminal-mode');
+    htmlEl.classList.remove('terminal-windows', 'terminal-ubuntu');
+  }
+  
+  // Update radio buttons in modal
+  document.getElementById('mode-' + currentThemeMode).checked = true;
+  document.getElementById('scheme-' + currentTerminalScheme).checked = true;
+}
+
+function setThemeMode(mode) {
+  currentThemeMode = mode;
+  localStorage.setItem('peerchat_theme_mode', mode);
+  applyTheme();
+}
+
+function setTerminalScheme(scheme) {
+  currentTerminalScheme = scheme;
+  localStorage.setItem('peerchat_terminal_scheme', scheme);
+  applyTheme();
+}
+
+function toggleThemeModal() {
+  const modal = document.getElementById('theme-modal');
+  modal.classList.add('open');
+}
+
+function closeThemeModal(e) {
+  if (e && e.target.id !== 'theme-modal') return;
+  document.getElementById('theme-modal').classList.remove('open');
+}
 
 // ===== NOTIFICATIONS =====
 let unreadCount = 0;
@@ -625,6 +1007,8 @@ function openChatScreen() {
   document.getElementById('setup-screen').classList.remove('active');
   document.getElementById('chat-screen').classList.add('active');
 
+  initTheme(); // Initialize theme when opening chat
+
   document.getElementById('header-peer-name').textContent = peerNick;
   document.getElementById('peer-avatar').textContent = peerNick.charAt(0).toUpperCase();
   updateHeaderStatus('connecting', `Đang chờ ${peerNick}...`);
@@ -651,6 +1035,13 @@ function goBack() {
   document.getElementById('setup-screen').classList.add('active');
   document.getElementById('connect-btn').disabled = false;
   document.getElementById('status-info').style.display = 'none';
+  document.getElementById('theme-modal').classList.remove('open');
+  
+  // Reset theme to normal when going back
+  currentThemeMode = 'normal';
+  document.body.classList.remove('terminal-mode');
+  document.documentElement.classList.remove('terminal-windows', 'terminal-ubuntu');
+  
   isConnected = false;
   if (channel) {
     channel.untrack();
