@@ -344,6 +344,300 @@
   /* ===== SCROLLBAR ===== */
   #messages::-webkit-scrollbar { width: 4px; }
   #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ===== TERMINAL MODE ===== */
+  :root.terminal-windows {
+    --terminal-bg: #000000;
+    --terminal-text: #0cc40c;
+    --terminal-accent: #107C10;
+    --terminal-secondary: #666666;
+  }
+  
+  :root.terminal-ubuntu {
+    --terminal-bg: #000000;
+    --terminal-text: #ff6600;
+    --terminal-accent: #E95420;
+    --terminal-secondary: #666666;
+  }
+
+  body.terminal-mode {
+    background: var(--terminal-bg);
+    color: var(--terminal-text);
+    font-family: 'Courier New', 'Courier', monospace;
+  }
+
+  .terminal-mode #chat-screen {
+    background: var(--terminal-bg);
+  }
+
+  .terminal-mode .chat-header {
+    background: var(--terminal-bg);
+    border-bottom: 2px solid var(--terminal-accent);
+  }
+
+  .terminal-mode .chat-header-info .peer-name {
+    color: var(--terminal-text);
+  }
+
+  .terminal-mode .chat-header-info .conn-status {
+    color: var(--terminal-secondary);
+  }
+
+  .terminal-mode #messages {
+    background: var(--terminal-bg);
+    font-family: 'Courier New', 'Courier', monospace;
+  }
+
+  .terminal-mode .msg-bubble {
+    background: transparent;
+    border: 1px solid var(--terminal-text);
+    border-radius: 2px;
+    padding: 8px 12px;
+    font-family: 'Courier New', 'Courier', monospace;
+  }
+
+  .terminal-mode .msg-row.me .msg-bubble {
+    background: transparent;
+    color: var(--terminal-text);
+    border-left: 3px solid var(--terminal-text);
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+    padding-left: 12px;
+  }
+
+  .terminal-mode .msg-row.them .msg-bubble {
+    background: transparent;
+    color: var(--terminal-secondary);
+    border-right: 3px solid var(--terminal-secondary);
+    border-left: none;
+    border-top: none;
+    border-bottom: none;
+    padding-right: 12px;
+  }
+
+  .terminal-mode .msg-bubble::before {
+    content: '$ ';
+    color: var(--terminal-text);
+  }
+
+  .terminal-mode .msg-row.them .msg-bubble::before {
+    content: '> ';
+    color: var(--terminal-secondary);
+  }
+
+  .terminal-mode .msg-time {
+    color: var(--terminal-secondary);
+    font-size: 0.8rem;
+  }
+
+  .terminal-mode .chat-bottom {
+    background: var(--terminal-bg);
+    border-top: 2px solid var(--terminal-accent);
+  }
+
+  .terminal-mode #msg-input {
+    background: var(--terminal-bg);
+    color: var(--terminal-text);
+    border: 1px solid var(--terminal-text);
+    font-family: 'Courier New', 'Courier', monospace;
+  }
+
+  .terminal-mode #msg-input:focus {
+    border-color: var(--terminal-accent);
+    background: var(--terminal-bg);
+  }
+
+  .terminal-mode #msg-input::placeholder {
+    color: var(--terminal-secondary);
+  }
+
+  .terminal-mode #send-btn {
+    background: transparent;
+    border: 1px solid var(--terminal-text);
+    color: var(--terminal-text);
+  }
+
+  .terminal-mode .icon-btn {
+    color: var(--terminal-text);
+  }
+
+  .terminal-mode .icon-btn:active,
+  .terminal-mode .icon-btn.active {
+    background: transparent;
+    color: var(--terminal-accent);
+    border: 1px solid var(--terminal-accent);
+    border-radius: 2px;
+  }
+
+  .terminal-mode .emoji-row {
+    background: var(--terminal-bg);
+    border-bottom: 1px solid var(--terminal-text);
+  }
+
+  .terminal-mode .system-msg {
+    background: transparent;
+    border: 1px solid var(--terminal-secondary);
+    color: var(--terminal-secondary);
+    border-radius: 0;
+  }
+
+  .terminal-mode .date-divider {
+    color: var(--terminal-secondary);
+  }
+
+  .terminal-mode .date-divider::before,
+  .terminal-mode .date-divider::after {
+    background: var(--terminal-secondary);
+  }
+
+  .terminal-mode .btn-back,
+  .terminal-mode .btn-home {
+    background: transparent;
+    border: 1px solid var(--terminal-text);
+    color: var(--terminal-text);
+    border-radius: 2px;
+  }
+
+  .terminal-mode .btn-back:active,
+  .terminal-mode .btn-home:active {
+    background: var(--terminal-accent);
+    color: var(--terminal-bg);
+  }
+
+  .terminal-mode .theme-toggle-btn {
+    background: transparent;
+    border: 1px solid var(--terminal-text);
+    color: var(--terminal-text);
+    border-radius: 2px;
+    width: auto;
+    padding: 6px 10px;
+    font-family: 'Courier New', 'Courier', monospace;
+    font-size: 0.75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+
+  .terminal-mode .theme-toggle-btn:active {
+    background: var(--terminal-accent);
+    color: var(--terminal-bg);
+  }
+
+  .theme-toggle-btn {
+    background: transparent;
+    border: 1px solid var(--primary);
+    color: white;
+    border-radius: 2px;
+    width: auto;
+    padding: 6px 10px;
+    font-family: inherit;
+    font-size: 0.75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .theme-toggle-btn:active {
+    background: rgba(255,255,255,0.1);
+  }
+
+  /* Theme scheme selector modal */
+  #theme-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  #theme-modal.open {
+    display: flex;
+  }
+
+  .theme-modal-content {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 20px;
+    max-width: 300px;
+    box-shadow: var(--shadow-md);
+  }
+
+  .terminal-mode .theme-modal-content {
+    background: var(--terminal-bg);
+    border: 2px solid var(--terminal-accent);
+    color: var(--terminal-text);
+  }
+
+  .theme-modal-content h3 {
+    margin-bottom: 16px;
+    font-size: 1rem;
+  }
+
+  .theme-modal-content h3.terminal-scheme-label {
+    margin-top: 16px;
+  }
+
+  .theme-modal-content .scheme-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+
+  .theme-modal-content .scheme-option:hover {
+    background: var(--bg);
+  }
+
+  .terminal-mode .theme-modal-content .scheme-option:hover {
+    background: transparent;
+    border: 1px solid var(--terminal-text);
+  }
+
+  .theme-modal-content .scheme-option input[type="radio"] {
+    cursor: pointer;
+  }
+
+  .theme-modal-content .scheme-option label {
+    cursor: pointer;
+    flex: 1;
+    margin: 0;
+  }
+
+  .theme-modal-close {
+    margin-top: 16px;
+    width: 100%;
+    padding: 10px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: opacity 0.15s;
+  }
+
+  .terminal-mode .theme-modal-close {
+    background: transparent;
+    border: 1px solid var(--terminal-accent);
+    color: var(--terminal-accent);
+  }
+
+  .theme-modal-close:active {
+    opacity: 0.8;
+  }
 </style>
 </head>
 <body>
@@ -396,6 +690,13 @@
         <span id="header-status-text">Đang kết nối...</span>
       </div>
     </div>
+    <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Open theme settings" onclick="toggleThemeModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+        <polyline points="4 17 10 11 4 5"/>
+        <line x1="12" y1="19" x2="20" y2="19"/>
+      </svg>
+      <span>Terminal</span>
+    </button>
     <a href="./index.html" class="btn-home" title="Về trang chủ">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9.5z"/>
@@ -435,6 +736,31 @@
         </svg>
       </button>
     </div>
+  </div>
+</div>
+
+<!-- Theme Modal -->
+<div id="theme-modal" role="dialog" aria-modal="true" onclick="closeThemeModal(event)">
+  <div class="theme-modal-content" tabindex="-1" aria-labelledby="theme-modal-title" onclick="event.stopPropagation()">
+    <h3 id="theme-modal-title">Chế độ Hiển thị</h3>
+    <div class="scheme-option">
+      <input type="radio" id="mode-normal" name="theme-mode" value="normal" onchange="setThemeMode('normal')">
+      <label for="mode-normal">Giao diện bình thường</label>
+    </div>
+    <div class="scheme-option">
+      <input type="radio" id="mode-terminal" name="theme-mode" value="terminal" onchange="setThemeMode('terminal')">
+      <label for="mode-terminal">Chế độ Terminal</label>
+    </div>
+    <h3 class="terminal-scheme-label" id="terminal-scheme-title">Lựa chọn màu sắc Terminal</h3>
+    <div class="scheme-option">
+      <input type="radio" id="scheme-windows" name="terminal-scheme" value="windows" onchange="setTerminalScheme('windows')">
+      <label for="scheme-windows">Windows (Xanh lục)</label>
+    </div>
+    <div class="scheme-option">
+      <input type="radio" id="scheme-ubuntu" name="terminal-scheme" value="ubuntu" onchange="setTerminalScheme('ubuntu')">
+      <label for="scheme-ubuntu">Ubuntu (Cam/Đỏ)</label>
+    </div>
+    <button class="theme-modal-close" onclick="closeThemeModal()">Đóng</button>
   </div>
 </div>
 
@@ -484,6 +810,162 @@ let isConnected = false;
 const STORAGE_KEY_PREFIX = 'peerchat_';
 let storageKey = '';
 let lastDateLabel = '';
+let currentThemeMode = 'normal'; // 'normal' or 'terminal'
+let currentTerminalScheme = 'windows'; // 'windows' or 'ubuntu'
+
+// ===== THEME MANAGEMENT =====
+function initTheme() {
+  // Load theme preferences from localStorage
+  const savedMode = localStorage.getItem('peerchat_theme_mode') || 'normal';
+  const savedScheme = localStorage.getItem('peerchat_terminal_scheme') || 'windows';
+  
+  currentThemeMode = savedMode;
+  currentTerminalScheme = savedScheme;
+  
+  // Apply theme
+  applyTheme();
+}
+
+function applyTheme() {
+  const htmlEl = document.documentElement;
+  const bodyEl = document.body;
+  
+  if (currentThemeMode === 'terminal') {
+    bodyEl.classList.add('terminal-mode');
+    if (currentTerminalScheme === 'windows') {
+      htmlEl.classList.remove('terminal-ubuntu');
+      htmlEl.classList.add('terminal-windows');
+    } else {
+      htmlEl.classList.remove('terminal-windows');
+      htmlEl.classList.add('terminal-ubuntu');
+    }
+  } else {
+    bodyEl.classList.remove('terminal-mode');
+    htmlEl.classList.remove('terminal-windows', 'terminal-ubuntu');
+  }
+  
+  // Update radio buttons in modal if they exist
+  const modeRadio = document.getElementById(`mode-${currentThemeMode}`);
+  const schemeRadio = document.getElementById(`scheme-${currentTerminalScheme}`);
+  if (modeRadio) modeRadio.checked = true;
+  if (schemeRadio) schemeRadio.checked = true;
+}
+
+function setThemeMode(mode) {
+  currentThemeMode = mode;
+  localStorage.setItem('peerchat_theme_mode', mode);
+  applyTheme();
+  // Re-render messages to apply diacritic conversion if theme changed
+  const chatScreen = document.getElementById('chat-screen');
+  if (chatScreen && chatScreen.classList.contains('active')) {
+    loadMessages();
+  }
+}
+
+function setTerminalScheme(scheme) {
+  currentTerminalScheme = scheme;
+  localStorage.setItem('peerchat_terminal_scheme', scheme);
+  applyTheme();
+}
+
+// Track if escape handler is attached to prevent duplicates
+let escapeHandlerAttached = false;
+
+function attachEscapeHandler() {
+  if (!escapeHandlerAttached) {
+    document.addEventListener('keydown', handleEscapeKey);
+    escapeHandlerAttached = true;
+  }
+}
+
+function detachEscapeHandler() {
+  if (escapeHandlerAttached) {
+    document.removeEventListener('keydown', handleEscapeKey);
+    escapeHandlerAttached = false;
+  }
+}
+
+function toggleThemeModal() {
+  const modal = document.getElementById('theme-modal');
+  if (modal) {
+    modal.classList.add('open');
+    attachEscapeHandler();
+    // Focus the modal content div for proper screen reader announcement
+    modal.querySelector('.theme-modal-content').focus();
+  }
+}
+
+function closeThemeModal(e) {
+  const modal = document.getElementById('theme-modal');
+  if (!modal) return;
+  
+  // Close modal when clicking on the background or programmatically
+  const shouldClose = !e || (e.target && e.target.id === 'theme-modal');
+  if (shouldClose) {
+    modal.classList.remove('open');
+    detachEscapeHandler();
+  }
+}
+
+// Handle Escape key to close modal
+function handleEscapeKey(e) {
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('theme-modal');
+    if (modal && modal.classList.contains('open')) {
+      closeThemeModal();
+    }
+  }
+}
+
+// ===== VIETNAMESE DIACRITIC REMOVAL =====
+function removeVietnameseDiacritics(text) {
+  // Ensure text is a string; return as-is if not
+  if (typeof text !== 'string') {
+    return String(text || '');
+  }
+  
+  // Map of Vietnamese characters with diacritics to non-diacritic versions
+  const diacriticMap = {
+    // Uppercase vowels with tone marks
+    'À': 'A', 'Á': 'A', 'Ả': 'A', 'Ã': 'A', 'Ạ': 'A',
+    'Ă': 'A', 'Ằ': 'A', 'Ắ': 'A', 'Ẳ': 'A', 'Ẵ': 'A', 'Ặ': 'A',
+    'Â': 'A', 'Ầ': 'A', 'Ấ': 'A', 'Ẩ': 'A', 'Ẫ': 'A', 'Ậ': 'A',
+    'È': 'E', 'É': 'E', 'Ẻ': 'E', 'Ẽ': 'E', 'Ẹ': 'E',
+    'Ê': 'E', 'Ề': 'E', 'Ế': 'E', 'Ể': 'E', 'Ễ': 'E', 'Ệ': 'E',
+    'Ì': 'I', 'Í': 'I', 'Ỉ': 'I', 'Ĩ': 'I', 'Ị': 'I',
+    'Ò': 'O', 'Ó': 'O', 'Ỏ': 'O', 'Õ': 'O', 'Ọ': 'O',
+    'Ô': 'O', 'Ồ': 'O', 'Ố': 'O', 'Ổ': 'O', 'Ỗ': 'O', 'Ộ': 'O',
+    'Ơ': 'O', 'Ờ': 'O', 'Ớ': 'O', 'Ở': 'O', 'Ỡ': 'O', 'Ợ': 'O',
+    'Ù': 'U', 'Ú': 'U', 'Ủ': 'U', 'Ũ': 'U', 'Ụ': 'U',
+    'Ư': 'U', 'Ừ': 'U', 'Ứ': 'U', 'Ử': 'U', 'Ữ': 'U', 'Ự': 'U',
+    'Ỳ': 'Y', 'Ý': 'Y', 'Ỷ': 'Y', 'Ỹ': 'Y', 'Ỵ': 'Y',
+    'Đ': 'D',
+    // Lowercase vowels with tone marks
+    'à': 'a', 'á': 'a', 'ả': 'a', 'ã': 'a', 'ạ': 'a',
+    'ă': 'a', 'ằ': 'a', 'ắ': 'a', 'ẳ': 'a', 'ẵ': 'a', 'ặ': 'a',
+    'â': 'a', 'ầ': 'a', 'ấ': 'a', 'ẩ': 'a', 'ẫ': 'a', 'ậ': 'a',
+    'è': 'e', 'é': 'e', 'ẻ': 'e', 'ẽ': 'e', 'ẹ': 'e',
+    'ê': 'e', 'ề': 'e', 'ế': 'e', 'ể': 'e', 'ễ': 'e', 'ệ': 'e',
+    'ì': 'i', 'í': 'i', 'ỉ': 'i', 'ĩ': 'i', 'ị': 'i',
+    'ò': 'o', 'ó': 'o', 'ỏ': 'o', 'õ': 'o', 'ọ': 'o',
+    'ô': 'o', 'ồ': 'o', 'ố': 'o', 'ổ': 'o', 'ỗ': 'o', 'ộ': 'o',
+    'ơ': 'o', 'ờ': 'o', 'ớ': 'o', 'ở': 'o', 'ỡ': 'o', 'ợ': 'o',
+    'ù': 'u', 'ú': 'u', 'ủ': 'u', 'ũ': 'u', 'ụ': 'u',
+    'ư': 'u', 'ừ': 'u', 'ứ': 'u', 'ử': 'u', 'ữ': 'u', 'ự': 'u',
+    'ỳ': 'y', 'ý': 'y', 'ỷ': 'y', 'ỹ': 'y', 'ỵ': 'y',
+    'đ': 'd'
+  };
+  
+  return text.split('').map(char => diacriticMap[char] || char).join('');
+}
+
+// Apply text conversion based on terminal mode
+function applyTerminalTextConversion(text) {
+  if (currentThemeMode === 'terminal') {
+    return removeVietnameseDiacritics(text);
+  }
+  return text;
+}
 
 // ===== NOTIFICATIONS =====
 let unreadCount = 0;
@@ -625,7 +1107,9 @@ function openChatScreen() {
   document.getElementById('setup-screen').classList.remove('active');
   document.getElementById('chat-screen').classList.add('active');
 
-  document.getElementById('header-peer-name').textContent = peerNick;
+  initTheme(); // Initialize theme when opening chat
+
+  document.getElementById('header-peer-name').textContent = applyTerminalTextConversion(peerNick);
   document.getElementById('peer-avatar').textContent = peerNick.charAt(0).toUpperCase();
   updateHeaderStatus('connecting', `Đang chờ ${peerNick}...`);
 
@@ -637,13 +1121,13 @@ function openChatScreen() {
 function updateHeaderStatus(state, text) {
   const dot = document.getElementById('header-status-dot');
   dot.className = 'status-dot ' + state;
-  document.getElementById('header-status-text').textContent = text;
+  document.getElementById('header-status-text').textContent = applyTerminalTextConversion(text);
 }
 
 function setStatus(state, text) {
   const dot = document.getElementById('status-dot');
   dot.className = 'status-dot ' + state;
-  document.getElementById('status-text').textContent = text;
+  document.getElementById('status-text').textContent = applyTerminalTextConversion(text);
 }
 
 function goBack() {
@@ -651,6 +1135,14 @@ function goBack() {
   document.getElementById('setup-screen').classList.add('active');
   document.getElementById('connect-btn').disabled = false;
   document.getElementById('status-info').style.display = 'none';
+  
+  // Close theme modal if open
+  const themeModal = document.getElementById('theme-modal');
+  if (themeModal) {
+    themeModal.classList.remove('open');
+    detachEscapeHandler();
+  }
+  
   isConnected = false;
   if (channel) {
     channel.untrack();
@@ -892,10 +1384,10 @@ function renderMessage(msg, noScroll) {
   bubble.className = 'msg-bubble';
 
   if (msg.type === 'text') {
-    bubble.textContent = msg.content;
+    bubble.textContent = applyTerminalTextConversion(msg.content);
   } else if (msg.type === 'image') {
     if (msg.content === '[image]') {
-      bubble.textContent = '📷 [Ảnh không còn lưu]';
+      bubble.textContent = applyTerminalTextConversion('📷 [Ảnh không còn lưu]');
     } else {
       const imgEl = document.createElement('img');
       imgEl.src = msg.content;
@@ -923,7 +1415,7 @@ function addSystemMsg(text) {
   const container = document.getElementById('messages');
   const el = document.createElement('div');
   el.className = 'system-msg';
-  el.textContent = text;
+  el.textContent = applyTerminalTextConversion(text);
   container.appendChild(el);
 }
 
@@ -946,7 +1438,7 @@ function closeLightbox() {
 // ===== TOAST =====
 function showToast(msg) {
   const el = document.getElementById('toast');
-  el.textContent = msg;
+  el.textContent = applyTerminalTextConversion(msg);
   el.classList.add('show');
   clearTimeout(el._t);
   el._t = setTimeout(() => el.classList.remove('show'), 2500);
@@ -967,9 +1459,12 @@ function formatDate(ts) {
   const now = new Date();
   const y = d.getFullYear(), m = d.getMonth(), day = d.getDate();
   const ny = now.getFullYear(), nm = now.getMonth(), nd = now.getDate();
-  if (y === ny && m === nm && day === nd) return 'Hôm nay';
-  if (y === ny && m === nm && day === nd - 1) return 'Hôm qua';
-  return `${day.toString().padStart(2,'0')}/${(m+1).toString().padStart(2,'0')}/${y}`;
+  let result;
+  if (y === ny && m === nm && day === nd) result = 'Hôm nay';
+  else if (y === ny && m === nm && day === nd - 1) result = 'Hôm qua';
+  else result = `${day.toString().padStart(2,'0')}/${(m+1).toString().padStart(2,'0')}/${y}`;
+  
+  return applyTerminalTextConversion(result);
 }
 
 // ===== RESTORE SETUP FROM STORAGE =====
