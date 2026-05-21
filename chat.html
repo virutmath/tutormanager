@@ -737,8 +737,8 @@
 
 <!-- Theme Modal -->
 <div id="theme-modal" onclick="closeThemeModal(event)">
-  <div class="theme-modal-content" onclick="event.stopPropagation()">
-    <h3>Chế độ Hiển thị</h3>
+  <div class="theme-modal-content" onclick="event.stopPropagation()" tabindex="0" role="dialog" aria-labelledby="theme-modal-title">
+    <h3 id="theme-modal-title">Chế độ Hiển thị</h3>
     <div class="scheme-option">
       <input type="radio" id="mode-normal" name="theme-mode" value="normal" onchange="setThemeMode('normal')">
       <label for="mode-normal">Giao diện bình thường</label>
@@ -840,9 +840,11 @@ function applyTheme() {
     htmlEl.classList.remove('terminal-windows', 'terminal-ubuntu');
   }
   
-  // Update radio buttons in modal
-  document.getElementById('mode-' + currentThemeMode).checked = true;
-  document.getElementById('scheme-' + currentTerminalScheme).checked = true;
+  // Update radio buttons in modal if they exist
+  const modeRadio = document.getElementById('mode-' + currentThemeMode);
+  const schemeRadio = document.getElementById('scheme-' + currentTerminalScheme);
+  if (modeRadio) modeRadio.checked = true;
+  if (schemeRadio) schemeRadio.checked = true;
 }
 
 function setThemeMode(mode) {
@@ -860,12 +862,25 @@ function setTerminalScheme(scheme) {
 function toggleThemeModal() {
   const modal = document.getElementById('theme-modal');
   modal.classList.add('open');
+  // Focus the first radio button for accessibility
+  document.getElementById('mode-normal').focus();
 }
 
 function closeThemeModal(e) {
+  // Allow closing by clicking on modal background, but not on content
   if (e && e.target.id !== 'theme-modal') return;
   document.getElementById('theme-modal').classList.remove('open');
 }
+
+// Handle Escape key to close modal
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('theme-modal');
+    if (modal.classList.contains('open')) {
+      modal.classList.remove('open');
+    }
+  }
+});
 
 // ===== NOTIFICATIONS =====
 let unreadCount = 0;
@@ -1037,10 +1052,8 @@ function goBack() {
   document.getElementById('status-info').style.display = 'none';
   document.getElementById('theme-modal').classList.remove('open');
   
-  // Reset theme to normal when going back
-  currentThemeMode = 'normal';
-  document.body.classList.remove('terminal-mode');
-  document.documentElement.classList.remove('terminal-windows', 'terminal-ubuntu');
+  // Reset theme to normal when going back and persist to localStorage
+  setThemeMode('normal');
   
   isConnected = false;
   if (channel) {
