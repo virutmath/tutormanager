@@ -4,15 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Chat</title>
-<meta name="theme-color" content="#4f46e5">
+<meta name="theme-color" content="#0d9488">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --primary: #4f46e5;
-    --primary-light: #818cf8;
-    --primary-dark: #3730a3;
+    --primary: #0d9488;
+    --primary-light: #5eead4;
+    --primary-dark: #0f766e;
     --bg: #f1f5f9;
     --surface: #ffffff;
     --text: #1e293b;
@@ -22,7 +22,7 @@
     --shadow-md: 0 4px 12px rgba(0,0,0,0.12);
     --radius: 12px;
     --radius-sm: 8px;
-    --bubble-me: #4f46e5;
+    --bubble-me: #0d9488;
     --bubble-them: #e2e8f0;
   }
   html, body {
@@ -295,7 +295,7 @@
     background: var(--bg);
     transition: border-color 0.2s;
   }
-  #msg-input:focus { border-color: var(--primary); background: var(--surface); }
+  #msg-input:focus { border-color: var(--border); background: var(--surface); outline: none; }
   #msg-input::placeholder { color: #aaa; }
 
   #send-btn {
@@ -349,14 +349,14 @@
 
   /* ===== TERMINAL MODE ===== */
   :root.terminal-windows {
-    --terminal-bg: #000000;
+    --terminal-bg: #1a1a2e;
     --terminal-text: #0cc40c;
     --terminal-accent: #107C10;
     --terminal-secondary: #666666;
   }
   
   :root.terminal-ubuntu {
-    --terminal-bg: #000000;
+    --terminal-bg: #1a1a2e;
     --terminal-text: #ff6600;
     --terminal-accent: #E95420;
     --terminal-secondary: #666666;
@@ -434,12 +434,15 @@
   .terminal-mode #msg-input {
     background: var(--terminal-bg);
     color: var(--terminal-text);
-    border: 1px solid var(--terminal-text);
+    border: none;
+    border-radius: 0;
     font-family: 'Courier New', 'Courier', monospace;
+    caret-color: var(--terminal-text);
   }
 
   .terminal-mode #msg-input:focus {
-    border-color: var(--terminal-accent);
+    border: none;
+    outline: none;
     background: var(--terminal-bg);
   }
 
@@ -679,11 +682,11 @@
   <div class="setup-card">
     <div class="setup-logo">
       <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="56" height="56" rx="16" fill="#4f46e5"/>
+        <rect width="56" height="56" rx="16" fill="#0d9488"/>
         <path d="M14 18C14 15.8 15.8 14 18 14H38C40.2 14 42 15.8 42 18V30C42 32.2 40.2 34 38 34H30L22 42V34H18C15.8 34 14 32.2 14 30V18Z" fill="white" fill-opacity="0.9"/>
-        <circle cx="21" cy="24" r="2.5" fill="#4f46e5"/>
-        <circle cx="28" cy="24" r="2.5" fill="#4f46e5"/>
-        <circle cx="35" cy="24" r="2.5" fill="#4f46e5"/>
+        <circle cx="21" cy="24" r="2.5" fill="#0d9488"/>
+        <circle cx="28" cy="24" r="2.5" fill="#0d9488"/>
+        <circle cx="35" cy="24" r="2.5" fill="#0d9488"/>
       </svg>
       <h1>PeerChat</h1>
       <p>Trò chuyện trực tiếp, riêng tư</p>
