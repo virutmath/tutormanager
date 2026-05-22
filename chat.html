@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Chat</title>
 <meta name="theme-color" content="#4f46e5">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -390,45 +392,38 @@
 
   .terminal-mode .msg-bubble {
     background: transparent;
-    border: 1px solid var(--terminal-text);
-    border-radius: 2px;
-    padding: 8px 12px;
+    border: none;
+    border-radius: 0;
+    padding: 2px 0;
     font-family: 'Courier New', 'Courier', monospace;
   }
 
   .terminal-mode .msg-row.me .msg-bubble {
     background: transparent;
-    color: var(--terminal-text);
-    border-left: 3px solid var(--terminal-text);
-    border-right: none;
-    border-top: none;
-    border-bottom: none;
-    padding-left: 12px;
+    color: white;
+    border: none;
+    padding: 2px 0;
   }
 
   .terminal-mode .msg-row.them .msg-bubble {
     background: transparent;
-    color: var(--terminal-secondary);
-    border-right: 3px solid var(--terminal-secondary);
-    border-left: none;
-    border-top: none;
-    border-bottom: none;
-    padding-right: 12px;
+    color: white;
+    border: none;
+    padding: 2px 0;
   }
 
   .terminal-mode .msg-bubble::before {
-    content: '$ ';
+    content: ':~$ ';
     color: var(--terminal-text);
   }
 
   .terminal-mode .msg-row.them .msg-bubble::before {
-    content: '> ';
-    color: var(--terminal-secondary);
+    content: ':~$ ';
+    color: var(--terminal-text);
   }
 
   .terminal-mode .msg-time {
-    color: var(--terminal-secondary);
-    font-size: 0.8rem;
+    display: none;
   }
 
   .terminal-mode .chat-bottom {
@@ -638,6 +633,43 @@
   .theme-modal-close:active {
     opacity: 0.8;
   }
+
+  /* ===== FONT OPTIONS ===== */
+  body.font-opensans { font-family: 'Open Sans', sans-serif; }
+  body.font-arial { font-family: Arial, Helvetica, sans-serif; }
+  body.font-code { font-family: 'Courier New', Courier, monospace; }
+
+  /* ===== TERMINAL MODE EXTRA OVERRIDES ===== */
+  /* Hide send button and icon buttons */
+  .terminal-mode #send-btn { display: none; }
+  .terminal-mode .icon-btn { display: none; }
+
+  /* Avatar becomes inline name@chatsystem label */
+  .terminal-mode .msg-avatar {
+    width: auto;
+    min-width: 0;
+    height: auto;
+    border-radius: 0;
+    background: transparent;
+    color: var(--terminal-text);
+    font-size: 0.875rem;
+    font-weight: 700;
+    white-space: nowrap;
+    align-self: flex-start;
+    margin-bottom: 0;
+    padding-top: 3px;
+  }
+
+  /* All messages left-aligned in terminal mode */
+  .terminal-mode .msg-row { align-items: flex-start; }
+  .terminal-mode .msg-row.me { flex-direction: row; }
+  .terminal-mode .msg-row.me .msg-group,
+  .terminal-mode .msg-row.them .msg-group { align-items: flex-start; }
+  .terminal-mode .msg-group { max-width: none; flex: 1; min-width: 0; }
+
+  /* Hide circular avatar in header, clean up input radius */
+  .terminal-mode .avatar { display: none; }
+  .terminal-mode #msg-input { border-radius: 0; }
 </style>
 </head>
 <body>
@@ -760,6 +792,23 @@
       <input type="radio" id="scheme-ubuntu" name="terminal-scheme" value="ubuntu" onchange="setTerminalScheme('ubuntu')">
       <label for="scheme-ubuntu">Ubuntu (Cam/Đỏ)</label>
     </div>
+    <h3 class="terminal-scheme-label">Phông chữ</h3>
+    <div class="scheme-option">
+      <input type="radio" id="font-default" name="chat-font" value="default" onchange="setFont('default')">
+      <label for="font-default">Mặc định</label>
+    </div>
+    <div class="scheme-option">
+      <input type="radio" id="font-opensans" name="chat-font" value="opensans" onchange="setFont('opensans')">
+      <label for="font-opensans">Open Sans</label>
+    </div>
+    <div class="scheme-option">
+      <input type="radio" id="font-arial" name="chat-font" value="arial" onchange="setFont('arial')">
+      <label for="font-arial">Arial</label>
+    </div>
+    <div class="scheme-option">
+      <input type="radio" id="font-code" name="chat-font" value="code" onchange="setFont('code')">
+      <label for="font-code">Code (monospace)</label>
+    </div>
     <button class="theme-modal-close" onclick="closeThemeModal()">Đóng</button>
   </div>
 </div>
@@ -812,6 +861,7 @@ let storageKey = '';
 let lastDateLabel = '';
 let currentThemeMode = 'normal'; // 'normal' or 'terminal'
 let currentTerminalScheme = 'windows'; // 'windows' or 'ubuntu'
+let currentFont = 'default'; // 'default', 'opensans', 'arial', 'code'
 
 // ===== THEME MANAGEMENT =====
 function initTheme() {
@@ -824,6 +874,7 @@ function initTheme() {
   
   // Apply theme
   applyTheme();
+  initFont();
 }
 
 function applyTheme() {
@@ -849,6 +900,28 @@ function applyTheme() {
   const schemeRadio = document.getElementById(`scheme-${currentTerminalScheme}`);
   if (modeRadio) modeRadio.checked = true;
   if (schemeRadio) schemeRadio.checked = true;
+}
+
+// ===== FONT MANAGEMENT =====
+function initFont() {
+  const savedFont = localStorage.getItem('peerchat_font') || 'default';
+  currentFont = savedFont;
+  applyFont();
+}
+
+function applyFont() {
+  document.body.classList.remove('font-opensans', 'font-arial', 'font-code');
+  if (currentFont !== 'default') {
+    document.body.classList.add('font-' + currentFont);
+  }
+  const fontRadio = document.getElementById('font-' + currentFont);
+  if (fontRadio) fontRadio.checked = true;
+}
+
+function setFont(font) {
+  currentFont = font;
+  localStorage.setItem('peerchat_font', font);
+  applyFont();
 }
 
 function setThemeMode(mode) {
@@ -1375,7 +1448,11 @@ function renderMessage(msg, noScroll) {
 
   const avatarEl = document.createElement('div');
   avatarEl.className = 'msg-avatar';
-  avatarEl.textContent = initials;
+  if (currentThemeMode === 'terminal') {
+    avatarEl.textContent = applyTerminalTextConversion(nick) + '@chatsystem';
+  } else {
+    avatarEl.textContent = initials;
+  }
 
   const group = document.createElement('div');
   group.className = 'msg-group';
@@ -1473,6 +1550,12 @@ function formatDate(ts) {
   const savedPeer = localStorage.getItem('peerchat_peerNick');
   if (saved) document.getElementById('my-nick').value = saved;
   if (savedPeer) document.getElementById('peer-nick').value = savedPeer;
+
+  // Apply saved font on page load (before chat screen opens)
+  const savedFont = localStorage.getItem('peerchat_font');
+  if (savedFont && savedFont !== 'default') {
+    document.body.classList.add('font-' + savedFont);
+  }
 })();
 
 document.getElementById('my-nick').addEventListener('input', function() {
