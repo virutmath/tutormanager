@@ -6,7 +6,7 @@
 <title>Chat</title>
 <meta name="theme-color" content="#4f46e5">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -1552,10 +1552,7 @@ function formatDate(ts) {
   if (savedPeer) document.getElementById('peer-nick').value = savedPeer;
 
   // Apply saved font on page load (before chat screen opens)
-  const savedFont = localStorage.getItem('peerchat_font');
-  if (savedFont && savedFont !== 'default') {
-    document.body.classList.add('font-' + savedFont);
-  }
+  initFont();
 })();
 
 document.getElementById('my-nick').addEventListener('input', function() {
