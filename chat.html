@@ -348,24 +348,16 @@
   #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
   /* ===== TERMINAL MODE ===== */
-  :root.terminal-windows {
-    --terminal-bg: #1a1a2e;
-    --terminal-text: #0cc40c;
-    --terminal-accent: #107C10;
-    --terminal-secondary: #666666;
-  }
-  
-  :root.terminal-ubuntu {
-    --terminal-bg: #1a1a2e;
-    --terminal-text: #ff6600;
-    --terminal-accent: #E95420;
-    --terminal-secondary: #666666;
+  /* Unified terminal color variables */
+  :root {
+    --terminal-bg: #1f2937;
+    --terminal-name: #7dd3fc;
   }
 
   body.terminal-mode {
     background: var(--terminal-bg);
-    color: var(--terminal-text);
-    font-family: 'Courier New', 'Courier', monospace;
+    color: white;
+    font-family: 'Consolas', 'Courier New', monospace;
   }
 
   .terminal-mode #chat-screen {
@@ -374,52 +366,49 @@
 
   .terminal-mode .chat-header {
     background: var(--terminal-bg);
-    border-bottom: 2px solid var(--terminal-accent);
+    border: none;
   }
 
   .terminal-mode .chat-header-info .peer-name {
-    color: var(--terminal-text);
+    color: white;
   }
 
   .terminal-mode .chat-header-info .conn-status {
-    color: var(--terminal-secondary);
+    color: rgba(255,255,255,0.55);
   }
 
   .terminal-mode #messages {
     background: var(--terminal-bg);
-    font-family: 'Courier New', 'Courier', monospace;
+    font-family: 'Consolas', 'Courier New', monospace;
   }
 
   .terminal-mode .msg-bubble {
     background: transparent;
     border: none;
     border-radius: 0;
-    padding: 2px 0;
-    font-family: 'Courier New', 'Courier', monospace;
+    padding: 0;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.9375rem;
+    color: white;
   }
 
   .terminal-mode .msg-row.me .msg-bubble {
     background: transparent;
     color: white;
     border: none;
-    padding: 2px 0;
+    padding: 0;
   }
 
   .terminal-mode .msg-row.them .msg-bubble {
     background: transparent;
     color: white;
     border: none;
-    padding: 2px 0;
+    padding: 0;
   }
 
-  .terminal-mode .msg-bubble::before {
-    content: ':~$ ';
-    color: var(--terminal-text);
-  }
-
+  .terminal-mode .msg-bubble::before,
   .terminal-mode .msg-row.them .msg-bubble::before {
-    content: ':~$ ';
-    color: var(--terminal-text);
+    content: none;
   }
 
   .terminal-mode .msg-time {
@@ -428,16 +417,18 @@
 
   .terminal-mode .chat-bottom {
     background: var(--terminal-bg);
-    border-top: 2px solid var(--terminal-accent);
+    border: none;
   }
 
   .terminal-mode #msg-input {
     background: var(--terminal-bg);
-    color: var(--terminal-text);
+    color: white;
     border: none;
     border-radius: 0;
-    font-family: 'Courier New', 'Courier', monospace;
-    caret-color: var(--terminal-text);
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.9375rem;
+    caret-color: white;
+    padding: 0;
   }
 
   .terminal-mode #msg-input:focus {
@@ -447,70 +438,59 @@
   }
 
   .terminal-mode #msg-input::placeholder {
-    color: var(--terminal-secondary);
+    color: rgba(255,255,255,0.25);
   }
 
   .terminal-mode #send-btn {
-    background: transparent;
-    border: 1px solid var(--terminal-text);
-    color: var(--terminal-text);
+    display: none;
   }
 
   .terminal-mode .icon-btn {
-    color: var(--terminal-text);
-  }
-
-  .terminal-mode .icon-btn:active,
-  .terminal-mode .icon-btn.active {
-    background: transparent;
-    color: var(--terminal-accent);
-    border: 1px solid var(--terminal-accent);
-    border-radius: 2px;
+    display: none;
   }
 
   .terminal-mode .emoji-row {
     background: var(--terminal-bg);
-    border-bottom: 1px solid var(--terminal-text);
+    border: none;
   }
 
   .terminal-mode .system-msg {
     background: transparent;
-    border: 1px solid var(--terminal-secondary);
-    color: var(--terminal-secondary);
+    border: none;
+    color: rgba(255,255,255,0.45);
     border-radius: 0;
   }
 
   .terminal-mode .date-divider {
-    color: var(--terminal-secondary);
+    color: rgba(255,255,255,0.4);
   }
 
   .terminal-mode .date-divider::before,
   .terminal-mode .date-divider::after {
-    background: var(--terminal-secondary);
+    background: rgba(255,255,255,0.15);
   }
 
   .terminal-mode .btn-back,
   .terminal-mode .btn-home {
     background: transparent;
-    border: 1px solid var(--terminal-text);
-    color: var(--terminal-text);
-    border-radius: 2px;
+    border: none;
+    color: rgba(255,255,255,0.7);
   }
 
   .terminal-mode .btn-back:active,
   .terminal-mode .btn-home:active {
-    background: var(--terminal-accent);
-    color: var(--terminal-bg);
+    background: rgba(255,255,255,0.1);
+    color: white;
   }
 
   .terminal-mode .theme-toggle-btn {
     background: transparent;
-    border: 1px solid var(--terminal-text);
-    color: var(--terminal-text);
-    border-radius: 2px;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    border-radius: 0;
     width: auto;
     padding: 6px 10px;
-    font-family: 'Courier New', 'Courier', monospace;
+    font-family: 'Consolas', 'Courier New', monospace;
     font-size: 0.75rem;
     cursor: pointer;
     display: flex;
@@ -520,8 +500,8 @@
   }
 
   .terminal-mode .theme-toggle-btn:active {
-    background: var(--terminal-accent);
-    color: var(--terminal-bg);
+    background: rgba(255,255,255,0.1);
+    color: white;
   }
 
   .theme-toggle-btn {
@@ -571,8 +551,8 @@
 
   .terminal-mode .theme-modal-content {
     background: var(--terminal-bg);
-    border: 2px solid var(--terminal-accent);
-    color: var(--terminal-text);
+    border: none;
+    color: white;
   }
 
   .theme-modal-content h3 {
@@ -600,8 +580,8 @@
   }
 
   .terminal-mode .theme-modal-content .scheme-option:hover {
-    background: transparent;
-    border: 1px solid var(--terminal-text);
+    background: rgba(255,255,255,0.08);
+    border: none;
   }
 
   .theme-modal-content .scheme-option input[type="radio"] {
@@ -629,8 +609,8 @@
 
   .terminal-mode .theme-modal-close {
     background: transparent;
-    border: 1px solid var(--terminal-accent);
-    color: var(--terminal-accent);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
   }
 
   .theme-modal-close:active {
@@ -647,32 +627,66 @@
   .terminal-mode #send-btn { display: none; }
   .terminal-mode .icon-btn { display: none; }
 
-  /* Avatar becomes inline name@chatsystem label */
+  /* Avatar becomes terminal username prompt */
   .terminal-mode .msg-avatar {
     width: auto;
     min-width: 0;
     height: auto;
     border-radius: 0;
     background: transparent;
-    color: var(--terminal-text);
-    font-size: 0.875rem;
-    font-weight: 700;
+    font-size: 0.9375rem;
+    font-weight: normal;
     white-space: nowrap;
     align-self: flex-start;
     margin-bottom: 0;
-    padding-top: 3px;
+    padding-top: 0;
+    font-family: 'Consolas', 'Courier New', monospace;
+  }
+
+  /* Terminal username span colors */
+  .terminal-nick-full { color: var(--terminal-name); }
+  .terminal-nick-short { display: none; color: var(--terminal-name); }
+  .terminal-dollar { color: white; }
+
+  /* Responsive: abbreviated name when viewport < 300px */
+  @media (max-width: 300px) {
+    .terminal-nick-full { display: none; }
+    .terminal-nick-short { display: inline; }
+  }
+
+  /* Terminal input prefix (username$ prompt) */
+  .terminal-input-prefix {
+    display: none;
+    align-items: center;
+    white-space: nowrap;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.9375rem;
+    line-height: 1.4;
+    flex-shrink: 0;
+    user-select: none;
+  }
+
+  .terminal-mode .terminal-input-prefix {
+    display: flex;
   }
 
   /* All messages left-aligned in terminal mode */
-  .terminal-mode .msg-row { align-items: flex-start; }
+  .terminal-mode .msg-row { align-items: flex-start; gap: 0; }
   .terminal-mode .msg-row.me { flex-direction: row; }
   .terminal-mode .msg-row.me .msg-group,
   .terminal-mode .msg-row.them .msg-group { align-items: flex-start; }
   .terminal-mode .msg-group { max-width: none; flex: 1; min-width: 0; }
 
-  /* Hide circular avatar in header, clean up input radius */
+  /* Hide circular avatar in header, clean up input */
   .terminal-mode .avatar { display: none; }
   .terminal-mode #msg-input { border-radius: 0; }
+
+  /* Reduced padding for terminal input area */
+  .terminal-mode .input-row {
+    padding: 4px 8px;
+    gap: 0;
+    align-items: center;
+  }
 </style>
 </head>
 <body>
@@ -761,6 +775,7 @@
         </svg>
       </button>
       <input type="file" id="file-input" accept="image/*" onchange="handleFileInput(event)">
+      <span class="terminal-input-prefix" id="terminal-input-prefix"></span>
       <textarea id="msg-input" rows="1" placeholder="Nhắn tin..." maxlength="4000"
         oninput="autoResize(this)"
         onkeydown="handleKey(event)"></textarea>
@@ -785,15 +800,6 @@
     <div class="scheme-option">
       <input type="radio" id="mode-terminal" name="theme-mode" value="terminal" onchange="setThemeMode('terminal')">
       <label for="mode-terminal">Chế độ Terminal</label>
-    </div>
-    <h3 class="terminal-scheme-label" id="terminal-scheme-title">Lựa chọn màu sắc Terminal</h3>
-    <div class="scheme-option">
-      <input type="radio" id="scheme-windows" name="terminal-scheme" value="windows" onchange="setTerminalScheme('windows')">
-      <label for="scheme-windows">Windows (Xanh lục)</label>
-    </div>
-    <div class="scheme-option">
-      <input type="radio" id="scheme-ubuntu" name="terminal-scheme" value="ubuntu" onchange="setTerminalScheme('ubuntu')">
-      <label for="scheme-ubuntu">Ubuntu (Cam/Đỏ)</label>
     </div>
     <h3 class="terminal-scheme-label">Phông chữ</h3>
     <div class="scheme-option">
@@ -881,28 +887,17 @@ function initTheme() {
 }
 
 function applyTheme() {
-  const htmlEl = document.documentElement;
   const bodyEl = document.body;
   
   if (currentThemeMode === 'terminal') {
     bodyEl.classList.add('terminal-mode');
-    if (currentTerminalScheme === 'windows') {
-      htmlEl.classList.remove('terminal-ubuntu');
-      htmlEl.classList.add('terminal-windows');
-    } else {
-      htmlEl.classList.remove('terminal-windows');
-      htmlEl.classList.add('terminal-ubuntu');
-    }
   } else {
     bodyEl.classList.remove('terminal-mode');
-    htmlEl.classList.remove('terminal-windows', 'terminal-ubuntu');
   }
   
   // Update radio buttons in modal if they exist
   const modeRadio = document.getElementById(`mode-${currentThemeMode}`);
-  const schemeRadio = document.getElementById(`scheme-${currentTerminalScheme}`);
   if (modeRadio) modeRadio.checked = true;
-  if (schemeRadio) schemeRadio.checked = true;
 }
 
 // ===== FONT MANAGEMENT =====
@@ -931,6 +926,7 @@ function setThemeMode(mode) {
   currentThemeMode = mode;
   localStorage.setItem('peerchat_theme_mode', mode);
   applyTheme();
+  updateTerminalInputPrefix();
   // Re-render messages to apply diacritic conversion if theme changed
   const chatScreen = document.getElementById('chat-screen');
   if (chatScreen && chatScreen.classList.contains('active')) {
@@ -942,6 +938,28 @@ function setTerminalScheme(scheme) {
   currentTerminalScheme = scheme;
   localStorage.setItem('peerchat_terminal_scheme', scheme);
   applyTheme();
+}
+
+// Update the username$ prefix shown in the terminal input area
+function updateTerminalInputPrefix() {
+  const prefixEl = document.getElementById('terminal-input-prefix');
+  if (!prefixEl) return;
+  prefixEl.innerHTML = '';
+  if (currentThemeMode === 'terminal' && myNick) {
+    const displayNick = applyTerminalTextConversion(myNick);
+    const nickSpan = document.createElement('span');
+    nickSpan.className = 'terminal-nick-full';
+    nickSpan.textContent = displayNick;
+    const shortSpan = document.createElement('span');
+    shortSpan.className = 'terminal-nick-short';
+    shortSpan.textContent = displayNick.charAt(0).toUpperCase();
+    const dollarSpan = document.createElement('span');
+    dollarSpan.className = 'terminal-dollar';
+    dollarSpan.textContent = '$ ';
+    prefixEl.appendChild(nickSpan);
+    prefixEl.appendChild(shortSpan);
+    prefixEl.appendChild(dollarSpan);
+  }
 }
 
 // Track if escape handler is attached to prevent duplicates
@@ -1184,6 +1202,7 @@ function openChatScreen() {
   document.getElementById('chat-screen').classList.add('active');
 
   initTheme(); // Initialize theme when opening chat
+  updateTerminalInputPrefix(); // Set input prefix for terminal mode
 
   document.getElementById('header-peer-name').textContent = applyTerminalTextConversion(peerNick);
   document.getElementById('peer-avatar').textContent = peerNick.charAt(0).toUpperCase();
@@ -1452,7 +1471,19 @@ function renderMessage(msg, noScroll) {
   const avatarEl = document.createElement('div');
   avatarEl.className = 'msg-avatar';
   if (currentThemeMode === 'terminal') {
-    avatarEl.textContent = applyTerminalTextConversion(nick) + '@chatsystem';
+    const nickText = applyTerminalTextConversion(nick);
+    const fullSpan = document.createElement('span');
+    fullSpan.className = 'terminal-nick-full';
+    fullSpan.textContent = nickText;
+    const shortSpan = document.createElement('span');
+    shortSpan.className = 'terminal-nick-short';
+    shortSpan.textContent = nickText.charAt(0).toUpperCase();
+    const dollarSpan = document.createElement('span');
+    dollarSpan.className = 'terminal-dollar';
+    dollarSpan.textContent = '$ ';
+    avatarEl.appendChild(fullSpan);
+    avatarEl.appendChild(shortSpan);
+    avatarEl.appendChild(dollarSpan);
   } else {
     avatarEl.textContent = initials;
   }
