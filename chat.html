@@ -437,10 +437,6 @@
     background: var(--terminal-bg);
   }
 
-  .terminal-mode #msg-input::placeholder {
-    color: rgba(255,255,255,0.25);
-  }
-
   .terminal-mode #send-btn {
     display: none;
   }
@@ -671,15 +667,22 @@
   }
 
   /* All messages left-aligned in terminal mode */
-  .terminal-mode .msg-row { align-items: flex-start; gap: 0; }
+  .terminal-mode .msg-row { align-items: flex-start; gap: 6px; }
   .terminal-mode .msg-row.me { flex-direction: row; }
   .terminal-mode .msg-row.me .msg-group,
   .terminal-mode .msg-row.them .msg-group { align-items: flex-start; }
   .terminal-mode .msg-group { max-width: none; flex: 1; min-width: 0; }
 
+  /* Remove background from username avatar in terminal mode */
+  .terminal-mode .msg-row.me .msg-avatar,
+  .terminal-mode .msg-row.them .msg-avatar { background: transparent; }
+
   /* Hide circular avatar in header, clean up input */
   .terminal-mode .avatar { display: none; }
   .terminal-mode #msg-input { border-radius: 0; }
+
+  /* Hide placeholder in terminal mode (username prefix serves as prompt) */
+  .terminal-mode #msg-input::placeholder { color: transparent; }
 
   /* Reduced padding for terminal input area */
   .terminal-mode .input-row {
