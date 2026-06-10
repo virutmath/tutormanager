@@ -380,6 +380,7 @@
   .terminal-mode #messages {
     background: var(--terminal-bg);
     font-family: 'Consolas', 'Courier New', monospace;
+    gap: 2px;
   }
 
   .terminal-mode .msg-bubble {
@@ -404,6 +405,12 @@
     color: white;
     border: none;
     padding: 0;
+  }
+
+  .terminal-mode .msg-time {
+    margin-top: 0;
+    padding: 0 2px;
+    line-height: 1.15;
   }
 
   .terminal-mode .msg-bubble::before,
@@ -664,10 +671,11 @@
 
   .terminal-mode .terminal-input-prefix {
     display: flex;
+    margin-right: 10px;
   }
 
   /* All messages left-aligned in terminal mode */
-  .terminal-mode .msg-row { align-items: flex-start; gap: 6px; }
+  .terminal-mode .msg-row { align-items: flex-start; gap: 4px; }
   .terminal-mode .msg-row.me { flex-direction: row; }
   .terminal-mode .msg-row.me .msg-group,
   .terminal-mode .msg-row.them .msg-group { align-items: flex-start; }
@@ -949,13 +957,13 @@ function updateTerminalInputPrefix() {
   if (!prefixEl) return;
   prefixEl.innerHTML = '';
   if (currentThemeMode === 'terminal' && myNick) {
-    const displayNick = applyTerminalTextConversion(myNick);
+    const displayNick = getAlignedTerminalNick(myNick);
     const nickSpan = document.createElement('span');
     nickSpan.className = 'terminal-nick-full';
     nickSpan.textContent = displayNick;
     const shortSpan = document.createElement('span');
     shortSpan.className = 'terminal-nick-short';
-    shortSpan.textContent = displayNick.charAt(0).toUpperCase();
+    shortSpan.textContent = applyTerminalTextConversion(myNick).charAt(0).toUpperCase();
     const dollarSpan = document.createElement('span');
     dollarSpan.className = 'terminal-dollar';
     dollarSpan.textContent = '$ ';
@@ -963,6 +971,50 @@ function updateTerminalInputPrefix() {
     prefixEl.appendChild(shortSpan);
     prefixEl.appendChild(dollarSpan);
   }
+}
+
+let terminalNickLayoutCache = null;
+
+function getTerminalNickLayout() {
+  const cacheMyNick = myNick || '';
+  const cachePeerNick = peerNick || '';
+  if (
+    !terminalNickLayoutCache ||
+    terminalNickLayoutCache.mode !== currentThemeMode ||
+    terminalNickLayoutCache.myNick !== cacheMyNick ||
+    terminalNickLayoutCache.peerNick !== cachePeerNick
+  ) {
+    const convertedMyNick = applyTerminalTextConversion(cacheMyNick);
+    const convertedPeerNick = applyTerminalTextConversion(cachePeerNick);
+    terminalNickLayoutCache = {
+      mode: currentThemeMode,
+      myNick: cacheMyNick,
+      peerNick: cachePeerNick,
+      convertedMyNick,
+      convertedPeerNick,
+      targetLength: Math.max(convertedMyNick.length, convertedPeerNick.length),
+    };
+  }
+  return terminalNickLayoutCache;
+}
+
+function getAlignedTerminalNick(nick) {
+  const layout = getTerminalNickLayout();
+  const currentRawNick = nick || '';
+  const isMyNick = currentRawNick === layout.myNick;
+  const isPeerNick = currentRawNick === layout.peerNick;
+  const currentNick = isMyNick
+    ? layout.convertedMyNick
+    : isPeerNick
+      ? layout.convertedPeerNick
+      : applyTerminalTextConversion(currentRawNick);
+  const targetLength = layout.targetLength;
+  // Clamp negative padding to zero because fallback or unknown nicks can be longer than the cached pair.
+  const padding = Math.max(0, targetLength - currentNick.length);
+  // Math.floor(padding / 2) gives the smaller half to the left, so any extra underscore lands on the right and keeps the $ prompt aligned.
+  const leftPadding = Math.floor(padding / 2);
+  const rightPadding = padding - leftPadding;
+  return '_'.repeat(leftPadding) + currentNick + '_'.repeat(rightPadding);
 }
 
 // Track if escape handler is attached to prevent duplicates
@@ -1474,13 +1526,13 @@ function renderMessage(msg, noScroll) {
   const avatarEl = document.createElement('div');
   avatarEl.className = 'msg-avatar';
   if (currentThemeMode === 'terminal') {
-    const nickText = applyTerminalTextConversion(nick);
+    const nickText = getAlignedTerminalNick(nick);
     const fullSpan = document.createElement('span');
     fullSpan.className = 'terminal-nick-full';
     fullSpan.textContent = nickText;
     const shortSpan = document.createElement('span');
     shortSpan.className = 'terminal-nick-short';
-    shortSpan.textContent = nickText.charAt(0).toUpperCase();
+    shortSpan.textContent = applyTerminalTextConversion(nick).charAt(0).toUpperCase();
     const dollarSpan = document.createElement('span');
     dollarSpan.className = 'terminal-dollar';
     dollarSpan.textContent = '$ ';
