@@ -973,12 +973,45 @@ function updateTerminalInputPrefix() {
   }
 }
 
+let terminalNickLayoutCache = null;
+
+function getTerminalNickLayout() {
+  const cacheMyNick = myNick || '';
+  const cachePeerNick = peerNick || '';
+  if (
+    !terminalNickLayoutCache ||
+    terminalNickLayoutCache.mode !== currentThemeMode ||
+    terminalNickLayoutCache.myNick !== cacheMyNick ||
+    terminalNickLayoutCache.peerNick !== cachePeerNick
+  ) {
+    const convertedMyNick = applyTerminalTextConversion(cacheMyNick);
+    const convertedPeerNick = applyTerminalTextConversion(cachePeerNick);
+    terminalNickLayoutCache = {
+      mode: currentThemeMode,
+      myNick: cacheMyNick,
+      peerNick: cachePeerNick,
+      convertedMyNick,
+      convertedPeerNick,
+      targetLength: Math.max(convertedMyNick.length, convertedPeerNick.length),
+    };
+  }
+  return terminalNickLayoutCache;
+}
+
 function getAlignedTerminalNick(nick) {
-  const currentNick = applyTerminalTextConversion(nick);
-  const myNickText = applyTerminalTextConversion(myNick);
-  const peerNickText = applyTerminalTextConversion(peerNick);
-  const targetLength = Math.max(myNickText.length, peerNickText.length);
+  const layout = getTerminalNickLayout();
+  const currentRawNick = nick || '';
+  const isMyNick = currentRawNick === layout.myNick;
+  const isPeerNick = currentRawNick === layout.peerNick;
+  const currentNick = isMyNick
+    ? layout.convertedMyNick
+    : isPeerNick
+      ? layout.convertedPeerNick
+      : applyTerminalTextConversion(currentRawNick);
+  const targetLength = layout.targetLength;
+  // Clamp negative padding to zero because fallback or unknown nicks can be longer than the cached pair.
   const padding = Math.max(0, targetLength - currentNick.length);
+  // Math.floor(padding / 2) gives the smaller half to the left, so any extra underscore lands on the right and keeps the $ prompt aligned.
   const leftPadding = Math.floor(padding / 2);
   const rightPadding = padding - leftPadding;
   return '_'.repeat(leftPadding) + currentNick + '_'.repeat(rightPadding);
