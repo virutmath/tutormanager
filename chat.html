@@ -350,13 +350,13 @@
   /* ===== TERMINAL MODE ===== */
   /* Unified terminal color variables */
   :root {
-    --terminal-bg: #1f2937;
-    --terminal-name: #7dd3fc;
+    --terminal-bg: #191a1b;
+    --terminal-text: #bfbfbf;
   }
 
   body.terminal-mode {
     background: var(--terminal-bg);
-    color: white;
+    color: var(--terminal-text);
     font-family: 'Consolas', 'Courier New', monospace;
   }
 
@@ -370,11 +370,11 @@
   }
 
   .terminal-mode .chat-header-info .peer-name {
-    color: white;
+    color: var(--terminal-text);
   }
 
   .terminal-mode .chat-header-info .conn-status {
-    color: rgba(255,255,255,0.55);
+    color: var(--terminal-text);
   }
 
   .terminal-mode #messages {
@@ -390,19 +390,20 @@
     padding: 0;
     font-family: 'Consolas', 'Courier New', monospace;
     font-size: 0.9375rem;
-    color: white;
+    color: var(--terminal-text);
+    line-height: 1.2;
   }
 
   .terminal-mode .msg-row.me .msg-bubble {
     background: transparent;
-    color: white;
+    color: var(--terminal-text);
     border: none;
     padding: 0;
   }
 
   .terminal-mode .msg-row.them .msg-bubble {
     background: transparent;
-    color: white;
+    color: var(--terminal-text);
     border: none;
     padding: 0;
   }
@@ -429,13 +430,14 @@
 
   .terminal-mode #msg-input {
     background: var(--terminal-bg);
-    color: white;
+    color: var(--terminal-text);
     border: none;
     border-radius: 0;
     font-family: 'Consolas', 'Courier New', monospace;
     font-size: 0.9375rem;
-    caret-color: white;
+    caret-color: var(--terminal-text);
     padding: 0;
+    line-height: 1.2;
   }
 
   .terminal-mode #msg-input:focus {
@@ -460,12 +462,12 @@
   .terminal-mode .system-msg {
     background: transparent;
     border: none;
-    color: rgba(255,255,255,0.45);
+    color: var(--terminal-text);
     border-radius: 0;
   }
 
   .terminal-mode .date-divider {
-    color: rgba(255,255,255,0.4);
+    color: var(--terminal-text);
   }
 
   .terminal-mode .date-divider::before,
@@ -477,19 +479,19 @@
   .terminal-mode .btn-home {
     background: transparent;
     border: none;
-    color: rgba(255,255,255,0.7);
+    color: var(--terminal-text);
   }
 
   .terminal-mode .btn-back:active,
   .terminal-mode .btn-home:active {
     background: rgba(255,255,255,0.1);
-    color: white;
+    color: var(--terminal-text);
   }
 
   .terminal-mode .theme-toggle-btn {
     background: transparent;
     border: none;
-    color: rgba(255,255,255,0.7);
+    color: var(--terminal-text);
     border-radius: 0;
     width: auto;
     padding: 6px 10px;
@@ -504,7 +506,7 @@
 
   .terminal-mode .theme-toggle-btn:active {
     background: rgba(255,255,255,0.1);
-    color: white;
+    color: var(--terminal-text);
   }
 
   .theme-toggle-btn {
@@ -555,7 +557,7 @@
   .terminal-mode .theme-modal-content {
     background: var(--terminal-bg);
     border: none;
-    color: white;
+    color: var(--terminal-text);
   }
 
   .theme-modal-content h3 {
@@ -613,7 +615,7 @@
   .terminal-mode .theme-modal-close {
     background: transparent;
     border: 1px solid rgba(255,255,255,0.3);
-    color: white;
+    color: var(--terminal-text);
   }
 
   .theme-modal-close:active {
@@ -647,9 +649,9 @@
   }
 
   /* Terminal username span colors */
-  .terminal-nick-full { color: var(--terminal-name); }
-  .terminal-nick-short { display: none; color: var(--terminal-name); }
-  .terminal-dollar { color: white; }
+  .terminal-nick-full { color: var(--terminal-text); }
+  .terminal-nick-short { display: none; color: var(--terminal-text); }
+  .terminal-dollar { color: var(--terminal-text); margin-left: 2px; }
 
   /* Responsive: abbreviated name when viewport < 300px */
   @media (max-width: 300px) {
@@ -664,7 +666,7 @@
     white-space: nowrap;
     font-family: 'Consolas', 'Courier New', monospace;
     font-size: 0.9375rem;
-    line-height: 1.4;
+    line-height: 1.2;
     flex-shrink: 0;
     user-select: none;
   }
@@ -966,7 +968,7 @@ function updateTerminalInputPrefix() {
     shortSpan.textContent = applyTerminalTextConversion(myNick).charAt(0).toUpperCase();
     const dollarSpan = document.createElement('span');
     dollarSpan.className = 'terminal-dollar';
-    dollarSpan.textContent = '$ ';
+    dollarSpan.textContent = '$';
     prefixEl.appendChild(nickSpan);
     prefixEl.appendChild(shortSpan);
     prefixEl.appendChild(dollarSpan);
@@ -1535,7 +1537,7 @@ function renderMessage(msg, noScroll) {
     shortSpan.textContent = applyTerminalTextConversion(nick).charAt(0).toUpperCase();
     const dollarSpan = document.createElement('span');
     dollarSpan.className = 'terminal-dollar';
-    dollarSpan.textContent = '$ ';
+    dollarSpan.textContent = '$';
     avatarEl.appendChild(fullSpan);
     avatarEl.appendChild(shortSpan);
     avatarEl.appendChild(dollarSpan);
