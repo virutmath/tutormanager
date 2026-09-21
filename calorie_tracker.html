@@ -128,7 +128,7 @@
 
     function getEndpointConfig(value) {
       try {
-        const url = new URL(value);
+        const url = new URL(value, window.location.href);
         const hostname = url.hostname.toLowerCase();
         const pathname = url.pathname.replace(/\/+$/, "");
         if (url.protocol === "https:" && hostname === "api.openai.com" && pathname === "/v1/responses") {
@@ -231,6 +231,21 @@
       }
 
       return normalizeAnalysisResult(safeJsonParse(parseResponseText(data)));
+    }
+
+    function getSafeErrorDetail(errorData) {
+      const code = typeof errorData?.error?.code === "string"
+        ? errorData.error.code.toLowerCase()
+        : (typeof errorData?.code === "string" ? errorData.code.toLowerCase() : "");
+      const message = typeof errorData?.error?.message === "string"
+        ? errorData.error.message.toLowerCase()
+        : (typeof errorData?.message === "string" ? errorData.message.toLowerCase() : "");
+      const source = `${code} ${message}`;
+      if (/auth|api[_ -]?key|unauthorized|forbidden/.test(source)) return "Kiểm tra API key hoặc quyền truy cập";
+      if (/rate|quota|limit/.test(source)) return "Đã vượt giới hạn sử dụng";
+      if (/model/.test(source)) return "Model không hợp lệ hoặc chưa được cấp quyền";
+      if (/image|payload|schema|invalid[_ -]?request/.test(source)) return "Dữ liệu gửi lên chưa hợp lệ";
+      return "";
     }
 
     function readStoredValue(storage, key) {
@@ -425,9 +440,7 @@
           let safeDetail = "";
           try {
             const errorData = await response.json();
-            const message = typeof errorData?.error?.message === "string"
-              ? errorData.error.message.trim()
-              : (typeof errorData?.message === "string" ? errorData.message.trim() : "");
+            const message = getSafeErrorDetail(errorData);
             if (message) safeDetail = `: ${message}`;
           } catch {}
           throw new Error(`Yêu cầu AI thất bại (${response.status})${safeDetail}.`);
