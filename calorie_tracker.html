@@ -134,7 +134,7 @@
         if (url.protocol === "https:" && hostname === "api.openai.com" && pathname === "/v1/responses") {
           return { allowed: true, needsApiKey: true, url };
         }
-        if (isSameOriginEndpoint(url) && pathname.endsWith("/responses")) {
+        if (isSameOriginEndpoint(url) && pathname.endsWith("/responses") && !url.search && !url.hash) {
           return { allowed: true, needsApiKey: false, url };
         }
         return { allowed: false, needsApiKey: false, url: null };
@@ -347,6 +347,7 @@
     }
 
     function parseResponseText(data) {
+      if (!data || typeof data !== "object") return "";
       if (typeof data.output_text === "string" && data.output_text.trim()) return data.output_text.trim();
       const texts = [];
 
