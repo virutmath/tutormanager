@@ -206,7 +206,7 @@
           ) {
             return { allowed: true, needsApiKey: true, url };
           }
-          if (isSameOriginEndpoint(url) && pathname.endsWith("/generateContent") && !url.search && !url.hash) {
+          if (isSameOriginEndpoint(url) && /(?:\/|:)generateContent$/.test(pathname) && !url.search && !url.hash) {
             return { allowed: true, needsApiKey: false, url };
           }
           return { allowed: false, needsApiKey: false, url: null };
@@ -553,12 +553,11 @@
       ].join("\n");
 
       try {
-        const requestUrl = new URL(endpointConfig.url.toString());
         const headers = {
           "Content-Type": "application/json"
         };
         if (provider === "google" && needsApiKey && apiKey) {
-          requestUrl.searchParams.set("key", apiKey);
+          headers["x-goog-api-key"] = apiKey;
         } else if (needsApiKey && apiKey) {
           headers.Authorization = "Bearer " + apiKey;
         }
@@ -604,7 +603,7 @@
               ]
             };
 
-        const response = await fetch(requestUrl.toString(), {
+        const response = await fetch(endpointConfig.url.toString(), {
           method: "POST",
           headers,
           body: JSON.stringify(requestBody)
