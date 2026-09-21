@@ -494,8 +494,15 @@
     }
 
     function safeJsonParse(text) {
-      const normalized = String(text || "").trim().replace(/^```(?:json)?\s*|\s*```$/g, "");
-      try { return JSON.parse(normalized); } catch { return null; }
+      const normalized = String(text || "").trim();
+      const fencedMatch = normalized.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+      const candidates = fencedMatch
+        ? [fencedMatch[1].trim(), normalized]
+        : [normalized.replace(/^```(?:json)?\s*|\s*```$/g, ""), normalized];
+      for (const candidate of candidates) {
+        try { return JSON.parse(candidate); } catch {}
+      }
+      return null;
     }
 
     function parseResponseText(data) {
@@ -530,6 +537,13 @@
         for (const part of candidate?.content?.parts || []) {
           if (typeof part?.text === "string" && part.text.trim()) {
             texts.push(part.text.trim());
+            continue;
+          }
+          for (const key of ["json", "data"]) {
+            if (part?.[key] && typeof part[key] === "object") {
+              texts.push(JSON.stringify(part[key]));
+              break;
+            }
           }
         }
       }
@@ -537,6 +551,14 @@
     }
 
     function extractGoogleAnalysisResult(data) {
+      for (const candidate of data?.candidates || []) {
+        for (const part of candidate?.content?.parts || []) {
+          for (const value of [part?.json, part?.data, part]) {
+            const normalized = normalizeAnalysisResult(value);
+            if (normalized) return normalized;
+          }
+        }
+      }
       return normalizeAnalysisResult(safeJsonParse(parseGoogleResponseText(data)));
     }
 
