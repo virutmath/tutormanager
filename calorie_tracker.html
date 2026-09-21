@@ -98,16 +98,25 @@
     let currentImageDataUrl = "";
     let logs = [];
 
-    function isAllowedEndpoint(value) {
+    function getEndpointConfig(value) {
       try {
         const url = new URL(value);
         const hostname = url.hostname.toLowerCase();
         const pathname = url.pathname.replace(/\/+$/, "");
-        return pathname.endsWith("/responses")
-          && (isSameOriginEndpoint(url) || (url.protocol === "https:" && hostname === "api.openai.com"));
+        if (url.protocol === "https:" && hostname === "api.openai.com" && pathname === "/v1/responses") {
+          return { allowed: true, needsApiKey: true, url };
+        }
+        if (isSameOriginEndpoint(url) && pathname.endsWith("/responses")) {
+          return { allowed: true, needsApiKey: false, url };
+        }
+        return { allowed: false, needsApiKey: false, url: null };
       } catch {
-        return false;
+        return { allowed: false, needsApiKey: false, url: null };
       }
+    }
+
+    function isAllowedEndpoint(value) {
+      return getEndpointConfig(value).allowed;
     }
 
     function isSameOriginEndpoint(url) {
@@ -222,7 +231,7 @@
       apiKeyInput.value = readStoredValue(sessionStorage, STORAGE_KEYS.apiKey) || "";
       modelInput.value = readStoredValue(localStorage, STORAGE_KEYS.model) || "gpt-4.1-mini";
       const savedEndpoint = readStoredValue(localStorage, STORAGE_KEYS.endpoint) || DEFAULT_ENDPOINT;
-      endpointInput.value = isAllowedEndpoint(savedEndpoint) ? savedEndpoint : DEFAULT_ENDPOINT;
+      endpointInput.value = getEndpointConfig(savedEndpoint).allowed ? savedEndpoint : DEFAULT_ENDPOINT;
       try {
         const parsedLogs = JSON.parse(readStoredValue(localStorage, STORAGE_KEYS.logs) || "[]");
         logs = Array.isArray(parsedLogs)
@@ -322,12 +331,12 @@
       const apiKey = apiKeyInput.value.trim();
       const model = modelInput.value.trim() || "gpt-4.1-mini";
       const endpoint = endpointInput.value.trim() || DEFAULT_ENDPOINT;
-      if (!isAllowedEndpoint(endpoint)) {
+      const endpointConfig = getEndpointConfig(endpoint);
+      if (!endpointConfig.allowed) {
         resultBox.textContent = "Endpoint phải là HTTPS OpenAI Responses API hoặc proxy cùng origin hợp lệ.";
         return;
       }
-      const endpointUrl = new URL(endpoint);
-      const needsApiKey = endpointUrl.hostname.toLowerCase() === "api.openai.com";
+      const needsApiKey = endpointConfig.needsApiKey;
       if (!apiKey && needsApiKey) {
         resultBox.textContent = "Vui lòng nhập AI API key.";
         return;
@@ -384,7 +393,13 @@
           throw new Error(`AI request thất bại (${response.status}).`);
         }
 
-        const data = await response.json();
+        const responseText = await response.text();
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch {
+          throw new Error("AI trả về dữ liệu không hợp lệ.");
+        }
         const parsed = extractAnalysisResult(data);
         if (!parsed) {
           throw new Error("AI không trả về JSON hợp lệ theo cấu trúc mong đợi.");
