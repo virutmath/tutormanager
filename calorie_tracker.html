@@ -103,15 +103,18 @@
         const url = new URL(value);
         const hostname = url.hostname.toLowerCase();
         const pathname = url.pathname.replace(/\/+$/, "");
-        const sameOrigin = window.location.origin
-          && window.location.origin !== "null"
-          && url.origin === window.location.origin;
         return url.protocol === "https:"
           && pathname.endsWith("/responses")
-          && (hostname === "api.openai.com" || sameOrigin);
+          && (hostname === "api.openai.com" || isSameOriginEndpoint(url));
       } catch {
         return false;
       }
+    }
+
+    function isSameOriginEndpoint(url) {
+      return !!window.location.origin
+        && window.location.origin !== "null"
+        && url.origin === window.location.origin;
     }
 
     function normalizeLogEntry(value) {
@@ -284,12 +287,14 @@
       const apiKey = apiKeyInput.value.trim();
       const model = modelInput.value.trim() || "gpt-4.1-mini";
       const endpoint = endpointInput.value.trim() || DEFAULT_ENDPOINT;
-      if (!apiKey) {
-        resultBox.textContent = "Vui lòng nhập AI API key.";
-        return;
-      }
       if (!isAllowedEndpoint(endpoint)) {
         resultBox.textContent = "Endpoint phải là HTTPS OpenAI Responses API hoặc proxy cùng origin hợp lệ.";
+        return;
+      }
+      const endpointUrl = new URL(endpoint);
+      const needsApiKey = endpointUrl.hostname.toLowerCase() === "api.openai.com";
+      if (!apiKey && needsApiKey) {
+        resultBox.textContent = "Vui lòng nhập AI API key.";
         return;
       }
       if (!currentImageDataUrl) {
@@ -316,12 +321,16 @@
       ].join("\n");
 
       try {
+        const headers = {
+          "Content-Type": "application/json"
+        };
+        if (needsApiKey && apiKey) {
+          headers.Authorization = "Bearer " + apiKey;
+        }
+
         const response = await fetch(endpoint, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + apiKey
-          },
+          headers,
           body: JSON.stringify({
             model,
             input: [
@@ -376,6 +385,7 @@
         currentImageDataUrl = "";
         preview.src = "";
         preview.hidden = true;
+        resultBox.textContent = "Chưa có kết quả.";
         return;
       }
       try {
