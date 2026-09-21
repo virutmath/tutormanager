@@ -393,10 +393,9 @@
           throw new Error(`AI request thất bại (${response.status}).`);
         }
 
-        const responseText = await response.text();
         let data;
         try {
-          data = JSON.parse(responseText);
+          data = await response.json();
         } catch {
           throw new Error("AI trả về dữ liệu không hợp lệ.");
         }
