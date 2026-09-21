@@ -217,8 +217,15 @@
               return { allowed: true, needsApiKey: true, url };
             }
           }
-          if (isSameOriginEndpoint(url) && /(?:\/|:)generateContent$/.test(pathname) && !url.search && !url.hash) {
-            return { allowed: true, needsApiKey: false, url };
+          if (isSameOriginEndpoint(url) && !url.search && !url.hash) {
+            if (/(?:\/|:)generateContent$/.test(pathname)) {
+              return { allowed: true, needsApiKey: false, url };
+            }
+            const finalUrl = new URL(url.toString());
+            finalUrl.pathname = pathname.endsWith("/models")
+              ? `${pathname}/${encodeURIComponent(normalizeGoogleModel(model))}:generateContent`
+              : `${pathname}/models/${encodeURIComponent(normalizeGoogleModel(model))}:generateContent`;
+            return { allowed: true, needsApiKey: false, url: finalUrl };
           }
           return { allowed: false, needsApiKey: false, url: null };
         }
