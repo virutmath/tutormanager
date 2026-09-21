@@ -103,9 +103,12 @@
         const url = new URL(value);
         const hostname = url.hostname.toLowerCase();
         const pathname = url.pathname.replace(/\/+$/, "");
+        const sameOrigin = window.location.origin
+          && window.location.origin !== "null"
+          && url.origin === window.location.origin;
         return url.protocol === "https:"
-          && hostname === "api.openai.com"
-          && pathname === "/v1/responses";
+          && pathname.endsWith("/responses")
+          && (hostname === "api.openai.com" || sameOrigin);
       } catch {
         return false;
       }
@@ -258,14 +261,22 @@
     function parseResponseText(data) {
       if (typeof data.output_text === "string" && data.output_text.trim()) return data.output_text.trim();
       const texts = [];
-      if (Array.isArray(data.output)) {
-        for (const block of data.output) {
-          if (!Array.isArray(block.content)) continue;
-          for (const c of block.content) {
-            if (c.type === "output_text" && c.text) texts.push(c.text);
-          }
+
+      const collectTexts = value => {
+        if (!value) return;
+        if (Array.isArray(value)) {
+          for (const item of value) collectTexts(item);
+          return;
         }
-      }
+        if (typeof value !== "object") return;
+        if ((value.type === "output_text" || value.type === "text") && typeof value.text === "string" && value.text) {
+          texts.push(value.text);
+        }
+        collectTexts(value.content);
+        collectTexts(value.output);
+      };
+
+      collectTexts(data.output);
       return texts.join("\n").trim();
     }
 
@@ -278,7 +289,7 @@
         return;
       }
       if (!isAllowedEndpoint(endpoint)) {
-        resultBox.textContent = "Endpoint phải là HTTPS OpenAI Responses API hợp lệ.";
+        resultBox.textContent = "Endpoint phải là HTTPS OpenAI Responses API hoặc proxy cùng origin hợp lệ.";
         return;
       }
       if (!currentImageDataUrl) {
