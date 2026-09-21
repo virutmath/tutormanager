@@ -322,7 +322,7 @@
         resultBox.textContent = `Tổng calo: ${isFinite(totalCalories) ? totalCalories : "?"} kcal\nĐộ tin cậy: ${parsed.confidence || "?"}\n${labelMsg}\n\nChi tiết:\n${summary}`;
 
         logs.unshift({
-          timestamp: Date.now(),
+          timestamp: new Date().toISOString(),
           totalCalories: isFinite(totalCalories) ? totalCalories : "?",
           summary
         });
