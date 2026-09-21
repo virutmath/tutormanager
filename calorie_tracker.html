@@ -450,6 +450,8 @@
       modelInput.value = safeModel;
       endpointInput.value = safeEndpoint;
       writeStoredValue(localStorage, STORAGE_KEYS.provider, provider);
+      writeStoredValue(localStorage, STORAGE_KEYS.model, safeModel);
+      writeStoredValue(localStorage, STORAGE_KEYS.endpoint, safeEndpoint);
       writeStoredValue(localStorage, getProviderStorageKey(STORAGE_KEYS.model, provider), safeModel);
       writeStoredValue(localStorage, getProviderStorageKey(STORAGE_KEYS.endpoint, provider), safeEndpoint);
       writeStoredValue(localStorage, STORAGE_KEYS.logs, JSON.stringify(logs));
