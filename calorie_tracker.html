@@ -95,7 +95,7 @@
 
   <script>
     const DEFAULT_PROVIDER = "openai";
-    const DEFAULT_ENDPOINTS = {
+    const DEFAULT_ENDPOINT_BASES = {
       openai: "https://api.openai.com/v1/responses",
       google: "https://generativelanguage.googleapis.com/v1beta"
     };
@@ -174,6 +174,13 @@
         mimeType: match[1] || "image/jpeg",
         data: match[2]
       };
+    }
+
+    function getDefaultEndpoint(provider, model) {
+      if (provider === "google") {
+        return `${DEFAULT_ENDPOINT_BASES.google}/models/${encodeURIComponent(normalizeGoogleModel(model))}:generateContent`;
+      }
+      return DEFAULT_ENDPOINT_BASES.openai;
     }
 
     function getEndpointConfig(provider, value, model) {
@@ -346,10 +353,10 @@
       apiKeyInput.value = readStoredValue(sessionStorage, STORAGE_KEYS.apiKey) || "";
       modelInput.value = readStoredValue(localStorage, STORAGE_KEYS.model)
         || DEFAULT_MODELS[provider];
-      const savedEndpoint = readStoredValue(localStorage, STORAGE_KEYS.endpoint) || DEFAULT_ENDPOINTS[provider];
+      const savedEndpoint = readStoredValue(localStorage, STORAGE_KEYS.endpoint) || getDefaultEndpoint(provider, modelInput.value.trim());
       endpointInput.value = isAllowedEndpoint(provider, savedEndpoint, modelInput.value.trim())
         ? savedEndpoint
-        : DEFAULT_ENDPOINTS[provider];
+        : getDefaultEndpoint(provider, modelInput.value.trim());
       updateConfigUi();
       try {
         const parsedLogs = JSON.parse(readStoredValue(localStorage, STORAGE_KEYS.logs) || "[]");
@@ -362,21 +369,24 @@
       renderLogs();
     }
 
-    function updateConfigUi(previousProvider = null) {
+    function updateConfigUi(previousProvider = null, previousModel = "") {
       const provider = normalizeProvider(providerInput.value);
-      const defaultEndpoint = DEFAULT_ENDPOINTS[provider];
       const defaultModel = DEFAULT_MODELS[provider];
-      const previousDefaultEndpoint = previousProvider ? DEFAULT_ENDPOINTS[previousProvider] : null;
       const previousDefaultModel = previousProvider ? DEFAULT_MODELS[previousProvider] : null;
+      if (!modelInput.value.trim() || (previousDefaultModel && modelInput.value.trim() === previousDefaultModel)) {
+        modelInput.value = defaultModel;
+      }
+      const currentModel = modelInput.value.trim() || defaultModel;
+      const defaultEndpoint = getDefaultEndpoint(provider, currentModel);
+      const previousDefaultEndpoint = previousProvider
+        ? getDefaultEndpoint(previousProvider, previousModel || previousDefaultModel)
+        : null;
       if (
         !endpointInput.value.trim()
-        || !isAllowedEndpoint(provider, endpointInput.value.trim(), modelInput.value.trim())
+        || !isAllowedEndpoint(provider, endpointInput.value.trim(), currentModel)
         || (previousDefaultEndpoint && endpointInput.value.trim() === previousDefaultEndpoint)
       ) {
         endpointInput.value = defaultEndpoint;
-      }
-      if (!modelInput.value.trim() || (previousDefaultModel && modelInput.value.trim() === previousDefaultModel)) {
-        modelInput.value = defaultModel;
       }
       endpointInput.placeholder = defaultEndpoint;
       configHelp.textContent = PROVIDER_HELP[provider];
@@ -395,7 +405,7 @@
       }
       const safeEndpoint = isAllowedEndpoint(provider, endpointInput.value.trim(), safeModel)
         ? endpointInput.value.trim()
-        : DEFAULT_ENDPOINTS[provider];
+        : getDefaultEndpoint(provider, safeModel);
       providerInput.value = provider;
       modelInput.value = safeModel;
       endpointInput.value = safeEndpoint;
@@ -499,7 +509,7 @@
       const model = provider === "google"
         ? normalizeGoogleModel(modelInput.value)
         : (modelInput.value.trim() || "gpt-4.1-mini");
-      const endpoint = endpointInput.value.trim() || DEFAULT_ENDPOINTS[provider];
+      const endpoint = endpointInput.value.trim() || getDefaultEndpoint(provider, model);
       const endpointConfig = getEndpointConfig(provider, endpoint, model);
       if (!endpointConfig.allowed) {
         resultBox.textContent = provider === "google"
@@ -671,11 +681,22 @@
     apiKeyInput.addEventListener("input", saveState);
     providerInput.addEventListener("change", () => {
       const previousProvider = normalizeProvider(readStoredValue(localStorage, STORAGE_KEYS.provider) || DEFAULT_PROVIDER);
-      updateConfigUi(previousProvider);
+      const previousModel = readStoredValue(localStorage, STORAGE_KEYS.model) || DEFAULT_MODELS[previousProvider];
+      updateConfigUi(previousProvider, previousModel);
       saveState();
     });
-    modelInput.addEventListener("change", saveState);
-    modelInput.addEventListener("input", saveState);
+    modelInput.addEventListener("change", () => {
+      const previousProvider = normalizeProvider(providerInput.value);
+      const previousModel = readStoredValue(localStorage, STORAGE_KEYS.model) || DEFAULT_MODELS[previousProvider];
+      updateConfigUi(previousProvider, previousModel);
+      saveState();
+    });
+    modelInput.addEventListener("input", () => {
+      const previousProvider = normalizeProvider(providerInput.value);
+      const previousModel = readStoredValue(localStorage, STORAGE_KEYS.model) || DEFAULT_MODELS[previousProvider];
+      updateConfigUi(previousProvider, previousModel);
+      saveState();
+    });
     endpointInput.addEventListener("change", saveState);
     endpointInput.addEventListener("input", saveState);
 
