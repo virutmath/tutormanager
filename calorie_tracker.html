@@ -190,6 +190,7 @@
         const pathname = url.pathname.replace(/\/+$/, "");
         if (provider === "google") {
           const versionMatch = pathname.match(/^\/(v1beta|v1)(?:\/models)?$/);
+          const directModelMatch = pathname.match(/^\/(v1beta|v1)\/models\/(.+):generateContent$/);
           if (url.protocol === "https:" && hostname === "generativelanguage.googleapis.com" && versionMatch) {
             const finalUrl = new URL(url.toString());
             finalUrl.pathname = `/${versionMatch[1]}/models/${encodeURIComponent(normalizeGoogleModel(model))}:generateContent`;
@@ -197,7 +198,12 @@
             finalUrl.hash = "";
             return { allowed: true, needsApiKey: true, url: finalUrl };
           }
-          if (url.protocol === "https:" && hostname === "generativelanguage.googleapis.com" && /^\/(v1beta|v1)\/models\/.+:generateContent$/.test(pathname)) {
+          if (
+            url.protocol === "https:"
+            && hostname === "generativelanguage.googleapis.com"
+            && directModelMatch
+            && !directModelMatch[2].includes("/")
+          ) {
             return { allowed: true, needsApiKey: true, url };
           }
           if (isSameOriginEndpoint(url) && pathname.endsWith("/generateContent") && !url.search && !url.hash) {
