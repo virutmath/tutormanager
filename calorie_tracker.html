@@ -693,13 +693,13 @@
       saveState();
     });
     modelInput.addEventListener("change", () => {
-      const previousProvider = normalizeProvider(providerInput.value);
+      const previousProvider = normalizeProvider(readStoredValue(localStorage, STORAGE_KEYS.provider) || providerInput.value || DEFAULT_PROVIDER);
       const previousModel = readStoredValue(localStorage, STORAGE_KEYS.model) || DEFAULT_MODELS[previousProvider];
       updateConfigUi(previousProvider, previousModel);
       saveState();
     });
     modelInput.addEventListener("input", () => {
-      const previousProvider = normalizeProvider(providerInput.value);
+      const previousProvider = normalizeProvider(readStoredValue(localStorage, STORAGE_KEYS.provider) || providerInput.value || DEFAULT_PROVIDER);
       const previousModel = readStoredValue(localStorage, STORAGE_KEYS.model) || DEFAULT_MODELS[previousProvider];
       updateConfigUi(previousProvider, previousModel);
       saveState();
