@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calo Food Logger</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: Arial, sans-serif; margin: 0; background:#111827; color:#f9fafb; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 20px; }
+    h1 { margin: 0 0 12px; font-size: 28px; }
+    p { margin: 0 0 14px; color:#d1d5db; }
+    .card { background:#1f2937; border:1px solid #374151; border-radius:12px; padding:16px; margin-bottom:16px; }
+    label { display:block; font-weight:700; margin-bottom:8px; }
+    input, button, textarea { width:100%; box-sizing:border-box; border-radius:8px; border:1px solid #4b5563; background:#111827; color:#f9fafb; padding:10px; }
+    button { cursor:pointer; font-weight:700; background:#2563eb; border-color:#1d4ed8; }
+    button.secondary { background:#374151; border-color:#4b5563; margin-top:8px; }
+    button:disabled { opacity:.6; cursor:not-allowed; }
+    .row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .result { white-space:pre-wrap; background:#111827; border:1px dashed #4b5563; padding:10px; border-radius:8px; min-height:72px; }
+    img { max-width:100%; border-radius:8px; border:1px solid #374151; margin-top:8px; }
+    table { width:100%; border-collapse:collapse; margin-top:8px; font-size:14px; }
+    th, td { border-bottom:1px solid #374151; text-align:left; padding:8px 6px; vertical-align:top; }
+    .muted { color:#9ca3af; font-size:12px; }
+    @media (max-width: 720px){ .row{ grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>📸 Calo Food Logger</h1>
+    <p>Chụp ảnh món ăn hoặc bao bì sản phẩm, gửi AI để ước lượng calo rồi lưu lại nhật ký nạp vào.</p>
+
+    <section class="card">
+      <div class="row">
+        <div>
+          <label for="apiKey">OpenAI API Key</label>
+          <input id="apiKey" type="password" placeholder="sk-..." autocomplete="off">
+        </div>
+        <div>
+          <label for="model">Model</label>
+          <input id="model" type="text" value="gpt-4.1-mini" autocomplete="off">
+        </div>
+      </div>
+      <p class="muted">API key chỉ lưu trong trình duyệt của bạn.</p>
+    </section>
+
+    <section class="card">
+      <label for="imageInput">Ảnh đồ ăn / bao bì</label>
+      <input id="imageInput" type="file" accept="image/*" capture="environment">
+      <img id="preview" alt="Xem trước ảnh" hidden>
+      <button id="analyzeBtn" style="margin-top:12px;">Phân tích calo bằng AI</button>
+    </section>
+
+    <section class="card">
+      <label>Kết quả phân tích gần nhất</label>
+      <div id="result" class="result">Chưa có kết quả.</div>
+    </section>
+
+    <section class="card">
+      <label>Nhật ký calo</label>
+      <table>
+        <thead>
+          <tr>
+            <th>Thời gian</th>
+            <th>Tổng calo</th>
+            <th>Chi tiết</th>
+          </tr>
+        </thead>
+        <tbody id="logBody"></tbody>
+      </table>
+      <button id="clearLogBtn" class="secondary">Xóa toàn bộ nhật ký</button>
+    </section>
+  </div>
+
+  <script>
+    const STORAGE_KEYS = {
+      apiKey: "calo_logger_api_key",
+      model: "calo_logger_model",
+      logs: "calo_logger_logs"
+    };
+
+    const apiKeyInput = document.getElementById("apiKey");
+    const modelInput = document.getElementById("model");
+    const imageInput = document.getElementById("imageInput");
+    const preview = document.getElementById("preview");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const resultBox = document.getElementById("result");
+    const logBody = document.getElementById("logBody");
+    const clearLogBtn = document.getElementById("clearLogBtn");
+
+    let currentImageDataUrl = "";
+    let logs = [];
+
+    function loadState() {
+      apiKeyInput.value = localStorage.getItem(STORAGE_KEYS.apiKey) || "";
+      modelInput.value = localStorage.getItem(STORAGE_KEYS.model) || "gpt-4.1-mini";
+      try {
+        logs = JSON.parse(localStorage.getItem(STORAGE_KEYS.logs) || "[]");
+      } catch {
+        logs = [];
+      }
+      renderLogs();
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEYS.apiKey, apiKeyInput.value.trim());
+      localStorage.setItem(STORAGE_KEYS.model, modelInput.value.trim());
+      localStorage.setItem(STORAGE_KEYS.logs, JSON.stringify(logs));
+    }
+
+    function renderLogs() {
+      if (!logs.length) {
+        logBody.innerHTML = `<tr><td colspan="3" class="muted">Chưa có dữ liệu.</td></tr>`;
+        return;
+      }
+      logBody.innerHTML = logs.map(entry => `
+        <tr>
+          <td>${new Date(entry.timestamp).toLocaleString("vi-VN")}</td>
+          <td><strong>${entry.totalCalories ?? "?"} kcal</strong></td>
+          <td>${entry.summary}</td>
+        </tr>
+      `).join("");
+    }
+
+    function toDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error("Không đọc được ảnh."));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function safeJsonParse(text) {
+      try { return JSON.parse(text); } catch { return null; }
+    }
+
+    function parseResponseText(data) {
+      if (typeof data.output_text === "string" && data.output_text.trim()) return data.output_text.trim();
+      const texts = [];
+      if (Array.isArray(data.output)) {
+        for (const block of data.output) {
+          if (!Array.isArray(block.content)) continue;
+          for (const c of block.content) {
+            if (c.type === "output_text" && c.text) texts.push(c.text);
+          }
+        }
+      }
+      return texts.join("\n").trim();
+    }
+
+    async function analyzeImage() {
+      const apiKey = apiKeyInput.value.trim();
+      const model = modelInput.value.trim() || "gpt-4.1-mini";
+      if (!apiKey) {
+        resultBox.textContent = "Vui lòng nhập OpenAI API key.";
+        return;
+      }
+      if (!currentImageDataUrl) {
+        resultBox.textContent = "Vui lòng chọn ảnh trước.";
+        return;
+      }
+
+      analyzeBtn.disabled = true;
+      resultBox.textContent = "Đang phân tích...";
+      saveState();
+
+      const prompt = [
+        "Bạn là chuyên gia dinh dưỡng.",
+        "Hãy phân tích ảnh thức ăn và ước lượng calo.",
+        "Nếu ảnh có bao bì sản phẩm với bảng thông tin dinh dưỡng hoặc calories, PHẢI ưu tiên đọc và dùng dữ liệu đó trước khi ước lượng bằng thị giác.",
+        "Trả về JSON với cấu trúc:",
+        "{",
+        '  "totalCalories": number,',
+        '  "items": [{"name": string, "estimatedCalories": number, "reason": string}],',
+        '  "usedNutritionLabel": boolean,',
+        '  "confidence": "low" | "medium" | "high"',
+        "}",
+        "Chỉ trả về JSON hợp lệ, không thêm văn bản khác."
+      ].join("\n");
+
+      try {
+        const response = await fetch("https://api.openai.com/v1/responses", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + apiKey
+          },
+          body: JSON.stringify({
+            model,
+            input: [
+              {
+                role: "user",
+                content: [
+                  { type: "input_text", text: prompt },
+                  { type: "input_image", image_url: currentImageDataUrl }
+                ]
+              }
+            ]
+          })
+        });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(`AI request thất bại (${response.status}): ${errText}`);
+        }
+
+        const data = await response.json();
+        const text = parseResponseText(data);
+        const parsed = safeJsonParse(text);
+        if (!parsed) {
+          throw new Error("AI không trả về JSON hợp lệ.");
+        }
+
+        const summary = (parsed.items || [])
+          .map(i => `${i.name}: ${i.estimatedCalories} kcal`)
+          .join("; ") || "Không có chi tiết.";
+        const totalCalories = Number(parsed.totalCalories);
+        const labelMsg = parsed.usedNutritionLabel ? "Có dùng thông tin từ bao bì." : "Không thấy thông tin dinh dưỡng trên bao bì.";
+        resultBox.textContent = `Tổng calo: ${isFinite(totalCalories) ? totalCalories : "?"} kcal\nĐộ tin cậy: ${parsed.confidence || "?"}\n${labelMsg}\n\nChi tiết:\n${summary}`;
+
+        logs.unshift({
+          timestamp: Date.now(),
+          totalCalories: isFinite(totalCalories) ? totalCalories : "?",
+          summary
+        });
+        logs = logs.slice(0, 100);
+        saveState();
+        renderLogs();
+      } catch (err) {
+        resultBox.textContent = err.message || "Có lỗi khi phân tích.";
+      } finally {
+        analyzeBtn.disabled = false;
+      }
+    }
+
+    imageInput.addEventListener("change", async () => {
+      const file = imageInput.files?.[0];
+      if (!file) return;
+      try {
+        currentImageDataUrl = await toDataUrl(file);
+        preview.src = currentImageDataUrl;
+        preview.hidden = false;
+      } catch (err) {
+        currentImageDataUrl = "";
+        preview.hidden = true;
+        resultBox.textContent = err.message || "Không đọc được ảnh.";
+      }
+    });
+
+    analyzeBtn.addEventListener("click", analyzeImage);
+    clearLogBtn.addEventListener("click", () => {
+      if (!confirm("Xóa toàn bộ nhật ký calo?")) return;
+      logs = [];
+      saveState();
+      renderLogs();
+    });
+
+    apiKeyInput.addEventListener("change", saveState);
+    modelInput.addEventListener("change", saveState);
+
+    loadState();
+  </script>
+</body>
+</html>
