@@ -627,11 +627,7 @@
           "Content-Type": "application/json"
         };
         if (provider === "google" && needsApiKey && apiKey) {
-          if (requestUrl.hostname === "generativelanguage.googleapis.com") {
-            requestUrl.searchParams.set("key", apiKey);
-          } else {
-            headers["x-goog-api-key"] = apiKey;
-          }
+          headers["x-goog-api-key"] = apiKey;
         } else if (needsApiKey && apiKey) {
           headers.Authorization = "Bearer " + apiKey;
         }
