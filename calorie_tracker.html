@@ -385,11 +385,15 @@
       if (provider === "google") {
         modelInput.value = normalizeGoogleModel(modelInput.value);
       }
-      const savedEndpoint = readStoredValue(localStorage, getProviderStorageKey(STORAGE_KEYS.endpoint, provider))
+      const scopedSavedEndpoint = readStoredValue(localStorage, getProviderStorageKey(STORAGE_KEYS.endpoint, provider));
+      const savedEndpoint = scopedSavedEndpoint
         || readStoredValue(localStorage, STORAGE_KEYS.endpoint)
         || getDefaultEndpoint(provider, modelInput.value.trim());
-      endpointInput.value = isAllowedEndpoint(provider, savedEndpoint, modelInput.value.trim())
-        ? savedEndpoint
+      const restoredEndpoint = provider === "google" && !scopedSavedEndpoint
+        ? getDefaultEndpoint(provider, modelInput.value.trim())
+        : savedEndpoint;
+      endpointInput.value = isAllowedEndpoint(provider, restoredEndpoint, modelInput.value.trim())
+        ? restoredEndpoint
         : getDefaultEndpoint(provider, modelInput.value.trim());
       lastSavedProvider = provider;
       lastSavedModel = modelInput.value.trim() || DEFAULT_MODELS[provider];
@@ -508,9 +512,12 @@
     function safeJsonParse(text) {
       const normalized = String(text || "").trim();
       const fencedMatch = normalized.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-      const candidates = fencedMatch
-        ? [fencedMatch[1].trim(), normalized]
-        : [normalized.replace(/^```(?:json)?\s*|\s*```$/g, ""), normalized];
+      const candidates = [normalized];
+      if (fencedMatch) {
+        candidates.unshift(fencedMatch[1].trim());
+      } else if (/^```(?:json)?\s*[\s\S]*\s*```$/i.test(normalized)) {
+        candidates.unshift(normalized.replace(/^```(?:json)?\s*|\s*```$/g, ""));
+      }
       for (const candidate of candidates) {
         try { return JSON.parse(candidate); } catch {}
       }
