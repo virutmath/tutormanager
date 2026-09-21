@@ -22,6 +22,9 @@
     table { width:100%; border-collapse:collapse; margin-top:8px; font-size:14px; }
     th, td { border-bottom:1px solid #374151; text-align:left; padding:8px 6px; vertical-align:top; }
     .muted { color:#9ca3af; font-size:12px; }
+    .config-toggle summary { cursor:pointer; font-weight:700; }
+    .config-toggle summary:focus-visible { outline:2px solid #60a5fa; outline-offset:4px; border-radius:6px; }
+    .config-body { margin-top:12px; }
     @media (max-width: 720px){ .row{ grid-template-columns:1fr; } }
   </style>
 </head>
@@ -31,21 +34,26 @@
     <p>Chụp ảnh món ăn hoặc bao bì sản phẩm, gửi AI để ước lượng calo rồi lưu lại nhật ký nạp vào.</p>
 
     <section class="card">
-      <div class="row">
-        <div>
-          <label for="apiKey">AI API Key</label>
-          <input id="apiKey" type="password" placeholder="sk-..." autocomplete="off">
+      <details class="config-toggle">
+        <summary>Cấu hình AI</summary>
+        <div class="config-body">
+          <div class="row">
+            <div>
+              <label for="apiKey">AI API Key</label>
+              <input id="apiKey" type="password" placeholder="sk-..." autocomplete="off">
+            </div>
+            <div>
+              <label for="model">Model</label>
+              <input id="model" type="text" value="gpt-4.1-mini" autocomplete="off">
+            </div>
+          </div>
+          <div style="margin-top:12px;">
+            <label for="endpoint">LLM Endpoint</label>
+            <input id="endpoint" type="url" value="https://api.openai.com/v1/responses" placeholder="https://api.openai.com/v1/responses" autocomplete="off">
+          </div>
+          <p class="muted">API key chỉ lưu tạm trong tab hiện tại; endpoint và model lưu trong trình duyệt của bạn. Nếu dùng proxy cùng origin, endpoint đó phải nhận payload theo OpenAI Responses API.</p>
         </div>
-        <div>
-          <label for="model">Model</label>
-          <input id="model" type="text" value="gpt-4.1-mini" autocomplete="off">
-        </div>
-      </div>
-      <div style="margin-top:12px;">
-        <label for="endpoint">LLM Endpoint</label>
-        <input id="endpoint" type="url" value="https://api.openai.com/v1/responses" placeholder="https://api.openai.com/v1/responses" autocomplete="off">
-      </div>
-      <p class="muted">API key chỉ lưu tạm trong tab hiện tại; endpoint và model lưu trong trình duyệt của bạn. Nếu dùng proxy cùng origin, endpoint đó phải nhận payload theo OpenAI Responses API.</p>
+      </details>
     </section>
 
     <section class="card">
