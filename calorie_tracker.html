@@ -23,6 +23,8 @@
     th, td { border-bottom:1px solid #374151; text-align:left; padding:8px 6px; vertical-align:top; }
     .muted { color:#9ca3af; font-size:12px; }
     details > summary { cursor:pointer; font-weight:700; }
+    details > summary::after { content:" (đang đóng)"; font-weight:400; color:#9ca3af; }
+    details[open] > summary::after { content:" (đang mở)"; }
     details[open] > summary { margin-bottom:12px; }
     @media (max-width: 720px){ .row{ grid-template-columns:1fr; } }
   </style>
