@@ -157,6 +157,8 @@
 
     let currentImageDataUrl = "";
     let logs = [];
+    let lastSavedProvider = DEFAULT_PROVIDER;
+    let lastSavedModel = DEFAULT_MODELS[DEFAULT_PROVIDER];
 
     function normalizeProvider(value) {
       return value === "google" ? "google" : DEFAULT_PROVIDER;
@@ -368,6 +370,8 @@
       endpointInput.value = isAllowedEndpoint(provider, savedEndpoint, modelInput.value.trim())
         ? savedEndpoint
         : getDefaultEndpoint(provider, modelInput.value.trim());
+      lastSavedProvider = provider;
+      lastSavedModel = modelInput.value.trim() || DEFAULT_MODELS[provider];
       updateConfigUi();
       try {
         const parsedLogs = JSON.parse(readStoredValue(localStorage, STORAGE_KEYS.logs) || "[]");
@@ -425,6 +429,13 @@
       writeStoredValue(localStorage, STORAGE_KEYS.model, safeModel);
       writeStoredValue(localStorage, STORAGE_KEYS.endpoint, safeEndpoint);
       writeStoredValue(localStorage, STORAGE_KEYS.logs, JSON.stringify(logs));
+      lastSavedProvider = provider;
+      lastSavedModel = safeModel;
+    }
+
+    function syncConfigState() {
+      updateConfigUi(lastSavedProvider, lastSavedModel);
+      saveState();
     }
 
     function renderLogs() {
@@ -691,24 +702,9 @@
 
     apiKeyInput.addEventListener("change", saveState);
     apiKeyInput.addEventListener("input", saveState);
-    providerInput.addEventListener("change", () => {
-      const previousProvider = normalizeProvider(readStoredValue(localStorage, STORAGE_KEYS.provider) || DEFAULT_PROVIDER);
-      const previousModel = readStoredValue(localStorage, STORAGE_KEYS.model) || DEFAULT_MODELS[previousProvider];
-      updateConfigUi(previousProvider, previousModel);
-      saveState();
-    });
-    modelInput.addEventListener("change", () => {
-      const previousProvider = normalizeProvider(readStoredValue(localStorage, STORAGE_KEYS.provider) || providerInput.value || DEFAULT_PROVIDER);
-      const previousModel = readStoredValue(localStorage, STORAGE_KEYS.model) || DEFAULT_MODELS[previousProvider];
-      updateConfigUi(previousProvider, previousModel);
-      saveState();
-    });
-    modelInput.addEventListener("input", () => {
-      const previousProvider = normalizeProvider(readStoredValue(localStorage, STORAGE_KEYS.provider) || providerInput.value || DEFAULT_PROVIDER);
-      const previousModel = readStoredValue(localStorage, STORAGE_KEYS.model) || DEFAULT_MODELS[previousProvider];
-      updateConfigUi(previousProvider, previousModel);
-      saveState();
-    });
+    providerInput.addEventListener("change", syncConfigState);
+    modelInput.addEventListener("change", syncConfigState);
+    modelInput.addEventListener("input", syncConfigState);
     endpointInput.addEventListener("change", saveState);
     endpointInput.addEventListener("input", saveState);
 
