@@ -373,7 +373,8 @@
       const provider = normalizeProvider(providerInput.value);
       const defaultModel = DEFAULT_MODELS[provider];
       const previousDefaultModel = previousProvider ? DEFAULT_MODELS[previousProvider] : null;
-      if (!modelInput.value.trim() || (previousDefaultModel && modelInput.value.trim() === previousDefaultModel)) {
+      const providerChanged = !!previousProvider && previousProvider !== provider;
+      if (!modelInput.value.trim() || (providerChanged && previousDefaultModel && modelInput.value.trim() === previousDefaultModel)) {
         modelInput.value = defaultModel;
       }
       const currentModel = modelInput.value.trim() || defaultModel;
