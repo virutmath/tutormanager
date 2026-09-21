@@ -553,11 +553,12 @@
       ].join("\n");
 
       try {
+        const requestUrl = new URL(endpointConfig.url.toString());
         const headers = {
           "Content-Type": "application/json"
         };
         if (provider === "google" && needsApiKey && apiKey) {
-          headers["x-goog-api-key"] = apiKey;
+          requestUrl.searchParams.set("key", apiKey);
         } else if (needsApiKey && apiKey) {
           headers.Authorization = "Bearer " + apiKey;
         }
@@ -603,7 +604,7 @@
               ]
             };
 
-        const response = await fetch(endpointConfig.url.toString(), {
+        const response = await fetch(requestUrl.toString(), {
           method: "POST",
           headers,
           body: JSON.stringify(requestBody)
