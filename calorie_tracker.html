@@ -103,12 +103,9 @@
         const url = new URL(value);
         const hostname = url.hostname.toLowerCase();
         const pathname = url.pathname.replace(/\/+$/, "");
-        const isAzureOpenAI = hostname.endsWith(".openai.azure.com");
-        const isOpenAIResponses = hostname === "api.openai.com" && pathname === "/v1/responses";
-        const isAzureResponses = isAzureOpenAI
-          && /^\/openai(?:\/v1|\/deployments\/[^/]+)?\/responses$/.test(pathname);
         return url.protocol === "https:"
-          && (isOpenAIResponses || isAzureResponses);
+          && hostname === "api.openai.com"
+          && pathname === "/v1/responses";
       } catch {
         return false;
       }
@@ -163,7 +160,8 @@
     function loadState() {
       apiKeyInput.value = sessionStorage.getItem(STORAGE_KEYS.apiKey) || "";
       modelInput.value = localStorage.getItem(STORAGE_KEYS.model) || "gpt-4.1-mini";
-      endpointInput.value = localStorage.getItem(STORAGE_KEYS.endpoint) || DEFAULT_ENDPOINT;
+      const savedEndpoint = localStorage.getItem(STORAGE_KEYS.endpoint) || DEFAULT_ENDPOINT;
+      endpointInput.value = isAllowedEndpoint(savedEndpoint) ? savedEndpoint : DEFAULT_ENDPOINT;
       try {
         const parsedLogs = JSON.parse(localStorage.getItem(STORAGE_KEYS.logs) || "[]");
         logs = Array.isArray(parsedLogs)
@@ -182,8 +180,12 @@
       } else {
         sessionStorage.removeItem(STORAGE_KEYS.apiKey);
       }
+      const safeEndpoint = isAllowedEndpoint(endpointInput.value.trim())
+        ? endpointInput.value.trim()
+        : DEFAULT_ENDPOINT;
+      endpointInput.value = safeEndpoint;
       localStorage.setItem(STORAGE_KEYS.model, modelInput.value.trim());
-      localStorage.setItem(STORAGE_KEYS.endpoint, endpointInput.value.trim());
+      localStorage.setItem(STORAGE_KEYS.endpoint, safeEndpoint);
       localStorage.setItem(STORAGE_KEYS.logs, JSON.stringify(logs));
     }
 
@@ -253,7 +255,7 @@
         return;
       }
       if (!isAllowedEndpoint(endpoint)) {
-        resultBox.textContent = "Endpoint phải là URL HTTPS đáng tin cậy và kết thúc bằng /responses.";
+        resultBox.textContent = "Endpoint phải là HTTPS OpenAI Responses API hợp lệ.";
         return;
       }
       if (!currentImageDataUrl) {
