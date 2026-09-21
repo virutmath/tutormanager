@@ -693,7 +693,7 @@
     apiKeyInput.addEventListener("input", saveState);
     providerInput.addEventListener("change", () => {
       const previousProvider = normalizeProvider(readStoredValue(localStorage, STORAGE_KEYS.provider) || DEFAULT_PROVIDER);
-      const previousModel = modelInput.value.trim() || DEFAULT_MODELS[previousProvider];
+      const previousModel = readStoredValue(localStorage, STORAGE_KEYS.model) || DEFAULT_MODELS[previousProvider];
       updateConfigUi(previousProvider, previousModel);
       saveState();
     });
