@@ -12,7 +12,7 @@
     p { margin: 0 0 14px; color:#d1d5db; }
     .card { background:#1f2937; border:1px solid #374151; border-radius:12px; padding:16px; margin-bottom:16px; }
     label { display:block; font-weight:700; margin-bottom:8px; }
-    input, button, textarea { width:100%; box-sizing:border-box; border-radius:8px; border:1px solid #4b5563; background:#111827; color:#f9fafb; padding:10px; }
+    input, select, button, textarea { width:100%; box-sizing:border-box; border-radius:8px; border:1px solid #4b5563; background:#111827; color:#f9fafb; padding:10px; }
     button { cursor:pointer; font-weight:700; background:#2563eb; border-color:#1d4ed8; }
     button.secondary { background:#374151; border-color:#4b5563; margin-top:8px; }
     button:disabled { opacity:.6; cursor:not-allowed; }
@@ -39,19 +39,28 @@
         <div class="config-body">
           <div class="row">
             <div>
-              <label for="apiKey">AI API Key</label>
-              <input id="apiKey" type="password" placeholder="sk-..." autocomplete="off">
+              <label for="provider">AI Provider</label>
+              <select id="provider">
+                <option value="openai">OpenAI / Responses API</option>
+                <option value="google">Google AI Studio / Gemini API</option>
+              </select>
             </div>
+            <div>
+              <label for="apiKey">AI API Key</label>
+              <input id="apiKey" type="password" placeholder="sk-... hoặc AIza..." autocomplete="off">
+            </div>
+          </div>
+          <div class="row">
             <div>
               <label for="model">Model</label>
               <input id="model" type="text" value="gpt-4.1-mini" autocomplete="off">
             </div>
+            <div>
+              <label for="endpoint">LLM Endpoint</label>
+              <input id="endpoint" type="url" value="https://api.openai.com/v1/responses" placeholder="https://api.openai.com/v1/responses" autocomplete="off">
+            </div>
           </div>
-          <div style="margin-top:12px;">
-            <label for="endpoint">LLM Endpoint</label>
-            <input id="endpoint" type="url" value="https://api.openai.com/v1/responses" placeholder="https://api.openai.com/v1/responses" autocomplete="off">
-          </div>
-          <p class="muted">API key chỉ lưu tạm trong tab hiện tại; endpoint và model lưu trong trình duyệt của bạn. Nếu dùng proxy cùng origin, endpoint đó phải nhận payload theo OpenAI Responses API.</p>
+          <p id="configHelp" class="muted">API key chỉ lưu tạm trong tab hiện tại; endpoint và model lưu trong trình duyệt của bạn. Nếu dùng proxy cùng origin, endpoint đó phải nhận payload theo OpenAI Responses API.</p>
         </div>
       </details>
     </section>
@@ -85,9 +94,18 @@
   </div>
 
   <script>
-    const DEFAULT_ENDPOINT = "https://api.openai.com/v1/responses";
+    const DEFAULT_PROVIDER = "openai";
+    const DEFAULT_ENDPOINTS = {
+      openai: "https://api.openai.com/v1/responses",
+      google: "https://generativelanguage.googleapis.com/v1beta"
+    };
+    const DEFAULT_MODELS = {
+      openai: "gpt-4.1-mini",
+      google: "gemini-2.5-flash"
+    };
     const STORAGE_KEYS = {
       apiKey: "calo_logger_api_key",
+      provider: "calo_logger_provider",
       model: "calo_logger_model",
       endpoint: "calo_logger_endpoint",
       logs: "calo_logger_logs"
@@ -120,10 +138,16 @@
         }
       }
     };
+    const PROVIDER_HELP = {
+      openai: "API key chỉ lưu tạm trong tab hiện tại; endpoint và model lưu trong trình duyệt của bạn. Nếu dùng proxy cùng origin, endpoint đó phải nhận payload theo OpenAI Responses API.",
+      google: "Google AI Studio dùng Gemini generateContent API. Với endpoint mặc định, app sẽ tự ghép thành /models/{model}:generateContent. Nếu dùng proxy cùng origin, endpoint đó phải nhận payload theo Gemini generateContent API."
+    };
 
+    const providerInput = document.getElementById("provider");
     const apiKeyInput = document.getElementById("apiKey");
     const modelInput = document.getElementById("model");
     const endpointInput = document.getElementById("endpoint");
+    const configHelp = document.getElementById("configHelp");
     const imageInput = document.getElementById("imageInput");
     const preview = document.getElementById("preview");
     const analyzeBtn = document.getElementById("analyzeBtn");
@@ -134,11 +158,46 @@
     let currentImageDataUrl = "";
     let logs = [];
 
-    function getEndpointConfig(value) {
+    function normalizeProvider(value) {
+      return value === "google" ? "google" : DEFAULT_PROVIDER;
+    }
+
+    function normalizeGoogleModel(value) {
+      const trimmed = String(value || "").trim();
+      return trimmed.replace(/^models\//i, "") || "gemini-2.5-flash";
+    }
+
+    function parseDataUrl(value) {
+      const match = /^data:([^;,]+);base64,(.+)$/i.exec(String(value || ""));
+      if (!match) return null;
+      return {
+        mimeType: match[1] || "image/jpeg",
+        data: match[2]
+      };
+    }
+
+    function getEndpointConfig(provider, value, model) {
       try {
         const url = new URL(value, window.location.href);
         const hostname = url.hostname.toLowerCase();
         const pathname = url.pathname.replace(/\/+$/, "");
+        if (provider === "google") {
+          const versionMatch = pathname.match(/^\/(v1beta|v1)(?:\/models)?$/);
+          if (url.protocol === "https:" && hostname === "generativelanguage.googleapis.com" && versionMatch) {
+            const finalUrl = new URL(url.toString());
+            finalUrl.pathname = `/${versionMatch[1]}/models/${encodeURIComponent(normalizeGoogleModel(model))}:generateContent`;
+            finalUrl.search = "";
+            finalUrl.hash = "";
+            return { allowed: true, needsApiKey: true, url: finalUrl };
+          }
+          if (url.protocol === "https:" && hostname === "generativelanguage.googleapis.com" && /^\/(v1beta|v1)\/models\/[^/]+:generateContent$/.test(pathname)) {
+            return { allowed: true, needsApiKey: true, url };
+          }
+          if (isSameOriginEndpoint(url) && pathname.endsWith("/generateContent") && !url.search && !url.hash) {
+            return { allowed: true, needsApiKey: false, url };
+          }
+          return { allowed: false, needsApiKey: false, url: null };
+        }
         if (url.protocol === "https:" && hostname === "api.openai.com" && pathname === "/v1/responses") {
           return { allowed: true, needsApiKey: true, url };
         }
@@ -151,8 +210,8 @@
       }
     }
 
-    function isAllowedEndpoint(value) {
-      return getEndpointConfig(value).allowed;
+    function isAllowedEndpoint(provider, value, model) {
+      return getEndpointConfig(provider, value, model).allowed;
     }
 
     function isSameOriginEndpoint(url) {
@@ -282,10 +341,16 @@
     }
 
     function loadState() {
+      const provider = normalizeProvider(readStoredValue(localStorage, STORAGE_KEYS.provider) || DEFAULT_PROVIDER);
+      providerInput.value = provider;
       apiKeyInput.value = readStoredValue(sessionStorage, STORAGE_KEYS.apiKey) || "";
-      modelInput.value = readStoredValue(localStorage, STORAGE_KEYS.model) || "gpt-4.1-mini";
-      const savedEndpoint = readStoredValue(localStorage, STORAGE_KEYS.endpoint) || DEFAULT_ENDPOINT;
-      endpointInput.value = getEndpointConfig(savedEndpoint).allowed ? savedEndpoint : DEFAULT_ENDPOINT;
+      modelInput.value = readStoredValue(localStorage, STORAGE_KEYS.model)
+        || DEFAULT_MODELS[provider];
+      const savedEndpoint = readStoredValue(localStorage, STORAGE_KEYS.endpoint) || DEFAULT_ENDPOINTS[provider];
+      endpointInput.value = isAllowedEndpoint(provider, savedEndpoint, modelInput.value.trim())
+        ? savedEndpoint
+        : DEFAULT_ENDPOINTS[provider];
+      updateConfigUi();
       try {
         const parsedLogs = JSON.parse(readStoredValue(localStorage, STORAGE_KEYS.logs) || "[]");
         logs = Array.isArray(parsedLogs)
@@ -297,18 +362,45 @@
       renderLogs();
     }
 
+    function updateConfigUi(previousProvider = null) {
+      const provider = normalizeProvider(providerInput.value);
+      const defaultEndpoint = DEFAULT_ENDPOINTS[provider];
+      const defaultModel = DEFAULT_MODELS[provider];
+      const previousDefaultEndpoint = previousProvider ? DEFAULT_ENDPOINTS[previousProvider] : null;
+      const previousDefaultModel = previousProvider ? DEFAULT_MODELS[previousProvider] : null;
+      if (
+        !endpointInput.value.trim()
+        || !isAllowedEndpoint(provider, endpointInput.value.trim(), modelInput.value.trim())
+        || (previousDefaultEndpoint && endpointInput.value.trim() === previousDefaultEndpoint)
+      ) {
+        endpointInput.value = defaultEndpoint;
+      }
+      if (!modelInput.value.trim() || (previousDefaultModel && modelInput.value.trim() === previousDefaultModel)) {
+        modelInput.value = defaultModel;
+      }
+      endpointInput.placeholder = defaultEndpoint;
+      configHelp.textContent = PROVIDER_HELP[provider];
+    }
+
     function saveState() {
+      const provider = normalizeProvider(providerInput.value);
       const apiKey = apiKeyInput.value.trim();
+      const safeModel = provider === "google"
+        ? normalizeGoogleModel(modelInput.value)
+        : (modelInput.value.trim() || DEFAULT_MODELS[provider]);
       if (apiKey) {
         writeStoredValue(sessionStorage, STORAGE_KEYS.apiKey, apiKey);
       } else {
         removeStoredValue(sessionStorage, STORAGE_KEYS.apiKey);
       }
-      const safeEndpoint = isAllowedEndpoint(endpointInput.value.trim())
+      const safeEndpoint = isAllowedEndpoint(provider, endpointInput.value.trim(), safeModel)
         ? endpointInput.value.trim()
-        : DEFAULT_ENDPOINT;
+        : DEFAULT_ENDPOINTS[provider];
+      providerInput.value = provider;
+      modelInput.value = safeModel;
       endpointInput.value = safeEndpoint;
-      writeStoredValue(localStorage, STORAGE_KEYS.model, modelInput.value.trim());
+      writeStoredValue(localStorage, STORAGE_KEYS.provider, provider);
+      writeStoredValue(localStorage, STORAGE_KEYS.model, safeModel);
       writeStoredValue(localStorage, STORAGE_KEYS.endpoint, safeEndpoint);
       writeStoredValue(localStorage, STORAGE_KEYS.logs, JSON.stringify(logs));
     }
@@ -355,7 +447,8 @@
     }
 
     function safeJsonParse(text) {
-      try { return JSON.parse(text); } catch { return null; }
+      const normalized = String(text || "").trim().replace(/^```(?:json)?\s*|\s*```$/g, "");
+      try { return JSON.parse(normalized); } catch { return null; }
     }
 
     function parseResponseText(data) {
@@ -384,13 +477,34 @@
       return texts.join("\n").trim();
     }
 
+    function parseGoogleResponseText(data) {
+      const texts = [];
+      for (const candidate of data?.candidates || []) {
+        for (const part of candidate?.content?.parts || []) {
+          if (typeof part?.text === "string" && part.text.trim()) {
+            texts.push(part.text.trim());
+          }
+        }
+      }
+      return texts.join("\n").trim();
+    }
+
+    function extractGoogleAnalysisResult(data) {
+      return normalizeAnalysisResult(safeJsonParse(parseGoogleResponseText(data)));
+    }
+
     async function analyzeImage() {
+      const provider = normalizeProvider(providerInput.value);
       const apiKey = apiKeyInput.value.trim();
-      const model = modelInput.value.trim() || "gpt-4.1-mini";
-      const endpoint = endpointInput.value.trim() || DEFAULT_ENDPOINT;
-      const endpointConfig = getEndpointConfig(endpoint);
+      const model = provider === "google"
+        ? normalizeGoogleModel(modelInput.value)
+        : (modelInput.value.trim() || "gpt-4.1-mini");
+      const endpoint = endpointInput.value.trim() || DEFAULT_ENDPOINTS[provider];
+      const endpointConfig = getEndpointConfig(provider, endpoint, model);
       if (!endpointConfig.allowed) {
-        resultBox.textContent = "Endpoint phải là HTTPS OpenAI Responses API hoặc proxy cùng origin hợp lệ.";
+        resultBox.textContent = provider === "google"
+          ? "Endpoint phải là Google AI Studio Gemini API HTTPS hoặc proxy cùng origin hợp lệ."
+          : "Endpoint phải là HTTPS OpenAI Responses API hoặc proxy cùng origin hợp lệ.";
         return;
       }
       const needsApiKey = endpointConfig.needsApiKey;
@@ -425,28 +539,57 @@
         const headers = {
           "Content-Type": "application/json"
         };
-        if (needsApiKey && apiKey) {
+        if (provider === "google" && needsApiKey && apiKey) {
+          headers["x-goog-api-key"] = apiKey;
+        } else if (needsApiKey && apiKey) {
           headers.Authorization = "Bearer " + apiKey;
         }
+
+        const imagePayload = parseDataUrl(currentImageDataUrl);
+        if (!imagePayload) {
+          throw new Error("Ảnh chưa đúng định dạng base64 hợp lệ.");
+        }
+
+        const requestBody = provider === "google"
+          ? {
+              contents: [
+                {
+                  role: "user",
+                  parts: [
+                    { text: prompt },
+                    {
+                      inlineData: {
+                        mimeType: imagePayload.mimeType,
+                        data: imagePayload.data
+                      }
+                    }
+                  ]
+                }
+              ],
+              generationConfig: {
+                responseMimeType: "application/json"
+              }
+            }
+          : {
+              model,
+              text: {
+                format: ANALYSIS_RESPONSE_FORMAT
+              },
+              input: [
+                {
+                  role: "user",
+                  content: [
+                    { type: "input_text", text: prompt },
+                    { type: "input_image", image_url: { url: currentImageDataUrl } }
+                  ]
+                }
+              ]
+            };
 
         const response = await fetch(endpointConfig.url.toString(), {
           method: "POST",
           headers,
-          body: JSON.stringify({
-            model,
-            text: {
-              format: ANALYSIS_RESPONSE_FORMAT
-            },
-            input: [
-              {
-                role: "user",
-                content: [
-                  { type: "input_text", text: prompt },
-                  { type: "input_image", image_url: { url: currentImageDataUrl } }
-                ]
-              }
-            ]
-          })
+          body: JSON.stringify(requestBody)
         });
 
         if (!response.ok) {
@@ -465,7 +608,9 @@
         } catch {
           throw new Error("AI trả về dữ liệu không hợp lệ.");
         }
-        const parsed = extractAnalysisResult(data);
+        const parsed = provider === "google"
+          ? extractGoogleAnalysisResult(data)
+          : extractAnalysisResult(data);
         if (!parsed) {
           throw new Error("AI không trả về JSON hợp lệ theo cấu trúc mong đợi.");
         }
@@ -524,6 +669,11 @@
 
     apiKeyInput.addEventListener("change", saveState);
     apiKeyInput.addEventListener("input", saveState);
+    providerInput.addEventListener("change", () => {
+      const previousProvider = normalizeProvider(readStoredValue(localStorage, STORAGE_KEYS.provider) || DEFAULT_PROVIDER);
+      updateConfigUi(previousProvider);
+      saveState();
+    });
     modelInput.addEventListener("change", saveState);
     modelInput.addEventListener("input", saveState);
     endpointInput.addEventListener("change", saveState);
