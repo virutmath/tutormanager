@@ -381,8 +381,7 @@
         });
 
         if (!response.ok) {
-          const errText = await response.text();
-          throw new Error(`AI request thất bại (${response.status}): ${errText}`);
+          throw new Error(`AI request thất bại (${response.status}).`);
         }
 
         const data = await response.json();
