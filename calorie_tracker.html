@@ -688,7 +688,10 @@
     apiKeyInput.addEventListener("input", saveState);
     providerInput.addEventListener("change", () => {
       const previousProvider = normalizeProvider(readStoredValue(localStorage, STORAGE_KEYS.provider) || DEFAULT_PROVIDER);
-      const previousModel = readStoredValue(localStorage, STORAGE_KEYS.model) || DEFAULT_MODELS[previousProvider];
+      const previousModel = modelInput.value.trim() || DEFAULT_MODELS[previousProvider];
+      if (previousProvider !== normalizeProvider(providerInput.value)) {
+        modelInput.value = DEFAULT_MODELS[normalizeProvider(providerInput.value)];
+      }
       updateConfigUi(previousProvider, previousModel);
       saveState();
     });
