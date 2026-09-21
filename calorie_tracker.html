@@ -84,6 +84,34 @@
       endpoint: "calo_logger_endpoint",
       logs: "calo_logger_logs"
     };
+    const ANALYSIS_RESPONSE_FORMAT = {
+      type: "json_schema",
+      name: "calorie_estimate",
+      strict: true,
+      schema: {
+        type: "object",
+        additionalProperties: false,
+        required: ["totalCalories", "items", "usedNutritionLabel", "confidence"],
+        properties: {
+          totalCalories: { type: "number" },
+          items: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              required: ["name", "estimatedCalories", "reason"],
+              properties: {
+                name: { type: "string" },
+                estimatedCalories: { type: "number" },
+                reason: { type: "string" }
+              }
+            }
+          },
+          usedNutritionLabel: { type: "boolean" },
+          confidence: { type: "string", enum: ["low", "medium", "high"] }
+        }
+      }
+    };
 
     const apiKeyInput = document.getElementById("apiKey");
     const modelInput = document.getElementById("model");
@@ -377,6 +405,9 @@
           headers,
           body: JSON.stringify({
             model,
+            text: {
+              format: ANALYSIS_RESPONSE_FORMAT
+            },
             input: [
               {
                 role: "user",
@@ -442,6 +473,7 @@
         resultBox.textContent = "Chưa có kết quả.";
       } catch (err) {
         currentImageDataUrl = "";
+        preview.src = "";
         preview.hidden = true;
         resultBox.textContent = err.message || "Không đọc được ảnh.";
       }
