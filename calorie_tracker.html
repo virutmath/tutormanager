@@ -197,7 +197,7 @@
             finalUrl.hash = "";
             return { allowed: true, needsApiKey: true, url: finalUrl };
           }
-          if (url.protocol === "https:" && hostname === "generativelanguage.googleapis.com" && /^\/(v1beta|v1)\/models\/[^/]+:generateContent$/.test(pathname)) {
+          if (url.protocol === "https:" && hostname === "generativelanguage.googleapis.com" && /^\/(v1beta|v1)\/models\/.+:generateContent$/.test(pathname)) {
             return { allowed: true, needsApiKey: true, url };
           }
           if (isSameOriginEndpoint(url) && pathname.endsWith("/generateContent") && !url.search && !url.hash) {
