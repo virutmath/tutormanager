@@ -52,7 +52,7 @@
       <label for="imageInput">Ảnh đồ ăn / bao bì</label>
       <input id="imageInput" type="file" accept="image/*" capture="environment">
       <img id="preview" alt="Xem trước ảnh" hidden>
-      <button id="analyzeBtn" style="margin-top:12px;">Phân tích calo bằng AI</button>
+      <button id="analyzeBtn" type="button" style="margin-top:12px;">Phân tích calo bằng AI</button>
     </section>
 
     <section class="card">
@@ -72,7 +72,7 @@
         </thead>
         <tbody id="logBody"></tbody>
       </table>
-      <button id="clearLogBtn" class="secondary">Xóa toàn bộ nhật ký</button>
+      <button id="clearLogBtn" type="button" class="secondary">Xóa toàn bộ nhật ký</button>
     </section>
   </div>
 
@@ -318,7 +318,7 @@
                 role: "user",
                 content: [
                   { type: "input_text", text: prompt },
-                  { type: "input_image", image_url: currentImageDataUrl }
+                  { type: "input_image", image_url: { url: currentImageDataUrl } }
                 ]
               }
             ]
