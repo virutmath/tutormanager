@@ -439,6 +439,7 @@
         currentImageDataUrl = await toDataUrl(file);
         preview.src = currentImageDataUrl;
         preview.hidden = false;
+        resultBox.textContent = "Chưa có kết quả.";
       } catch (err) {
         currentImageDataUrl = "";
         preview.hidden = true;
