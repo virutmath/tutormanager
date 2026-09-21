@@ -416,7 +416,7 @@
           headers.Authorization = "Bearer " + apiKey;
         }
 
-        const response = await fetch(endpoint, {
+        const response = await fetch(endpointConfig.url.toString(), {
           method: "POST",
           headers,
           body: JSON.stringify({
@@ -473,7 +473,7 @@
         saveState();
         renderLogs();
       } catch (err) {
-        resultBox.textContent = err.message || "Có lỗi khi phân tích.";
+        resultBox.textContent = err instanceof Error ? err.message : "Có lỗi khi phân tích.";
       } finally {
         analyzeBtn.disabled = false;
       }
@@ -497,7 +497,7 @@
         currentImageDataUrl = "";
         preview.src = "";
         preview.hidden = true;
-        resultBox.textContent = err.message || "Không đọc được ảnh.";
+        resultBox.textContent = err instanceof Error ? err.message : "Không đọc được ảnh.";
       }
     });
 
