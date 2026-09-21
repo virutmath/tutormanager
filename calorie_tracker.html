@@ -162,6 +162,39 @@
       };
     }
 
+    function extractAnalysisResult(data) {
+      const directCandidates = [data?.output_parsed, data?.parsed];
+      for (const candidate of directCandidates) {
+        const normalized = normalizeAnalysisResult(candidate);
+        if (normalized) return normalized;
+      }
+
+      const queue = [data?.output];
+      while (queue.length) {
+        const value = queue.shift();
+        if (!value) continue;
+        if (Array.isArray(value)) {
+          queue.push(...value);
+          continue;
+        }
+        if (typeof value !== "object") continue;
+
+        for (const key of ["parsed", "json"]) {
+          const normalized = normalizeAnalysisResult(value[key]);
+          if (normalized) return normalized;
+        }
+
+        if (value.text && typeof value.text === "object") {
+          const normalized = normalizeAnalysisResult(value.text.value);
+          if (normalized) return normalized;
+        }
+
+        queue.push(value.content, value.output);
+      }
+
+      return normalizeAnalysisResult(safeJsonParse(parseResponseText(data)));
+    }
+
     function readStoredValue(storage, key) {
       try {
         return storage.getItem(key);
@@ -353,8 +386,7 @@
         }
 
         const data = await response.json();
-        const text = parseResponseText(data);
-        const parsed = normalizeAnalysisResult(safeJsonParse(text));
+        const parsed = extractAnalysisResult(data);
         if (!parsed) {
           throw new Error("AI không trả về JSON hợp lệ theo cấu trúc mong đợi.");
         }
