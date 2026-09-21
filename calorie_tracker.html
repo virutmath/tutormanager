@@ -103,25 +103,61 @@
         const url = new URL(value);
         const hostname = url.hostname.toLowerCase();
         const pathname = url.pathname.replace(/\/+$/, "");
-        const allowedHosts = new Set([
-          "api.openai.com",
-          "api.openrouter.ai",
-          "openrouter.ai"
-        ]);
         const isAzureOpenAI = hostname.endsWith(".openai.azure.com");
+        const isOpenAIResponses = hostname === "api.openai.com" && pathname === "/v1/responses";
+        const isAzureResponses = isAzureOpenAI
+          && /^\/openai(?:\/v1|\/deployments\/[^/]+)?\/responses$/.test(pathname);
         return url.protocol === "https:"
-          && (allowedHosts.has(hostname) || isAzureOpenAI)
-          && pathname.endsWith("/responses");
+          && (isOpenAIResponses || isAzureResponses);
       } catch {
         return false;
       }
     }
 
-    function isValidAnalysisResult(value) {
-      return !!value
-        && typeof value === "object"
-        && !Array.isArray(value)
-        && (!("items" in value) || Array.isArray(value.items));
+    function normalizeLogEntry(value) {
+      if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+      const parsedDate = new Date(value.timestamp);
+      if (Number.isNaN(parsedDate.getTime())) return null;
+      const summary = typeof value.summary === "string" && value.summary.trim()
+        ? value.summary.trim()
+        : "Không có chi tiết.";
+      let totalCalories = "?";
+      if (typeof value.totalCalories === "number" && Number.isFinite(value.totalCalories)) {
+        totalCalories = value.totalCalories;
+      } else if (typeof value.totalCalories === "string" && value.totalCalories.trim()) {
+        totalCalories = value.totalCalories.trim();
+      }
+      return {
+        timestamp: parsedDate.toISOString(),
+        totalCalories,
+        summary
+      };
+    }
+
+    function normalizeAnalysisResult(value) {
+      if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+      if (!Array.isArray(value.items)) return null;
+
+      const totalCalories = Number(value.totalCalories);
+      if (!Number.isFinite(totalCalories)) return null;
+
+      const items = value.items.map(item => {
+        if (!item || typeof item !== "object" || Array.isArray(item)) return null;
+        const name = typeof item.name === "string" ? item.name.trim() : "";
+        const estimatedCalories = Number(item.estimatedCalories);
+        const reason = typeof item.reason === "string" ? item.reason.trim() : "";
+        if (!name || !Number.isFinite(estimatedCalories)) return null;
+        return { name, estimatedCalories, reason };
+      });
+
+      if (items.some(item => !item)) return null;
+
+      return {
+        totalCalories,
+        items,
+        usedNutritionLabel: Boolean(value.usedNutritionLabel),
+        confidence: ["low", "medium", "high"].includes(value.confidence) ? value.confidence : "?"
+      };
     }
 
     function loadState() {
@@ -130,7 +166,9 @@
       endpointInput.value = localStorage.getItem(STORAGE_KEYS.endpoint) || DEFAULT_ENDPOINT;
       try {
         const parsedLogs = JSON.parse(localStorage.getItem(STORAGE_KEYS.logs) || "[]");
-        logs = Array.isArray(parsedLogs) ? parsedLogs : [];
+        logs = Array.isArray(parsedLogs)
+          ? parsedLogs.map(normalizeLogEntry).filter(Boolean)
+          : [];
       } catch {
         logs = [];
       }
@@ -269,8 +307,8 @@
 
         const data = await response.json();
         const text = parseResponseText(data);
-        const parsed = safeJsonParse(text);
-        if (!isValidAnalysisResult(parsed)) {
+        const parsed = normalizeAnalysisResult(safeJsonParse(text));
+        if (!parsed) {
           throw new Error("AI không trả về JSON hợp lệ theo cấu trúc mong đợi.");
         }
 
