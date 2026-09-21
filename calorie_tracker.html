@@ -22,10 +22,8 @@
     table { width:100%; border-collapse:collapse; margin-top:8px; font-size:14px; }
     th, td { border-bottom:1px solid #374151; text-align:left; padding:8px 6px; vertical-align:top; }
     .muted { color:#9ca3af; font-size:12px; }
-    .config-toggle summary { cursor:pointer; font-weight:700; list-style:none; }
-    .config-toggle summary::-webkit-details-marker { display:none; }
-    .config-toggle summary::before { content:"▶"; display:inline-block; margin-right:8px; transition:transform .2s ease; }
-    .config-toggle[open] summary::before { transform:rotate(90deg); }
+    .config-toggle summary { cursor:pointer; font-weight:700; }
+    .config-toggle summary:focus-visible { outline:2px solid #60a5fa; outline-offset:4px; border-radius:6px; }
     .config-body { margin-top:12px; }
     @media (max-width: 720px){ .row{ grid-template-columns:1fr; } }
   </style>
