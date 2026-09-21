@@ -178,6 +178,10 @@
       };
     }
 
+    function getProviderStorageKey(key, provider) {
+      return `${key}_${provider}`;
+    }
+
     function getDefaultEndpoint(provider, model) {
       if (provider === "google") {
         return `${DEFAULT_ENDPOINT_BASES.google}/models/${encodeURIComponent(normalizeGoogleModel(model))}:generateContent`;
@@ -375,12 +379,15 @@
       const provider = normalizeProvider(readStoredValue(localStorage, STORAGE_KEYS.provider) || DEFAULT_PROVIDER);
       providerInput.value = provider;
       apiKeyInput.value = readStoredValue(sessionStorage, STORAGE_KEYS.apiKey) || "";
-      modelInput.value = readStoredValue(localStorage, STORAGE_KEYS.model)
+      modelInput.value = readStoredValue(localStorage, getProviderStorageKey(STORAGE_KEYS.model, provider))
+        || readStoredValue(localStorage, STORAGE_KEYS.model)
         || DEFAULT_MODELS[provider];
       if (provider === "google") {
         modelInput.value = normalizeGoogleModel(modelInput.value);
       }
-      const savedEndpoint = readStoredValue(localStorage, STORAGE_KEYS.endpoint) || getDefaultEndpoint(provider, modelInput.value.trim());
+      const savedEndpoint = readStoredValue(localStorage, getProviderStorageKey(STORAGE_KEYS.endpoint, provider))
+        || readStoredValue(localStorage, STORAGE_KEYS.endpoint)
+        || getDefaultEndpoint(provider, modelInput.value.trim());
       endpointInput.value = isAllowedEndpoint(provider, savedEndpoint, modelInput.value.trim())
         ? savedEndpoint
         : getDefaultEndpoint(provider, modelInput.value.trim());
@@ -443,8 +450,8 @@
       modelInput.value = safeModel;
       endpointInput.value = safeEndpoint;
       writeStoredValue(localStorage, STORAGE_KEYS.provider, provider);
-      writeStoredValue(localStorage, STORAGE_KEYS.model, safeModel);
-      writeStoredValue(localStorage, STORAGE_KEYS.endpoint, safeEndpoint);
+      writeStoredValue(localStorage, getProviderStorageKey(STORAGE_KEYS.model, provider), safeModel);
+      writeStoredValue(localStorage, getProviderStorageKey(STORAGE_KEYS.endpoint, provider), safeEndpoint);
       writeStoredValue(localStorage, STORAGE_KEYS.logs, JSON.stringify(logs));
       lastSavedProvider = provider;
       lastSavedModel = safeModel;
