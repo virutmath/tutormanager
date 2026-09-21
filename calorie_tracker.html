@@ -103,9 +103,8 @@
         const url = new URL(value);
         const hostname = url.hostname.toLowerCase();
         const pathname = url.pathname.replace(/\/+$/, "");
-        return url.protocol === "https:"
-          && pathname.endsWith("/responses")
-          && (hostname === "api.openai.com" || isSameOriginEndpoint(url));
+        return pathname.endsWith("/responses")
+          && (isSameOriginEndpoint(url) || (url.protocol === "https:" && hostname === "api.openai.com"));
       } catch {
         return false;
       }
@@ -272,8 +271,11 @@
           return;
         }
         if (typeof value !== "object") return;
-        if ((value.type === "output_text" || value.type === "text") && typeof value.text === "string" && value.text) {
-          texts.push(value.text);
+        const textValue = typeof value.text === "string"
+          ? value.text
+          : (value.text && typeof value.text.value === "string" ? value.text.value : "");
+        if ((value.type === "output_text" || value.type === "text") && textValue) {
+          texts.push(textValue);
         }
         collectTexts(value.content);
         collectTexts(value.output);
