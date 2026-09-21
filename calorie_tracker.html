@@ -45,7 +45,7 @@
         <label for="endpoint">LLM Endpoint</label>
         <input id="endpoint" type="url" value="https://api.openai.com/v1/responses" placeholder="https://api.openai.com/v1/responses" autocomplete="off">
       </div>
-      <p class="muted">API key, endpoint và model chỉ lưu trong trình duyệt của bạn.</p>
+      <p class="muted">API key chỉ lưu tạm trong tab hiện tại; endpoint và model lưu trong trình duyệt của bạn.</p>
     </section>
 
     <section class="card">
@@ -98,7 +98,7 @@
     let logs = [];
 
     function loadState() {
-      apiKeyInput.value = localStorage.getItem(STORAGE_KEYS.apiKey) || "";
+      apiKeyInput.value = sessionStorage.getItem(STORAGE_KEYS.apiKey) || "";
       modelInput.value = localStorage.getItem(STORAGE_KEYS.model) || "gpt-4.1-mini";
       endpointInput.value = localStorage.getItem(STORAGE_KEYS.endpoint) || "https://api.openai.com/v1/responses";
       try {
@@ -110,24 +110,45 @@
     }
 
     function saveState() {
-      localStorage.setItem(STORAGE_KEYS.apiKey, apiKeyInput.value.trim());
+      const apiKey = apiKeyInput.value.trim();
+      if (apiKey) {
+        sessionStorage.setItem(STORAGE_KEYS.apiKey, apiKey);
+      } else {
+        sessionStorage.removeItem(STORAGE_KEYS.apiKey);
+      }
       localStorage.setItem(STORAGE_KEYS.model, modelInput.value.trim());
       localStorage.setItem(STORAGE_KEYS.endpoint, endpointInput.value.trim());
       localStorage.setItem(STORAGE_KEYS.logs, JSON.stringify(logs));
     }
 
     function renderLogs() {
+      logBody.replaceChildren();
       if (!logs.length) {
-        logBody.innerHTML = `<tr><td colspan="3" class="muted">Chưa có dữ liệu.</td></tr>`;
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 3;
+        cell.className = "muted";
+        cell.textContent = "Chưa có dữ liệu.";
+        row.appendChild(cell);
+        logBody.appendChild(row);
         return;
       }
-      logBody.innerHTML = logs.map(entry => `
-        <tr>
-          <td>${new Date(entry.timestamp).toLocaleString("vi-VN")}</td>
-          <td><strong>${entry.totalCalories ?? "?"} kcal</strong></td>
-          <td>${entry.summary}</td>
-        </tr>
-      `).join("");
+      for (const entry of logs) {
+        const row = document.createElement("tr");
+        const timeCell = document.createElement("td");
+        timeCell.textContent = new Date(entry.timestamp).toLocaleString("vi-VN");
+
+        const totalCell = document.createElement("td");
+        const totalStrong = document.createElement("strong");
+        totalStrong.textContent = `${entry.totalCalories ?? "?"} kcal`;
+        totalCell.appendChild(totalStrong);
+
+        const summaryCell = document.createElement("td");
+        summaryCell.textContent = entry.summary;
+
+        row.append(timeCell, totalCell, summaryCell);
+        logBody.appendChild(row);
+      }
     }
 
     function toDataUrl(file) {
