@@ -149,9 +149,9 @@
 
     function isSameOriginEndpoint(url) {
       return window.isSecureContext
-        && url.protocol === "https:"
         && !!window.location.origin
         && window.location.origin !== "null"
+        && url.protocol === window.location.protocol
         && url.origin === window.location.origin;
     }
 
@@ -515,8 +515,11 @@
     });
 
     apiKeyInput.addEventListener("change", saveState);
+    apiKeyInput.addEventListener("input", saveState);
     modelInput.addEventListener("change", saveState);
+    modelInput.addEventListener("input", saveState);
     endpointInput.addEventListener("change", saveState);
+    endpointInput.addEventListener("input", saveState);
 
     loadState();
   </script>
