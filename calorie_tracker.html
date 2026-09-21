@@ -157,13 +157,36 @@
       };
     }
 
+    function readStoredValue(storage, key) {
+      try {
+        return storage.getItem(key);
+      } catch {
+        return null;
+      }
+    }
+
+    function writeStoredValue(storage, key, value) {
+      try {
+        storage.setItem(key, value);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    function removeStoredValue(storage, key) {
+      try {
+        storage.removeItem(key);
+      } catch {}
+    }
+
     function loadState() {
-      apiKeyInput.value = sessionStorage.getItem(STORAGE_KEYS.apiKey) || "";
-      modelInput.value = localStorage.getItem(STORAGE_KEYS.model) || "gpt-4.1-mini";
-      const savedEndpoint = localStorage.getItem(STORAGE_KEYS.endpoint) || DEFAULT_ENDPOINT;
+      apiKeyInput.value = readStoredValue(sessionStorage, STORAGE_KEYS.apiKey) || "";
+      modelInput.value = readStoredValue(localStorage, STORAGE_KEYS.model) || "gpt-4.1-mini";
+      const savedEndpoint = readStoredValue(localStorage, STORAGE_KEYS.endpoint) || DEFAULT_ENDPOINT;
       endpointInput.value = isAllowedEndpoint(savedEndpoint) ? savedEndpoint : DEFAULT_ENDPOINT;
       try {
-        const parsedLogs = JSON.parse(localStorage.getItem(STORAGE_KEYS.logs) || "[]");
+        const parsedLogs = JSON.parse(readStoredValue(localStorage, STORAGE_KEYS.logs) || "[]");
         logs = Array.isArray(parsedLogs)
           ? parsedLogs.map(normalizeLogEntry).filter(Boolean)
           : [];
@@ -176,17 +199,17 @@
     function saveState() {
       const apiKey = apiKeyInput.value.trim();
       if (apiKey) {
-        sessionStorage.setItem(STORAGE_KEYS.apiKey, apiKey);
+        writeStoredValue(sessionStorage, STORAGE_KEYS.apiKey, apiKey);
       } else {
-        sessionStorage.removeItem(STORAGE_KEYS.apiKey);
+        removeStoredValue(sessionStorage, STORAGE_KEYS.apiKey);
       }
       const safeEndpoint = isAllowedEndpoint(endpointInput.value.trim())
         ? endpointInput.value.trim()
         : DEFAULT_ENDPOINT;
       endpointInput.value = safeEndpoint;
-      localStorage.setItem(STORAGE_KEYS.model, modelInput.value.trim());
-      localStorage.setItem(STORAGE_KEYS.endpoint, safeEndpoint);
-      localStorage.setItem(STORAGE_KEYS.logs, JSON.stringify(logs));
+      writeStoredValue(localStorage, STORAGE_KEYS.model, modelInput.value.trim());
+      writeStoredValue(localStorage, STORAGE_KEYS.endpoint, safeEndpoint);
+      writeStoredValue(localStorage, STORAGE_KEYS.logs, JSON.stringify(logs));
     }
 
     function renderLogs() {
