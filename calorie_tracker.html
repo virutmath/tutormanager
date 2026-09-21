@@ -202,9 +202,11 @@
             url.protocol === "https:"
             && hostname === "generativelanguage.googleapis.com"
             && directModelMatch
-            && !directModelMatch[2].includes("/")
           ) {
-            return { allowed: true, needsApiKey: true, url };
+            const normalizedDirectModel = normalizeGoogleModel(directModelMatch[2]);
+            if (pathname === `/${directModelMatch[1]}/models/${normalizedDirectModel}:generateContent`) {
+              return { allowed: true, needsApiKey: true, url };
+            }
           }
           if (isSameOriginEndpoint(url) && /(?:\/|:)generateContent$/.test(pathname) && !url.search && !url.hash) {
             return { allowed: true, needsApiKey: false, url };
