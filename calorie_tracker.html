@@ -33,7 +33,7 @@
     <section class="card">
       <div class="row">
         <div>
-          <label for="apiKey">OpenAI API Key</label>
+          <label for="apiKey">AI API Key</label>
           <input id="apiKey" type="password" placeholder="sk-..." autocomplete="off">
         </div>
         <div>
@@ -41,7 +41,11 @@
           <input id="model" type="text" value="gpt-4.1-mini" autocomplete="off">
         </div>
       </div>
-      <p class="muted">API key chỉ lưu trong trình duyệt của bạn.</p>
+      <div style="margin-top:12px;">
+        <label for="endpoint">LLM Endpoint</label>
+        <input id="endpoint" type="url" value="https://api.openai.com/v1/responses" placeholder="https://api.openai.com/v1/responses" autocomplete="off">
+      </div>
+      <p class="muted">API key, endpoint và model chỉ lưu trong trình duyệt của bạn.</p>
     </section>
 
     <section class="card">
@@ -76,11 +80,13 @@
     const STORAGE_KEYS = {
       apiKey: "calo_logger_api_key",
       model: "calo_logger_model",
+      endpoint: "calo_logger_endpoint",
       logs: "calo_logger_logs"
     };
 
     const apiKeyInput = document.getElementById("apiKey");
     const modelInput = document.getElementById("model");
+    const endpointInput = document.getElementById("endpoint");
     const imageInput = document.getElementById("imageInput");
     const preview = document.getElementById("preview");
     const analyzeBtn = document.getElementById("analyzeBtn");
@@ -94,6 +100,7 @@
     function loadState() {
       apiKeyInput.value = localStorage.getItem(STORAGE_KEYS.apiKey) || "";
       modelInput.value = localStorage.getItem(STORAGE_KEYS.model) || "gpt-4.1-mini";
+      endpointInput.value = localStorage.getItem(STORAGE_KEYS.endpoint) || "https://api.openai.com/v1/responses";
       try {
         logs = JSON.parse(localStorage.getItem(STORAGE_KEYS.logs) || "[]");
       } catch {
@@ -105,6 +112,7 @@
     function saveState() {
       localStorage.setItem(STORAGE_KEYS.apiKey, apiKeyInput.value.trim());
       localStorage.setItem(STORAGE_KEYS.model, modelInput.value.trim());
+      localStorage.setItem(STORAGE_KEYS.endpoint, endpointInput.value.trim());
       localStorage.setItem(STORAGE_KEYS.logs, JSON.stringify(logs));
     }
 
@@ -152,8 +160,9 @@
     async function analyzeImage() {
       const apiKey = apiKeyInput.value.trim();
       const model = modelInput.value.trim() || "gpt-4.1-mini";
+      const endpoint = endpointInput.value.trim() || "https://api.openai.com/v1/responses";
       if (!apiKey) {
-        resultBox.textContent = "Vui lòng nhập OpenAI API key.";
+        resultBox.textContent = "Vui lòng nhập AI API key.";
         return;
       }
       if (!currentImageDataUrl) {
@@ -180,7 +189,7 @@
       ].join("\n");
 
       try {
-        const response = await fetch("https://api.openai.com/v1/responses", {
+        const response = await fetch(endpoint, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
