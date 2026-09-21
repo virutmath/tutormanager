@@ -185,16 +185,17 @@
         const name = typeof item.name === "string" ? item.name.trim() : "";
         const estimatedCalories = Number(item.estimatedCalories);
         const reason = typeof item.reason === "string" ? item.reason.trim() : "";
-        if (!name || !Number.isFinite(estimatedCalories)) return null;
+        if (!name || !Number.isFinite(estimatedCalories) || !reason) return null;
         return { name, estimatedCalories, reason };
       });
 
       if (items.some(item => !item)) return null;
+      if (typeof value.usedNutritionLabel !== "boolean") return null;
 
       return {
         totalCalories,
         items,
-        usedNutritionLabel: Boolean(value.usedNutritionLabel),
+        usedNutritionLabel: value.usedNutritionLabel,
         confidence: ["low", "medium", "high"].includes(value.confidence) ? value.confidence : "?"
       };
     }
@@ -405,9 +406,7 @@
           headers,
           body: JSON.stringify({
             model,
-            text: {
-              format: ANALYSIS_RESPONSE_FORMAT
-            },
+            response_format: ANALYSIS_RESPONSE_FORMAT,
             input: [
               {
                 role: "user",
