@@ -203,8 +203,11 @@
             && hostname === "generativelanguage.googleapis.com"
             && directModelMatch
           ) {
-            const normalizedDirectModel = normalizeGoogleModel(directModelMatch[2]);
-            if (pathname === `/${directModelMatch[1]}/models/${normalizedDirectModel}:generateContent`) {
+            const decodedDirectModel = decodeURIComponent(directModelMatch[2]);
+            const normalizedDirectModel = normalizeGoogleModel(decodedDirectModel);
+            const encodedExpectedPath = `/${directModelMatch[1]}/models/${encodeURIComponent(normalizedDirectModel)}:generateContent`;
+            const decodedExpectedPath = `/${directModelMatch[1]}/models/${normalizedDirectModel}:generateContent`;
+            if (pathname === encodedExpectedPath || pathname === decodedExpectedPath) {
               return { allowed: true, needsApiKey: true, url };
             }
           }
