@@ -406,7 +406,10 @@
       if (!modelInput.value.trim() || (providerChanged && previousDefaultModel && modelInput.value.trim() === previousDefaultModel)) {
         modelInput.value = defaultModel;
       }
-      const currentModel = modelInput.value.trim() || defaultModel;
+      const currentModel = provider === "google"
+        ? normalizeGoogleModel(modelInput.value)
+        : (modelInput.value.trim() || defaultModel);
+      modelInput.value = currentModel;
       const defaultEndpoint = getDefaultEndpoint(provider, currentModel);
       const previousDefaultEndpoint = previousProvider
         ? getDefaultEndpoint(previousProvider, previousModel || previousDefaultModel)
