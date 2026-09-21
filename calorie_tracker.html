@@ -23,8 +23,6 @@
     th, td { border-bottom:1px solid #374151; text-align:left; padding:8px 6px; vertical-align:top; }
     .muted { color:#9ca3af; font-size:12px; }
     details > summary { cursor:pointer; font-weight:700; }
-    details > summary::after { content:" (đang đóng)"; font-weight:400; color:#9ca3af; }
-    details[open] > summary::after { content:" (đang mở)"; }
     details[open] > summary { margin-bottom:12px; }
     @media (max-width: 720px){ .row{ grid-template-columns:1fr; } }
   </style>
@@ -35,8 +33,8 @@
     <p>Chụp ảnh món ăn hoặc bao bì sản phẩm, gửi AI để ước lượng calo rồi lưu lại nhật ký nạp vào.</p>
 
     <section class="card">
-      <details>
-        <summary>Cấu hình API</summary>
+      <details id="apiConfigDetails">
+        <summary id="apiConfigSummary">Cấu hình API (đang đóng)</summary>
         <div class="row">
           <div>
             <label for="apiKey">AI API Key</label>
@@ -129,6 +127,8 @@
     const resultBox = document.getElementById("result");
     const logBody = document.getElementById("logBody");
     const clearLogBtn = document.getElementById("clearLogBtn");
+    const apiConfigDetails = document.getElementById("apiConfigDetails");
+    const apiConfigSummary = document.getElementById("apiConfigSummary");
 
     let currentImageDataUrl = "";
     let logs = [];
@@ -310,6 +310,12 @@
       writeStoredValue(localStorage, STORAGE_KEYS.model, modelInput.value.trim());
       writeStoredValue(localStorage, STORAGE_KEYS.endpoint, safeEndpoint);
       writeStoredValue(localStorage, STORAGE_KEYS.logs, JSON.stringify(logs));
+    }
+
+    function updateApiConfigSummary() {
+      apiConfigSummary.textContent = apiConfigDetails.open
+        ? "Cấu hình API (đang mở)"
+        : "Cấu hình API (đang đóng)";
     }
 
     function renderLogs() {
@@ -527,8 +533,10 @@
     modelInput.addEventListener("input", saveState);
     endpointInput.addEventListener("change", saveState);
     endpointInput.addEventListener("input", saveState);
+    apiConfigDetails.addEventListener("toggle", updateApiConfigSummary);
 
     loadState();
+    updateApiConfigSummary();
   </script>
 </body>
 </html>
