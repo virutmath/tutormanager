@@ -579,6 +579,7 @@
     }
 
     async function analyzeImage() {
+      syncConfigState();
       const provider = normalizeProvider(providerInput.value);
       const apiKey = apiKeyInput.value.trim();
       const model = provider === "google"
