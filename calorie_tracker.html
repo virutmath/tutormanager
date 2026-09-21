@@ -377,6 +377,9 @@
       apiKeyInput.value = readStoredValue(sessionStorage, STORAGE_KEYS.apiKey) || "";
       modelInput.value = readStoredValue(localStorage, STORAGE_KEYS.model)
         || DEFAULT_MODELS[provider];
+      if (provider === "google") {
+        modelInput.value = normalizeGoogleModel(modelInput.value);
+      }
       const savedEndpoint = readStoredValue(localStorage, STORAGE_KEYS.endpoint) || getDefaultEndpoint(provider, modelInput.value.trim());
       endpointInput.value = isAllowedEndpoint(provider, savedEndpoint, modelInput.value.trim())
         ? savedEndpoint
