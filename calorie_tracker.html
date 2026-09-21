@@ -148,7 +148,9 @@
     }
 
     function isSameOriginEndpoint(url) {
-      return !!window.location.origin
+      return window.isSecureContext
+        && url.protocol === "https:"
+        && !!window.location.origin
         && window.location.origin !== "null"
         && url.origin === window.location.origin;
     }
@@ -322,7 +324,9 @@
 
         const totalCell = document.createElement("td");
         const totalStrong = document.createElement("strong");
-        totalStrong.textContent = `${entry.totalCalories ?? "?"} kcal`;
+        totalStrong.textContent = typeof entry.totalCalories === "number"
+          ? `${entry.totalCalories} kcal`
+          : `${entry.totalCalories ?? "?"}`;
         totalCell.appendChild(totalStrong);
 
         const summaryCell = document.createElement("td");
