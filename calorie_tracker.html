@@ -629,6 +629,7 @@
 
         const requestBody = provider === "google"
           ? {
+              ...(!needsApiKey ? { model } : {}),
               contents: [
                 {
                   role: "user",
