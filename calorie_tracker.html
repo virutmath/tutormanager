@@ -406,7 +406,9 @@
           headers,
           body: JSON.stringify({
             model,
-            response_format: ANALYSIS_RESPONSE_FORMAT,
+            text: {
+              format: ANALYSIS_RESPONSE_FORMAT
+            },
             input: [
               {
                 role: "user",
@@ -420,7 +422,15 @@
         });
 
         if (!response.ok) {
-          throw new Error(`Yêu cầu AI thất bại (${response.status}).`);
+          let safeDetail = "";
+          try {
+            const errorData = await response.json();
+            const message = typeof errorData?.error?.message === "string"
+              ? errorData.error.message.trim()
+              : (typeof errorData?.message === "string" ? errorData.message.trim() : "");
+            if (message) safeDetail = `: ${message}`;
+          } catch {}
+          throw new Error(`Yêu cầu AI thất bại (${response.status})${safeDetail}.`);
         }
 
         let data;
