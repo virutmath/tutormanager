@@ -389,11 +389,8 @@
       const savedEndpoint = scopedSavedEndpoint
         || readStoredValue(localStorage, STORAGE_KEYS.endpoint)
         || getDefaultEndpoint(provider, modelInput.value.trim());
-      const restoredEndpoint = provider === "google" && !scopedSavedEndpoint
-        ? getDefaultEndpoint(provider, modelInput.value.trim())
-        : savedEndpoint;
-      endpointInput.value = isAllowedEndpoint(provider, restoredEndpoint, modelInput.value.trim())
-        ? restoredEndpoint
+      endpointInput.value = isAllowedEndpoint(provider, savedEndpoint, modelInput.value.trim())
+        ? savedEndpoint
         : getDefaultEndpoint(provider, modelInput.value.trim());
       lastSavedProvider = provider;
       lastSavedModel = modelInput.value.trim() || DEFAULT_MODELS[provider];
@@ -645,7 +642,6 @@
 
         const requestBody = provider === "google"
           ? {
-              ...(!needsApiKey ? { model } : {}),
               contents: [
                 {
                   role: "user",
