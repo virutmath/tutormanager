@@ -338,7 +338,12 @@
 
     imageInput.addEventListener("change", async () => {
       const file = imageInput.files?.[0];
-      if (!file) return;
+      if (!file) {
+        currentImageDataUrl = "";
+        preview.src = "";
+        preview.hidden = true;
+        return;
+      }
       try {
         currentImageDataUrl = await toDataUrl(file);
         preview.src = currentImageDataUrl;
