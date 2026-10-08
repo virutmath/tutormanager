@@ -19,7 +19,7 @@
     .row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     .button-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px; }
     .button-row button.secondary { margin-top:0; }
-    .report-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin:12px 0; }
+    .report-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; margin:12px 0; }
     .metric { background:#111827; border:1px solid #374151; border-radius:8px; padding:12px; }
     .metric strong { display:block; font-size:20px; margin-top:6px; }
     .alert { border:1px solid #ef4444; background:#7f1d1d; color:#fee2e2; padding:12px; border-radius:8px; margin:12px 0; }
@@ -43,6 +43,7 @@
     .config-toggle summary { cursor:pointer; font-weight:700; }
     .config-toggle summary:focus-visible { outline:2px solid #60a5fa; outline-offset:4px; border-radius:6px; }
     .config-body { margin-top:12px; }
+    .settings-section { border-top:1px solid #374151; margin-top:16px; padding-top:16px; }
     @media (max-width: 720px){
       .row, .button-row, .report-grid, .form-grid { grid-template-columns:1fr; }
       .macro-row { grid-template-columns:82px 1fr 72px; gap:6px; }
@@ -55,8 +56,9 @@
     <p>Chụp ảnh món ăn hoặc bao bì sản phẩm, gửi AI để ước lượng calo rồi lưu lại nhật ký nạp vào.</p>
 
     <section class="card">
+      <h2>Cài đặt</h2>
       <details class="config-toggle">
-        <summary>Cấu hình AI</summary>
+        <summary>Cấu hình AI và tìm kiếm</summary>
         <div class="config-body">
           <div class="row">
             <div>
@@ -80,6 +82,13 @@
           <p class="muted">API key Google và Brave chỉ lưu tạm trong tab hiện tại; model và lựa chọn tìm kiếm lưu trong trình duyệt. Brave key được gửi tới Worker API đã cấu hình trong app.</p>
         </div>
       </details>
+      <div class="settings-section">
+        <h3>Mục tiêu calo mỗi ngày</h3>
+        <label for="calorieLimit">Mức trần calo mỗi ngày</label>
+        <input id="calorieLimit" type="number" min="1" step="1" placeholder="Nhập mức trần (kcal)">
+        <button id="saveLimitBtn" type="button" style="margin-top:12px;">Lưu mức trần calo</button>
+        <p class="muted">Để trống mức trần nếu không muốn bật cảnh báo. Cảnh báo sẽ xuất hiện trong báo cáo khi tổng calo vượt mức đã đặt.</p>
+      </div>
     </section>
 
     <section class="card">
@@ -107,45 +116,8 @@
     </section>
 
     <section class="card">
-      <h2>Tổng calo theo ngày</h2>
-      <div class="row">
-        <div>
-          <label for="reportDate">Ngày xem báo cáo</label>
-          <input id="reportDate" type="date">
-        </div>
-        <div>
-          <label for="calorieLimit">Mức trần calo mỗi ngày</label>
-          <input id="calorieLimit" type="number" min="1" step="1" placeholder="Nhập mức trần (kcal)">
-        </div>
-      </div>
-      <div id="dailyAlert" role="status" aria-live="polite"></div>
-      <div class="report-grid">
-        <div class="metric">Tổng năng lượng<strong id="dailyCalories">0 kcal</strong></div>
-        <div class="metric">Số lần ghi nhật ký<strong id="dailyEntryCount">0</strong></div>
-        <div class="metric">Mức trần<strong id="dailyLimitValue">Chưa đặt</strong></div>
-      </div>
-      <button id="saveLimitBtn" type="button">Lưu mức trần calo</button>
-      <p class="muted">Để trống mức trần nếu không muốn bật cảnh báo. Cảnh báo sẽ xuất hiện trong báo cáo khi tổng calo vượt mức đã đặt.</p>
-    </section>
-
-    <section class="card">
-      <h2>Lượng calo trong thời gian gần đây</h2>
-      <div class="button-row">
-        <button id="chart7Btn" type="button">7 ngày gần nhất</button>
-        <button id="chart30Btn" type="button" class="secondary">30 ngày gần nhất</button>
-      </div>
-      <svg id="calorieChart" class="chart" viewBox="0 0 760 280" role="img" aria-label="Biểu đồ calo theo ngày"></svg>
-      <p class="muted">Đường đỏ thể hiện mức trần calo nếu đã cấu hình.</p>
-    </section>
-
-    <section class="card">
-      <h2>Cân bằng dinh dưỡng trong ngày</h2>
-      <div id="macroChart"></div>
-      <p class="muted">Tỷ lệ năng lượng ước tính từ protein, carbohydrate và chất béo; đây là số liệu tham khảo, không phải khuyến nghị y tế.</p>
-    </section>
-
-    <section class="card">
-      <h2>Nhập nhật ký calo thủ công</h2>
+      <h2>Nhập nhật ký dinh dưỡng</h2>
+      <p class="muted">Kết quả phân tích AI sẽ được điền vào biểu mẫu để bạn kiểm tra hoặc chỉnh sửa. Nhật ký chỉ được lưu khi bạn bấm nút bên dưới.</p>
       <form id="manualEntryForm">
         <div class="form-grid">
           <div>
@@ -184,6 +156,33 @@
         <button type="submit" style="margin-top:12px;">Lưu nhật ký</button>
         <p id="manualFormStatus" role="status" aria-live="polite"></p>
       </form>
+    </section>
+
+    <section class="card">
+      <h2>Tổng calo theo ngày</h2>
+      <label for="reportDate">Ngày xem báo cáo</label>
+      <input id="reportDate" type="date">
+      <div id="dailyAlert" role="status" aria-live="polite"></div>
+      <div class="report-grid">
+        <div class="metric">Tổng năng lượng<strong id="dailyCalories">0 kcal</strong></div>
+        <div class="metric">Số lần ghi nhật ký<strong id="dailyEntryCount">0</strong></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Lượng calo trong thời gian gần đây</h2>
+      <div class="button-row">
+        <button id="chart7Btn" type="button">7 ngày gần nhất</button>
+        <button id="chart30Btn" type="button" class="secondary">30 ngày gần nhất</button>
+      </div>
+      <svg id="calorieChart" class="chart" viewBox="0 0 760 280" role="img" aria-label="Biểu đồ calo theo ngày"></svg>
+      <p class="muted">Đường đỏ thể hiện mức trần calo nếu đã cấu hình.</p>
+    </section>
+
+    <section class="card">
+      <h2>Cân bằng dinh dưỡng trong ngày</h2>
+      <div id="macroChart"></div>
+      <p class="muted">Tỷ lệ năng lượng ước tính từ protein, carbohydrate và chất béo; đây là số liệu tham khảo, không phải khuyến nghị y tế.</p>
     </section>
 
     <section class="card">
@@ -475,9 +474,6 @@
       const totals = sumEntries(entries);
       document.getElementById("dailyCalories").textContent = `${Math.round(totals.calories)} kcal`;
       document.getElementById("dailyEntryCount").textContent = String(entries.length);
-      document.getElementById("dailyLimitValue").textContent = dailyCalorieLimit === null
-        ? "Chưa đặt"
-        : `${dailyCalorieLimit} kcal`;
 
       dailyAlert.replaceChildren();
       if (dailyCalorieLimit !== null && totals.calories > dailyCalorieLimit) {
@@ -855,6 +851,28 @@
       ].join("\n");
     }
 
+    function fillNutritionForm(analysis, identity, productText) {
+      const form = document.getElementById("manualEntryForm");
+      const itemNames = analysis.items.map(item => item.name).filter(Boolean);
+      const name = identity?.productName
+        || itemNames.join(", ")
+        || productText
+        || "Thực phẩm phân tích bằng AI";
+      const now = new Date();
+
+      document.getElementById("manualName").value = name.slice(0, 120);
+      document.getElementById("manualCalories").value = String(analysis.totalCalories);
+      document.getElementById("manualDate").value = getLocalDateKey(now);
+      document.getElementById("manualTime").value = now.toTimeString().slice(0, 5);
+      document.getElementById("manualProtein").value = analysis.proteinGrams ?? "";
+      document.getElementById("manualCarbs").value = analysis.carbohydrateGrams ?? "";
+      document.getElementById("manualFat").value = analysis.fatGrams ?? "";
+      document.getElementById("manualFiber").value = analysis.fiberGrams ?? "";
+      document.getElementById("manualFormStatus").textContent =
+        "Đã điền kết quả phân tích vào biểu mẫu. Kiểm tra thông tin rồi bấm “Lưu nhật ký” để ghi lại.";
+      form.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
     async function analyzeImage() {
       saveState();
       const apiKey = apiKeyInput.value.trim();
@@ -941,19 +959,7 @@
           ? `\n\nNguồn Brave Search:\n${searchResults.map(result => `- ${result.title}${result.url ? ` — ${result.url}` : ""}`).join("\n")}`
           : (useSearch ? "\n\nBrave Search không trả về kết quả phù hợp." : "");
         resultBox.textContent = `${identitySummary}Tổng calo: ${parsed.totalCalories} kcal\nĐộ tin cậy: ${parsed.confidence}\n${parsed.usedNutritionLabel ? "Có dùng thông tin từ nhãn dinh dưỡng." : "Không xác nhận được nhãn dinh dưỡng."}\n\nDinh dưỡng ước tính:\n${nutritionSummary}\n\nChi tiết:\n${itemSummary}${sourceSummary}`;
-
-        logs.unshift({
-          timestamp: new Date().toISOString(),
-          totalCalories: parsed.totalCalories,
-          proteinGrams: parsed.proteinGrams,
-          carbohydrateGrams: parsed.carbohydrateGrams,
-          fatGrams: parsed.fatGrams,
-          fiberGrams: parsed.fiberGrams,
-          summary: `${identity ? `${identity.productName}: ` : ""}${itemSummary}`,
-          source: "analysis"
-        });
-        saveState();
-        refreshReports();
+        fillNutritionForm(parsed, identity, productText);
       } catch (err) {
         resultBox.textContent = err instanceof Error ? err.message : "Có lỗi khi phân tích.";
       } finally {

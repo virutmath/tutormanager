@@ -75,8 +75,7 @@ export default {
     const searchUrl = new URL(BRAVE_SEARCH_URL);
     searchUrl.searchParams.set("q", query);
     searchUrl.searchParams.set("count", "6");
-    searchUrl.searchParams.set("country", "VN");
-    searchUrl.searchParams.set("search_lang", "vi");
+    searchUrl.searchParams.set("country", "ALL");
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 12000);
@@ -107,7 +106,7 @@ export default {
         : (status === 429
           ? "Brave Search đã vượt hạn mức yêu cầu."
           : (braveResponse.status < 500
-            ? `Brave Search từ chối request (HTTP ${braveResponse.status}); kiểm tra query và tham số country/search_lang.`
+            ? `Brave Search từ chối request (HTTP ${braveResponse.status}); kiểm tra query và tham số tìm kiếm.`
             : `Brave Search upstream đang lỗi (HTTP ${braveResponse.status}); thử lại sau.`));
       return jsonResponse({ error: message, upstreamStatus: braveResponse.status }, status, headers);
     }
