@@ -52,7 +52,7 @@
               </select>
             </div>
           </div>
-          <p class="muted">API key l?y t? Google AI Studio, ch? l?u t?m trong tab hi?n t?i; model l?u trong tr?nh duy?t c?a b?n.</p>
+          <p class="muted">API key lấy từ Google AI Studio, chỉ lưu tạm trong tab hiện tại; model lưu trong trình duyệt của bạn.</p>
         </div>
       </details>
     </section>
@@ -104,7 +104,8 @@
     const logBody = document.getElementById("logBody");
     const clearLogBtn = document.getElementById("clearLogBtn");
 
-    let currentImageDataUrl = "";
+    let currentImageBlob = null;
+    let currentImagePreviewUrl = "";
     let logs = [];
 
     function normalizeModel(value) {
@@ -264,12 +265,56 @@
       }
     }
 
-    function toDataUrl(file) {
+    async function decodeImage(file) {
+      if (typeof createImageBitmap === "function") {
+        return createImageBitmap(file);
+      }
+
+      const objectUrl = URL.createObjectURL(file);
+      try {
+        const image = new Image();
+        image.src = objectUrl;
+        await image.decode();
+        return image;
+      } finally {
+        URL.revokeObjectURL(objectUrl);
+      }
+    }
+
+    async function compressImage(file) {
+      const image = await decodeImage(file);
+      try {
+        const scale = Math.min(1, 2048 / Math.max(image.width, image.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+
+        const context = canvas.getContext("2d");
+        if (!context) throw new Error("Không thể xử lý ảnh trên thiết bị này.");
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        const blob = await new Promise((resolve, reject) => {
+          canvas.toBlob(
+            result => result ? resolve(result) : reject(new Error("Không thể nén ảnh.")),
+            "image/jpeg",
+            0.82
+          );
+        });
+        return blob;
+      } finally {
+        if (typeof image.close === "function") image.close();
+      }
+    }
+
+    function blobToDataUrl(blob) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error("Không đọc được ảnh."));
-        reader.readAsDataURL(file);
+        reader.onload = () => {
+          if (typeof reader.result === "string") resolve(reader.result);
+          else reject(new Error("Không đọc được ảnh đã xử lý."));
+        };
+        reader.onerror = () => reject(new Error("Không đọc được ảnh đã xử lý."));
+        reader.readAsDataURL(blob);
       });
     }
 
@@ -324,10 +369,10 @@
       const apiKey = apiKeyInput.value.trim();
       const model = normalizeModel(modelInput.value);
       if (!apiKey) {
-        resultBox.textContent = "Vui l?ng nh?p Google AI Studio API key.";
+        resultBox.textContent = "Vui lòng nhập Google AI Studio API key.";
         return;
       }
-      if (!currentImageDataUrl) {
+      if (!currentImageBlob) {
         resultBox.textContent = "Vui lòng chọn ảnh trước.";
         return;
       }
@@ -357,9 +402,10 @@
           "x-goog-api-key": apiKey
         };
 
-        const imagePayload = parseDataUrl(currentImageDataUrl);
+        const compressedImageDataUrl = await blobToDataUrl(currentImageBlob);
+        const imagePayload = parseDataUrl(compressedImageDataUrl);
         if (!imagePayload) {
-          throw new Error("?nh ch?a ??ng ??nh d?ng base64 h?p l?.");
+          throw new Error("Ảnh chưa đúng định dạng base64 hợp lệ.");
         }
 
         const requestBody = {
@@ -373,7 +419,7 @@
             }
           ]
         };
-        // Gemma kh?ng h? tr? JSON mode; prompt + parser x? l? JSON cho model n?y.
+        // Gemma không hỗ trợ JSON mode; prompt và parser xử lý JSON cho model này.
         if (!model.startsWith("gemma")) {
           requestBody.generationConfig = { responseMimeType: "application/json" };
         }
@@ -429,23 +475,30 @@
 
     imageInput.addEventListener("change", async () => {
       const file = imageInput.files?.[0];
+      if (currentImagePreviewUrl) URL.revokeObjectURL(currentImagePreviewUrl);
+      currentImagePreviewUrl = "";
+      currentImageBlob = null;
       if (!file) {
-        currentImageDataUrl = "";
         preview.src = "";
         preview.hidden = true;
         resultBox.textContent = "Chưa có kết quả.";
         return;
       }
+      analyzeBtn.disabled = true;
+      resultBox.textContent = "Đang tối ưu ảnh...";
       try {
-        currentImageDataUrl = await toDataUrl(file);
-        preview.src = currentImageDataUrl;
+        currentImageBlob = await compressImage(file);
+        currentImagePreviewUrl = URL.createObjectURL(currentImageBlob);
+        preview.src = currentImagePreviewUrl;
         preview.hidden = false;
         resultBox.textContent = "Chưa có kết quả.";
       } catch (err) {
-        currentImageDataUrl = "";
+        currentImageBlob = null;
         preview.src = "";
         preview.hidden = true;
         resultBox.textContent = err instanceof Error ? err.message : "Không đọc được ảnh.";
+      } finally {
+        analyzeBtn.disabled = false;
       }
     });
 
@@ -457,8 +510,6 @@
       renderLogs();
     });
 
-    apiKeyInput.addEventListener("change", saveState);
-    apiKeyInput.addEventListener("input", saveState);
     apiKeyInput.addEventListener("change", saveState);
     apiKeyInput.addEventListener("input", saveState);
     modelInput.addEventListener("change", saveState);
