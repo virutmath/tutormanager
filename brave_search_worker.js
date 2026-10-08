@@ -90,7 +90,10 @@ export default {
         signal: controller.signal
       });
     } catch {
-      return jsonResponse({ error: "Không kết nối được Brave Search API." }, 502, headers);
+      const message = controller.signal.aborted
+        ? "Brave Search không phản hồi trong 12 giây (timeout)."
+        : "Worker không kết nối được tới Brave Search API; kiểm tra sự cố mạng hoặc cấu hình upstream.";
+      return jsonResponse({ error: message }, 502, headers);
     } finally {
       clearTimeout(timeout);
     }
@@ -100,9 +103,13 @@ export default {
         ? 401
         : (braveResponse.status === 429 ? 429 : 502);
       const message = status === 401
-        ? "Brave Search từ chối API key."
-        : (status === 429 ? "Brave Search đã vượt hạn mức yêu cầu." : "Brave Search API thất bại.");
-      return jsonResponse({ error: message }, status, headers);
+        ? "Brave Search từ chối API key hoặc key không có quyền với API này."
+        : (status === 429
+          ? "Brave Search đã vượt hạn mức yêu cầu."
+          : (braveResponse.status < 500
+            ? `Brave Search từ chối request (HTTP ${braveResponse.status}); kiểm tra query và tham số country/search_lang.`
+            : `Brave Search upstream đang lỗi (HTTP ${braveResponse.status}); thử lại sau.`));
+      return jsonResponse({ error: message, upstreamStatus: braveResponse.status }, status, headers);
     }
 
     let searchData;

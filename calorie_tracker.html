@@ -784,16 +784,6 @@
       } catch {
         throw new Error("Không kết nối được Brave Search Worker. Kiểm tra URL, trạng thái Worker và cấu hình CORS.");
       }
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-          throw new Error("Brave Search Worker từ chối yêu cầu. Kiểm tra origin GitHub Pages hoặc Brave API key.");
-        }
-        if (response.status === 429) {
-          throw new Error("Brave Search đã vượt hạn mức yêu cầu.");
-        }
-        throw new Error(`Brave Search Worker thất bại (HTTP ${response.status}).`);
-      }
-
       let data;
       try {
         data = await response.json();
@@ -802,6 +792,17 @@
       }
       if (typeof data?.error === "string") {
         throw new Error(data.error);
+      }
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          throw new Error("Brave Search Worker từ chối yêu cầu. Kiểm tra origin GitHub Pages hoặc cấu hình Worker.");
+        }
+        if (response.status === 429) {
+          throw new Error("Brave Search đã vượt hạn mức yêu cầu.");
+        }
+        const upstreamStatus = Number(data?.upstreamStatus);
+        const upstreamDetail = Number.isInteger(upstreamStatus) ? `; Brave HTTP ${upstreamStatus}` : "";
+        throw new Error(`Brave Search Worker thất bại (HTTP ${response.status}${upstreamDetail}).`);
       }
       return (Array.isArray(data?.results) ? data.results : [])
         .slice(0, 6)
