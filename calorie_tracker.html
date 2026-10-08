@@ -39,28 +39,20 @@
         <div class="config-body">
           <div class="row">
             <div>
-              <label for="provider">AI Provider</label>
-              <select id="provider">
-                <option value="openai">OpenAI / Responses API</option>
-                <option value="google">Google AI Studio / Gemini API</option>
-              </select>
+              <label for="apiKey">Google AI Studio API Key</label>
+              <input id="apiKey" type="password" placeholder="AIza..." autocomplete="off">
             </div>
-            <div>
-              <label for="apiKey">AI API Key</label>
-              <input id="apiKey" type="password" placeholder="sk-... hoặc AIza..." autocomplete="off">
-            </div>
-          </div>
-          <div class="row">
             <div>
               <label for="model">Model</label>
-              <input id="model" type="text" value="gpt-4.1-mini" autocomplete="off">
-            </div>
-            <div>
-              <label for="endpoint">LLM Endpoint</label>
-              <input id="endpoint" type="url" value="https://api.openai.com/v1/responses" placeholder="https://api.openai.com/v1/responses" autocomplete="off">
+              <select id="model">
+                <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash Lite</option>
+                <option value="gemini-3.8-flash">Gemini 3.8 Flash</option>
+                <option value="gemini-3.7-flash">Gemini 3.7 Flash</option>
+                <option value="gemma-4-31b-it">Gemma 4 31B</option>
+              </select>
             </div>
           </div>
-          <p id="configHelp" class="muted">API key chỉ lưu tạm trong tab hiện tại; endpoint và model lưu trong trình duyệt của bạn. Nếu dùng proxy cùng origin, endpoint đó phải nhận payload theo OpenAI Responses API.</p>
+          <p class="muted">API key l?y t? Google AI Studio, ch? l?u t?m trong tab hi?n t?i; model l?u trong tr?nh duy?t c?a b?n.</p>
         </div>
       </details>
     </section>
@@ -94,60 +86,17 @@
   </div>
 
   <script>
-    const DEFAULT_PROVIDER = "openai";
-    const DEFAULT_ENDPOINT_BASES = {
-      openai: "https://api.openai.com/v1/responses",
-      google: "https://generativelanguage.googleapis.com/v1beta"
-    };
-    const DEFAULT_MODELS = {
-      openai: "gpt-4.1-mini",
-      google: "gemini-2.5-flash"
-    };
+    const GOOGLE_API_BASE = "https://generativelanguage.googleapis.com/v1beta";
+    const MODELS = ["gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-3.7-flash", "gemma-4-31b-it"];
+    const DEFAULT_MODEL = MODELS[0];
     const STORAGE_KEYS = {
       apiKey: "calo_logger_api_key",
-      provider: "calo_logger_provider",
       model: "calo_logger_model",
-      endpoint: "calo_logger_endpoint",
       logs: "calo_logger_logs"
     };
-    const ANALYSIS_RESPONSE_FORMAT = {
-      type: "json_schema",
-      name: "calorie_estimate",
-      strict: true,
-      schema: {
-        type: "object",
-        additionalProperties: false,
-        required: ["totalCalories", "items", "usedNutritionLabel", "confidence"],
-        properties: {
-          totalCalories: { type: "number" },
-          items: {
-            type: "array",
-            items: {
-              type: "object",
-              additionalProperties: false,
-              required: ["name", "estimatedCalories", "reason"],
-              properties: {
-                name: { type: "string" },
-                estimatedCalories: { type: "number" },
-                reason: { type: "string" }
-              }
-            }
-          },
-          usedNutritionLabel: { type: "boolean" },
-          confidence: { type: "string", enum: ["low", "medium", "high"] }
-        }
-      }
-    };
-    const PROVIDER_HELP = {
-      openai: "API key chỉ lưu tạm trong tab hiện tại; endpoint và model lưu trong trình duyệt của bạn. Nếu dùng proxy cùng origin, endpoint đó phải nhận payload theo OpenAI Responses API.",
-      google: "Google AI Studio dùng Gemini generateContent API. Với endpoint mặc định, app sẽ tự ghép thành /models/{model}:generateContent. Nếu dùng proxy cùng origin, endpoint đó phải nhận payload theo Gemini generateContent API."
-    };
 
-    const providerInput = document.getElementById("provider");
     const apiKeyInput = document.getElementById("apiKey");
     const modelInput = document.getElementById("model");
-    const endpointInput = document.getElementById("endpoint");
-    const configHelp = document.getElementById("configHelp");
     const imageInput = document.getElementById("imageInput");
     const preview = document.getElementById("preview");
     const analyzeBtn = document.getElementById("analyzeBtn");
@@ -157,16 +106,10 @@
 
     let currentImageDataUrl = "";
     let logs = [];
-    let lastSavedProvider = DEFAULT_PROVIDER;
-    let lastSavedModel = DEFAULT_MODELS[DEFAULT_PROVIDER];
 
-    function normalizeProvider(value) {
-      return value === "google" ? "google" : DEFAULT_PROVIDER;
-    }
-
-    function normalizeGoogleModel(value) {
-      const trimmed = String(value || "").trim();
-      return trimmed.replace(/^models\//i, "") || "gemini-2.5-flash";
+    function normalizeModel(value) {
+      const id = String(value || "").trim().replace(/^models\//i, "");
+      return MODELS.includes(id) ? id : DEFAULT_MODEL;
     }
 
     function parseDataUrl(value) {
@@ -176,85 +119,6 @@
         mimeType: match[1] || "image/jpeg",
         data: match[2]
       };
-    }
-
-    function getProviderStorageKey(key, provider) {
-      return `${key}_${provider}`;
-    }
-
-    function getDefaultEndpoint(provider, model) {
-      if (provider === "google") {
-        return `${DEFAULT_ENDPOINT_BASES.google}/models/${encodeURIComponent(normalizeGoogleModel(model))}:generateContent`;
-      }
-      return DEFAULT_ENDPOINT_BASES.openai;
-    }
-
-    function getEndpointConfig(provider, value, model) {
-      try {
-        const url = new URL(value, window.location.href);
-        const hostname = url.hostname.toLowerCase();
-        const pathname = url.pathname.replace(/\/+$/, "");
-        if (provider === "google") {
-          const versionMatch = pathname.match(/^\/(v1beta|v1)(?:\/models)?$/);
-          const directModelMatch = pathname.match(/^\/(v1beta|v1)\/models\/(.+):generateContent$/);
-          if (url.protocol === "https:" && hostname === "generativelanguage.googleapis.com" && versionMatch) {
-            const finalUrl = new URL(url.toString());
-            finalUrl.pathname = `/${versionMatch[1]}/models/${encodeURIComponent(normalizeGoogleModel(model))}:generateContent`;
-            finalUrl.hash = "";
-            return { allowed: true, needsApiKey: true, url: finalUrl };
-          }
-          if (isSameOriginEndpoint(url) && versionMatch && !url.search && !url.hash) {
-            const finalUrl = new URL(url.toString());
-            finalUrl.pathname = `/${versionMatch[1]}/models/${encodeURIComponent(normalizeGoogleModel(model))}:generateContent`;
-            return { allowed: true, needsApiKey: false, url: finalUrl };
-          }
-          if (
-            url.protocol === "https:"
-            && hostname === "generativelanguage.googleapis.com"
-            && directModelMatch
-          ) {
-            const decodedDirectModel = decodeURIComponent(directModelMatch[2]);
-            const normalizedDirectModel = normalizeGoogleModel(decodedDirectModel);
-            const encodedExpectedPath = `/${directModelMatch[1]}/models/${encodeURIComponent(normalizedDirectModel)}:generateContent`;
-            const decodedExpectedPath = `/${directModelMatch[1]}/models/${normalizedDirectModel}:generateContent`;
-            if (pathname === encodedExpectedPath || pathname === decodedExpectedPath) {
-              return { allowed: true, needsApiKey: true, url };
-            }
-          }
-          if (isSameOriginEndpoint(url) && !url.search && !url.hash) {
-            if (/(?:\/|:)generateContent$/.test(pathname)) {
-              return { allowed: true, needsApiKey: false, url };
-            }
-            const finalUrl = new URL(url.toString());
-            finalUrl.pathname = pathname.endsWith("/models")
-              ? `${pathname}/${encodeURIComponent(normalizeGoogleModel(model))}:generateContent`
-              : `${pathname}/models/${encodeURIComponent(normalizeGoogleModel(model))}:generateContent`;
-            return { allowed: true, needsApiKey: false, url: finalUrl };
-          }
-          return { allowed: false, needsApiKey: false, url: null };
-        }
-        if (url.protocol === "https:" && hostname === "api.openai.com" && pathname === "/v1/responses") {
-          return { allowed: true, needsApiKey: true, url };
-        }
-        if (isSameOriginEndpoint(url) && pathname.endsWith("/responses") && !url.search && !url.hash) {
-          return { allowed: true, needsApiKey: false, url };
-        }
-        return { allowed: false, needsApiKey: false, url: null };
-      } catch {
-        return { allowed: false, needsApiKey: false, url: null };
-      }
-    }
-
-    function isAllowedEndpoint(provider, value, model) {
-      return getEndpointConfig(provider, value, model).allowed;
-    }
-
-    function isSameOriginEndpoint(url) {
-      return window.isSecureContext
-        && !!window.location.origin
-        && window.location.origin !== "null"
-        && url.protocol === window.location.protocol
-        && url.origin === window.location.origin;
     }
 
     function normalizeLogEntry(value) {
@@ -304,39 +168,6 @@
       };
     }
 
-    function extractAnalysisResult(data) {
-      const directCandidates = [data?.output_parsed, data?.parsed];
-      for (const candidate of directCandidates) {
-        const normalized = normalizeAnalysisResult(candidate);
-        if (normalized) return normalized;
-      }
-
-      const queue = [data?.output];
-      while (queue.length) {
-        const value = queue.shift();
-        if (!value) continue;
-        if (Array.isArray(value)) {
-          queue.push(...value);
-          continue;
-        }
-        if (typeof value !== "object") continue;
-
-        for (const key of ["parsed", "json"]) {
-          const normalized = normalizeAnalysisResult(value[key]);
-          if (normalized) return normalized;
-        }
-
-        if (value.text && typeof value.text === "object") {
-          const normalized = normalizeAnalysisResult(value.text.value);
-          if (normalized) return normalized;
-        }
-
-        queue.push(value.content, value.output);
-      }
-
-      return normalizeAnalysisResult(safeJsonParse(parseResponseText(data)));
-    }
-
     function getSafeErrorDetail(errorData) {
       const code = typeof errorData?.error?.code === "string"
         ? errorData.error.code.toLowerCase()
@@ -376,25 +207,8 @@
     }
 
     function loadState() {
-      const provider = normalizeProvider(readStoredValue(localStorage, STORAGE_KEYS.provider) || DEFAULT_PROVIDER);
-      providerInput.value = provider;
       apiKeyInput.value = readStoredValue(sessionStorage, STORAGE_KEYS.apiKey) || "";
-      modelInput.value = readStoredValue(localStorage, getProviderStorageKey(STORAGE_KEYS.model, provider))
-        || readStoredValue(localStorage, STORAGE_KEYS.model)
-        || DEFAULT_MODELS[provider];
-      if (provider === "google") {
-        modelInput.value = normalizeGoogleModel(modelInput.value);
-      }
-      const scopedSavedEndpoint = readStoredValue(localStorage, getProviderStorageKey(STORAGE_KEYS.endpoint, provider));
-      const savedEndpoint = scopedSavedEndpoint
-        || readStoredValue(localStorage, STORAGE_KEYS.endpoint)
-        || getDefaultEndpoint(provider, modelInput.value.trim());
-      endpointInput.value = isAllowedEndpoint(provider, savedEndpoint, modelInput.value.trim())
-        ? savedEndpoint
-        : getDefaultEndpoint(provider, modelInput.value.trim());
-      lastSavedProvider = provider;
-      lastSavedModel = modelInput.value.trim() || DEFAULT_MODELS[provider];
-      updateConfigUi();
+      modelInput.value = normalizeModel(readStoredValue(localStorage, STORAGE_KEYS.model));
       try {
         const parsedLogs = JSON.parse(readStoredValue(localStorage, STORAGE_KEYS.logs) || "[]");
         logs = Array.isArray(parsedLogs)
@@ -406,63 +220,16 @@
       renderLogs();
     }
 
-    function updateConfigUi(previousProvider = null, previousModel = "") {
-      const provider = normalizeProvider(providerInput.value);
-      const defaultModel = DEFAULT_MODELS[provider];
-      const previousDefaultModel = previousProvider ? DEFAULT_MODELS[previousProvider] : null;
-      const providerChanged = !!previousProvider && previousProvider !== provider;
-      if (!modelInput.value.trim() || (providerChanged && previousDefaultModel && modelInput.value.trim() === previousDefaultModel)) {
-        modelInput.value = defaultModel;
-      }
-      const currentModel = provider === "google"
-        ? normalizeGoogleModel(modelInput.value)
-        : (modelInput.value.trim() || defaultModel);
-      modelInput.value = currentModel;
-      const defaultEndpoint = getDefaultEndpoint(provider, currentModel);
-      const previousDefaultEndpoint = previousProvider
-        ? getDefaultEndpoint(previousProvider, previousModel || previousDefaultModel)
-        : null;
-      if (
-        !endpointInput.value.trim()
-        || !isAllowedEndpoint(provider, endpointInput.value.trim(), currentModel)
-        || (previousDefaultEndpoint && endpointInput.value.trim() === previousDefaultEndpoint)
-      ) {
-        endpointInput.value = defaultEndpoint;
-      }
-      endpointInput.placeholder = defaultEndpoint;
-      configHelp.textContent = PROVIDER_HELP[provider];
-    }
-
     function saveState() {
-      const provider = normalizeProvider(providerInput.value);
       const apiKey = apiKeyInput.value.trim();
-      const safeModel = provider === "google"
-        ? normalizeGoogleModel(modelInput.value)
-        : (modelInput.value.trim() || DEFAULT_MODELS[provider]);
       if (apiKey) {
         writeStoredValue(sessionStorage, STORAGE_KEYS.apiKey, apiKey);
       } else {
         removeStoredValue(sessionStorage, STORAGE_KEYS.apiKey);
       }
-      const safeEndpoint = isAllowedEndpoint(provider, endpointInput.value.trim(), safeModel)
-        ? endpointInput.value.trim()
-        : getDefaultEndpoint(provider, safeModel);
-      providerInput.value = provider;
-      modelInput.value = safeModel;
-      endpointInput.value = safeEndpoint;
-      writeStoredValue(localStorage, STORAGE_KEYS.provider, provider);
-      writeStoredValue(localStorage, STORAGE_KEYS.model, safeModel);
-      writeStoredValue(localStorage, STORAGE_KEYS.endpoint, safeEndpoint);
-      writeStoredValue(localStorage, getProviderStorageKey(STORAGE_KEYS.model, provider), safeModel);
-      writeStoredValue(localStorage, getProviderStorageKey(STORAGE_KEYS.endpoint, provider), safeEndpoint);
+      modelInput.value = normalizeModel(modelInput.value);
+      writeStoredValue(localStorage, STORAGE_KEYS.model, modelInput.value);
       writeStoredValue(localStorage, STORAGE_KEYS.logs, JSON.stringify(logs));
-      lastSavedProvider = provider;
-      lastSavedModel = safeModel;
-    }
-
-    function syncConfigState() {
-      updateConfigUi(lastSavedProvider, lastSavedModel);
-      saveState();
     }
 
     function renderLogs() {
@@ -521,32 +288,6 @@
       return null;
     }
 
-    function parseResponseText(data) {
-      if (!data || typeof data !== "object") return "";
-      if (typeof data.output_text === "string" && data.output_text.trim()) return data.output_text.trim();
-      const texts = [];
-
-      const collectTexts = value => {
-        if (!value) return;
-        if (Array.isArray(value)) {
-          for (const item of value) collectTexts(item);
-          return;
-        }
-        if (typeof value !== "object") return;
-        const textValue = typeof value.text === "string"
-          ? value.text
-          : (value.text && typeof value.text.value === "string" ? value.text.value : "");
-        if ((value.type === "output_text" || value.type === "text") && textValue) {
-          texts.push(textValue);
-        }
-        collectTexts(value.content);
-        collectTexts(value.output);
-      };
-
-      collectTexts(data.output);
-      return texts.join("\n").trim();
-    }
-
     function parseGoogleResponseText(data) {
       const texts = [];
       for (const candidate of data?.candidates || []) {
@@ -579,23 +320,11 @@
     }
 
     async function analyzeImage() {
-      syncConfigState();
-      const provider = normalizeProvider(providerInput.value);
+      saveState();
       const apiKey = apiKeyInput.value.trim();
-      const model = provider === "google"
-        ? normalizeGoogleModel(modelInput.value)
-        : (modelInput.value.trim() || "gpt-4.1-mini");
-      const endpoint = endpointInput.value.trim() || getDefaultEndpoint(provider, model);
-      const endpointConfig = getEndpointConfig(provider, endpoint, model);
-      if (!endpointConfig.allowed) {
-        resultBox.textContent = provider === "google"
-          ? "Endpoint phải là Google AI Studio Gemini API HTTPS hoặc proxy cùng origin hợp lệ."
-          : "Endpoint phải là HTTPS OpenAI Responses API hoặc proxy cùng origin hợp lệ.";
-        return;
-      }
-      const needsApiKey = endpointConfig.needsApiKey;
-      if (!apiKey && needsApiKey) {
-        resultBox.textContent = "Vui lòng nhập AI API key.";
+      const model = normalizeModel(modelInput.value);
+      if (!apiKey) {
+        resultBox.textContent = "Vui l?ng nh?p Google AI Studio API key.";
         return;
       }
       if (!currentImageDataUrl) {
@@ -622,58 +351,34 @@
       ].join("\n");
 
       try {
-        const requestUrl = new URL(endpointConfig.url.toString());
+        const requestUrl = `${GOOGLE_API_BASE}/models/${encodeURIComponent(model)}:generateContent`;
         const headers = {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey
         };
-        if (provider === "google" && needsApiKey && apiKey) {
-          headers["x-goog-api-key"] = apiKey;
-        } else if (needsApiKey && apiKey) {
-          headers.Authorization = "Bearer " + apiKey;
-        }
 
         const imagePayload = parseDataUrl(currentImageDataUrl);
         if (!imagePayload) {
-          throw new Error("Ảnh chưa đúng định dạng base64 hợp lệ.");
+          throw new Error("?nh ch?a ??ng ??nh d?ng base64 h?p l?.");
         }
 
-        const requestBody = provider === "google"
-          ? {
-              contents: [
-                {
-                  role: "user",
-                  parts: [
-                    { text: prompt },
-                    {
-                      inlineData: {
-                        mimeType: imagePayload.mimeType,
-                        data: imagePayload.data
-                      }
-                    }
-                  ]
-                }
-              ],
-              generationConfig: {
-                responseMimeType: "application/json"
-              }
-            }
-          : {
-              model,
-              text: {
-                format: ANALYSIS_RESPONSE_FORMAT
-              },
-              input: [
-                {
-                  role: "user",
-                  content: [
-                    { type: "input_text", text: prompt },
-                    { type: "input_image", image_url: { url: currentImageDataUrl } }
-                  ]
-                }
+        const requestBody = {
+          contents: [
+            {
+              role: "user",
+              parts: [
+                { text: prompt },
+                { inlineData: { mimeType: imagePayload.mimeType, data: imagePayload.data } }
               ]
-            };
+            }
+          ]
+        };
+        // Gemma kh?ng h? tr? JSON mode; prompt + parser x? l? JSON cho model n?y.
+        if (!model.startsWith("gemma")) {
+          requestBody.generationConfig = { responseMimeType: "application/json" };
+        }
 
-        const response = await fetch(requestUrl.toString(), {
+        const response = await fetch(requestUrl, {
           method: "POST",
           headers,
           body: JSON.stringify(requestBody)
@@ -695,9 +400,7 @@
         } catch {
           throw new Error("AI trả về dữ liệu không hợp lệ.");
         }
-        const parsed = provider === "google"
-          ? extractGoogleAnalysisResult(data)
-          : extractAnalysisResult(data);
+        const parsed = extractGoogleAnalysisResult(data);
         if (!parsed) {
           throw new Error("AI không trả về JSON hợp lệ theo cấu trúc mong đợi.");
         }
@@ -756,11 +459,9 @@
 
     apiKeyInput.addEventListener("change", saveState);
     apiKeyInput.addEventListener("input", saveState);
-    providerInput.addEventListener("change", syncConfigState);
-    modelInput.addEventListener("change", syncConfigState);
-    modelInput.addEventListener("input", syncConfigState);
-    endpointInput.addEventListener("change", saveState);
-    endpointInput.addEventListener("input", saveState);
+    apiKeyInput.addEventListener("change", saveState);
+    apiKeyInput.addEventListener("input", saveState);
+    modelInput.addEventListener("change", saveState);
 
     loadState();
   </script>
