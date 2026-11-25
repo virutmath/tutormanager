@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Chat</title>
 <meta name="theme-color" content="#0d9488">
+<link id="chat-favicon" rel="icon" type="image/svg+xml" href="./icons/chat.svg">
+<link id="chat-mask-icon" rel="mask-icon" href="./icons/chat.svg" color="#0d9488">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -698,7 +700,7 @@
   .terminal-mode .input-row {
     padding: 4px 8px;
     gap: 0;
-    align-items: center;
+    align-items: flex-end;
   }
 </style>
 </head>
@@ -940,6 +942,9 @@ function setThemeMode(mode) {
   localStorage.setItem('peerchat_theme_mode', mode);
   applyTheme();
   updateTerminalInputPrefix();
+  const textarea = document.getElementById('msg-input');
+  textarea.style.height = 'auto';
+  autoResize(textarea);
   // Re-render messages to apply diacritic conversion if theme changed
   const chatScreen = document.getElementById('chat-screen');
   if (chatScreen && chatScreen.classList.contains('active')) {
@@ -1122,6 +1127,12 @@ function applyTerminalTextConversion(text) {
 let unreadCount = 0;
 const BASE_TITLE = document.title;
 
+function updateFavicon(hasUnread) {
+  const iconPath = hasUnread ? './icons/chat-unread.svg' : './icons/chat.svg';
+  document.getElementById('chat-favicon').href = iconPath;
+  document.getElementById('chat-mask-icon').href = iconPath;
+}
+
 function requestNotificationPermission() {
   if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission();
@@ -1135,6 +1146,7 @@ function notifyIncoming(msg) {
   // Update unread count and page title (visible in browser tab on desktop)
   unreadCount++;
   document.title = '(' + unreadCount + ') ' + BASE_TITLE;
+  updateFavicon(true);
 
   // Show browser/OS notification if permission was granted
   if ('Notification' in window && Notification.permission === 'granted') {
@@ -1156,6 +1168,7 @@ function notifyIncoming(msg) {
 function clearUnreadCount() {
   unreadCount = 0;
   document.title = BASE_TITLE;
+  updateFavicon(false);
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) clearUnreadCount(); });
 window.addEventListener('focus', clearUnreadCount);
